@@ -1,0 +1,109 @@
+/* 🧭 Fixed Navbar */
+.navbar {
+  position: fixed;
+
+  top: 0;
+  left: 2%;
+  width: 96%;
+  z-index: 1000;
+  display: flex;
+  border-radius: 10px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background-color: rgb(254, 254, 254);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+/* Prevent content from hiding behind navbar */
+.pageContent {
+  padding-top: 80px;
+}
+
+/* 🧭 Nav Items Group - Horizontal Scroll */
+.navItems {
+  display: flex;
+  flex-direction: row;
+  gap: 4.25rem;
+  list-style: none;
+  padding: 0.5rem 1rem;
+  margin: 0;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+.navItems::-webkit-scrollbar {
+  display: none;
+}
+
+/* Individual Nav Item */
+.navItem {
+  flex: 0 0 auto;
+}
+
+.link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #333;
+  font-size: 0.85rem;
+  transition: color 0.5s ease;
+}
+
+.icon {
+  font-size: 1.6rem;
+  color: #555;
+
+}
+
+.activeLink {
+  color: #d63384;
+  font-weight: bold;
+}
+.activeLink .icon {
+  color: #d63384;
+}
+
+/* 🧭 Logo Section */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.logoImage {
+  border-radius: 25px;
+  object-fit: cover;
+}
+.logoText h1 {
+  font-size: 1.25rem;
+  color: #d63384;
+  margin: 0;
+}
+
+/* 🔐 Auth Links */
+.authLinks {
+  display: flex;
+  gap: 0.75rem;
+  align-self: center;
+}
+.authButton {
+  text-decoration: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #d63384;
+  border: 1px solid #d63384;
+  font-weight: 500;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.authButton:hover {
+  background-color: #d63384;
+  color: #fff;
+}
+.authDivider {
+  font-weight: bold;
+  color: #888;
+  align-self: center;
+}
