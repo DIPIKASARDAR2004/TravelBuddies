@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -12,6 +13,8 @@ import {
   FaFemale ,
   FaMoneyBill,
   FaLanguage,
+  FaSun,
+  FaMoon,
 } from 'react-icons/fa';
 import { MdHealthAndSafety } from 'react-icons/md';
 import styles from './home.module.css';
@@ -19,7 +22,7 @@ import styles from './home.module.css';
 interface NavItem {
   href: string;
   label: string;
-  icon: JSX.Element;
+  icon: React.ReactNode;
 }
 
 const navItems: NavItem[] = [
@@ -35,7 +38,27 @@ const navItems: NavItem[] = [
   
 ];
 
-export default function Navbar(): JSX.Element {
+export default function Navbar() {
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+    setTheme(initialTheme);
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
   return (
     <nav className={styles.navbar}>
       <div className={styles.logo}>
@@ -62,6 +85,17 @@ export default function Navbar(): JSX.Element {
       </ul>
 
       <div className={styles.authLinks}>
+        <button
+          onClick={toggleTheme}
+          className={styles.themeToggle}
+          aria-label="Toggle Theme"
+        >
+          {theme === 'light' ? (
+            <FaMoon className={styles.themeToggleIcon} />
+          ) : (
+            <FaSun className={styles.themeToggleIcon} />
+          )}
+        </button>
         <Link href="/login" className={styles.authButton}>
           Login
         </Link>

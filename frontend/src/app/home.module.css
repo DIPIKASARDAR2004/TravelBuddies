@@ -1,19 +1,19 @@
-/* 🧭 Fixed Navbar */
 .navbar {
   position: fixed;
-
-  top: 0;
+  top: 15px;
   left: 2%;
   width: 96%;
   z-index: 1000;
   display: flex;
-  border-radius: 10px;
+  border-radius: 12px;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1.5rem;
-  background-color: rgb(254, 254, 254);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
+  padding: 0.5rem 1.5rem;
+  background-color: var(--navbar-bg);
+  border: 1px solid var(--navbar-border);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
 }
 
 /* Prevent content from hiding behind navbar */
@@ -47,23 +47,29 @@
   flex-direction: column;
   align-items: center;
   text-decoration: none;
-  color: #333;
+  color: var(--text);
   font-size: 0.85rem;
-  transition: color 0.5s ease;
+  transition: all 0.3s ease;
+}
+.link:hover {
+  color: var(--primary);
 }
 
 .icon {
   font-size: 1.6rem;
-  color: #555;
-
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+}
+.link:hover .icon {
+  color: var(--primary);
 }
 
 .activeLink {
-  color: #d63384;
+  color: var(--primary);
   font-weight: bold;
 }
 .activeLink .icon {
-  color: #d63384;
+  color: var(--primary);
 }
 
 /* 🧭 Logo Section */
@@ -82,28 +88,49 @@
   margin: 0;
 }
 
-/* 🔐 Auth Links */
 .authLinks {
   display: flex;
   gap: 0.75rem;
   align-self: center;
+  align-items: center;
+}
+.themeToggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  border-radius: 50%;
+  color: var(--text);
+  transition: all 0.3s ease;
+  width: 38px;
+  height: 38px;
+}
+.themeToggle:hover {
+  background-color: var(--muted);
+  transform: rotate(15deg);
+}
+.themeToggleIcon {
+  font-size: 1.2rem;
 }
 .authButton {
   text-decoration: none;
   padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  background-color: #fff;
-  color: #d63384;
-  border: 1px solid #d63384;
+  border-radius: 8px;
+  background-color: transparent;
+  color: var(--primary);
+  border: 1px solid var(--primary);
   font-weight: 500;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: all 0.3s ease;
 }
 .authButton:hover {
-  background-color: #d63384;
+  background-color: var(--primary);
   color: #fff;
 }
 .authDivider {
   font-weight: bold;
-  color: #888;
+  color: var(--muted);
   align-self: center;
 }

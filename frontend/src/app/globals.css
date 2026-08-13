@@ -1,18 +1,46 @@
  @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 /* 🌈 Font & Theme Variables */
 :root {
   --background: #ffffff;
-  --foreground: #ec2f2f;
+  --foreground: #1e293b;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --bg: #f8fafc; /* premium soft light-slate background */
+  --card: #ffffff;
+  --text: #0f172a; /* slate-900 */
+  --text-secondary: #475569; /* slate-600 */
+  --muted: #e2e8f0; /* slate-200 */
+  --primary: #3b82f6; /* modern travel blue */
+  --primary-hover: #2563eb;
+  --ring: rgba(59, 130, 246, 0.15);
+  
+  --navbar-bg: rgba(255, 255, 255, 0.85);
+  --navbar-border: rgba(226, 232, 240, 0.8);
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #fcfcf8;
-  }
+.dark {
+  --background: #0b0f19; /* premium deep dark-slate background */
+  --foreground: #f8fafc; /* slate-50 */
+
+  --bg: #0b0f19; 
+  --card: #1e293b; /* slate-800 */
+  --text: #f8fafc;
+  --text-secondary: #94a3b8; /* slate-400 */
+  --muted: #334155; /* slate-700 */
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --ring: rgba(59, 130, 246, 0.3);
+  
+  --navbar-bg: rgba(11, 15, 25, 0.85);
+  --navbar-border: rgba(51, 65, 85, 0.8);
+  --input-bg: #1e293b;
+  --input-border: #334155;
 }
 
 /* 🧱 Base Styles */
@@ -127,16 +155,7 @@ body {
   font-size: larger;
 }
 
-/* this is megha part*/
- :root{
-  --bg:#f0f0f0;/*background for all*/
-  --card:#ffffff;
-  /*--text:#040302;it is ussed for booking train text color*/
-  --muted:#dfdddd;
-  --primary:#408bc4;/*when you click butteon the the colour you will se */
-  --primary-hover:#6f9cd0;
-  --ring:rgba(212, 212, 213, 0.35);/*colour of the ring*/
-}
+/* this is megha part - variables now integrated in global root system */
 /* ------- Theme (easy to edit) ------- */
 
 .option{
@@ -206,17 +225,20 @@ body {
 .offer-card {
   display: flex;
   gap: 10px;
-  align-items: flex;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  align-items: center;
+  border: 1px solid var(--muted);
+  border-radius: 12px;
   padding: 15px;
-  background: #fff;
+  background: var(--card);
   margin: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 .offer-card:hover {
-  background-color: #f7feff;
-  background: #f8ffff;
-  border: #45bfd7 1px solid;
+  background: var(--bg);
+  border: var(--primary) 1px solid;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .offer-img {
@@ -237,19 +259,23 @@ body {
 .offer-type {
   font-size: 10px;
   font-weight: bold;
-  color: #666;
+  color: var(--text-secondary);
   margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .offer-title {
   font-size: 16px;
   margin: 4px 0;
+  color: var(--text);
+  font-weight: 600;
 }
 
 .offer-desc {
   font-size: 14px;
-  color: #444;
-  margin-bottom: 0;
+  color: var(--text-secondary);
+  margin-bottom: 0;
 }
 
 
@@ -282,8 +308,8 @@ border-radius: 28px;
   font-family:'Times New Roman', Times, serif;
   gap: 100px;
   font-weight: 700;
-color: #000000;
-text-decoration: dotted;
+  color: var(--text);
+  text-decoration: dotted;
 }
 .h6_img{
   height: 45px;
@@ -313,29 +339,30 @@ margin-left: 2px;
 
 /* ------- Fields ------- */
 .field{ flex:1 1 180px; display:flex; flex-direction:column; gap:6px;height: 120px; }
-.label{ font-size:20px; color:rgb(196, 193, 193); letter-spacing:.0px;height: 80px; }
+.label{ font-size:20px; color:var(--text-secondary); letter-spacing:.0px;height: 80px; }
 
 .input,.select,.date{
   width:100%;
   padding:10px 12px;
-  border:1px solid #adadad;
+  border:1px solid var(--input-border);
   border-radius:6px;
   outline:none;
-  background:#fff;
+  background:var(--input-bg);
+  color:var(--text);
   font-size: 24px;
   height: 200px;
   font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 .input:hover{
-  background:#f2f6fb;
+  background:var(--muted);
   border:var(--primary) 1px solid;
 }
 .select:hover{
-  background:#fafcff;
+  background:var(--muted);
   border:var(--primary) 1px solid;
 }
 .date:hover{
-  background:#f8fbfe;
+  background:var(--muted);
   border:var(--primary) 1px solid;
 }
 .fare-section label {
@@ -537,29 +564,30 @@ margin-left: 2px;
 
 /* ------- Fields ------- */
 .hotel-field{ flex:1 1 180px; display:flex; flex-direction:column; gap:6px;height: 120px; }
-.hotel-label{ font-size:20px; color:rgb(196, 193, 193); letter-spacing:.0px;height: 80px; }
+.hotel-label{ font-size:20px; color:var(--text-secondary); letter-spacing:.0px;height: 80px; }
 
 .hotel-input,.hotel-select,.hotel-date{
   width:100%;
   padding:10px 12px;
-  border:1px solid #adadad;
+  border:1px solid var(--input-border);
   border-radius:6px;
   outline:none;
-  background:#fff;
+  background:var(--input-bg);
+  color:var(--text);
   font-size: 24px;
   height: 200px;
   font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 .hotel-input:hover{
-  background:#f2f6fb;
+  background:var(--muted);
   border:var(--primary) 1px solid;
 }
 .hotel-select:hover{
-  background:#fafcff;
+  background:var(--muted);
   border:var(--primary) 1px solid;
 }
 .hotel-date:hover{
-  background:#f8fbfe;
+  background:var(--muted);
   border:var(--primary) 1px solid;
 }
 

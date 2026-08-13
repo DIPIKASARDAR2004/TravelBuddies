@@ -74,10 +74,10 @@ export default function BudgetPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 p-6 flex flex-col items-center">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 dark:from-slate-950 dark:to-slate-900 p-6 flex flex-col items-center transition-colors duration-300">
       {/* Budget Calculator */}
-      <div className="bg-white shadow-2xl rounded-3xl p-8 max-w-xl w-full mt-10">
-        <h1 className="text-3xl font-bold mb-6 text-center text-blue-700">
+      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-2xl rounded-3xl p-8 max-w-xl w-full mt-10 transition-colors duration-300">
+        <h1 className="text-3xl font-bold mb-6 text-center text-blue-700 dark:text-blue-400">
           Budget Packages
         </h1>
 
@@ -90,7 +90,7 @@ export default function BudgetPage() {
               placeholder="Enter Location (e.g., Digha)"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="w-full border border-gray-300 p-3 pl-10 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
+              className="w-full border border-gray-300 dark:border-slate-700 p-3 pl-10 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
               required
             />
           </div>
@@ -104,7 +104,7 @@ export default function BudgetPage() {
                 placeholder="Min Budget ₹"
                 value={minBudget}
                 onChange={(e) => setMinBudget(e.target.value)}
-                className="w-full border border-gray-300 p-3 pl-10 rounded-xl focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
+                className="w-full border border-gray-300 dark:border-slate-700 p-3 pl-10 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
                 required
               />
             </div>
@@ -115,7 +115,7 @@ export default function BudgetPage() {
                 placeholder="Max Budget ₹"
                 value={maxBudget}
                 onChange={(e) => setMaxBudget(e.target.value)}
-                className="w-full border border-gray-300 p-3 pl-10 rounded-xl focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
+                className="w-full border border-gray-300 dark:border-slate-700 p-3 pl-10 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
                 required
               />
             </div>
@@ -126,7 +126,7 @@ export default function BudgetPage() {
             <select
               value={option}
               onChange={(e) => setOption(e.target.value)}
-              className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent transition appearance-none"
+              className="w-full border border-gray-300 dark:border-slate-700 p-3 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-400 focus:border-transparent transition appearance-none"
             >
               <option value="full">Full Package (Hotel + Train + Restaurant)</option>
               <option value="hotel">Only Hotel</option>
@@ -146,8 +146,8 @@ export default function BudgetPage() {
         {/* Results */}
         {result && (
           <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-3">Suggestions:</h2>
-            <ul className="list-disc pl-6 space-y-2">
+            <h2 className="text-xl font-semibold mb-3 text-slate-800 dark:text-slate-200">Suggestions:</h2>
+            <ul className="list-disc pl-6 space-y-2 text-slate-700 dark:text-slate-300">
               {result.map((item, index) => (
                 <li key={index}>{item}</li>
               ))}
@@ -157,8 +157,8 @@ export default function BudgetPage() {
       </div>
 
       {/* Budget Features */}
-      <section className="py-10 bg-gray-50 mt-12 rounded-2xl w-full max-w-6xl">
-        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
+      <section className="py-10 bg-gray-50 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/80 mt-12 rounded-2xl w-full max-w-6xl transition-colors duration-300">
+        <h1 className="text-3xl font-bold text-center mb-8 text-slate-800 dark:text-slate-100">
           💡 Unique Budget Calculator Features
         </h1>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 px-6">
@@ -166,11 +166,11 @@ export default function BudgetPage() {
             <div
               key={i}
               onClick={() => router.push(f.link)}
-              className="bg-white rounded-2xl p-6 shadow hover:shadow-lg hover:scale-105 transition-transform cursor-pointer text-center"
+              className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow hover:shadow-lg dark:hover:shadow-blue-900/5 border border-slate-100 dark:border-slate-700/50 hover:scale-105 transition-transform cursor-pointer text-center"
             >
               {f.icon}
-              <h2 className="mt-4 text-xl font-semibold">{f.title}</h2>
-              <p className="mt-2 text-gray-600">{f.desc}</p>
+              <h2 className="mt-4 text-xl font-semibold text-slate-800 dark:text-slate-100">{f.title}</h2>
+              <p className="mt-2 text-slate-600 dark:text-slate-400 text-sm">{f.desc}</p>
             </div>
           ))}
         </div>

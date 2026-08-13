@@ -2,6 +2,9 @@
 
 import React, { useState } from "react";
 import ExploreRoutes from "./exploreRoutes";
+import dynamic from "next/dynamic";
+const OfflineMap = dynamic(() => import("@/app/map/OfflineMap").then(mod => mod.default), { ssr: false });
+
 
 export default function MapPage() {
   const [showExplore, setShowExplore] = useState(false);
@@ -18,6 +21,7 @@ export default function MapPage() {
       </button>
 
       {showExplore && <ExploreRoutes />}
+<OfflineMap />
     </div>
   );
 }

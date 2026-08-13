@@ -1,0 +1,20 @@
+[
+  {
+    "id": "safe-zone-1",
+    "name": "Mountain Ranger Station Alpha",
+    "description": "24/7 manned station with emergency satellite phones, medical kits, and fresh drinking water.",
+    "latitude": 34.0522,
+    "longitude": -118.2437,
+    "safetyLevel": "High",
+    "contact": "Radio Channel 16"
+  },
+  {
+    "id": "safe-zone-2",
+    "name": "Eco-Tourism EcoShelter B",
+    "description": "Unmanned storm shelter with automated first-aid kit, blankets, and solar-powered charging ports.",
+    "latitude": 34.0622,
+    "longitude": -118.2537,
+    "safetyLevel": "Medium",
+    "contact": "None (Emergency button inside)"
+  }
+]

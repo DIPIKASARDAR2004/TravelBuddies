@@ -53,32 +53,32 @@ const cardData: CardItem[] = [
   },
 ];
 
-export default function CardScrollRow(): JSX.Element {
+export default function CardScrollRow() {
   return (
     
     <section className="flex justify-center px-7 py-12">
       
-      <div className="w-[100%] max-w-[1400px] mx-auto bg-white rounded-2xl shadow-xl p-8">
+      <div className="w-[100%] max-w-[1400px] mx-auto bg-white dark:bg-slate-800/90 rounded-2xl shadow-xl dark:shadow-2xl p-8 border border-slate-100 dark:border-slate-700/50 backdrop-blur-sm transition-colors duration-300">
 
 
-        <h2 className="text-4xl font-bold mb-6 text-gray-400">International Destinations!</h2>
-        <div className="flex overflow-x-auto space-x-4 px-2 pb-2">
+        <h2 className="text-4xl font-bold mb-6 text-slate-500 dark:text-slate-300">International Destinations!</h2>
+        <div className="flex overflow-x-auto space-x-4 px-2 pb-4 hide-scrollbar">
           {cardData.map((card, index) => (
             <div
               key={index}
-              className="min-w-[288px] bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+              className="min-w-[288px] bg-white dark:bg-slate-900 rounded-xl shadow-md dark:shadow-xl overflow-hidden border border-slate-100 dark:border-slate-800/80 hover:shadow-lg dark:hover:shadow-blue-900/10 hover:-translate-y-1 transition-all duration-300"
             >
               <img
                 src={card.img}
                 alt={card.title}
-                className="w-full h-40 object-cover"
+                className="w-full h-40 object-cover hover:scale-105 transition-transform duration-500"
               />
               <div className="p-4">
-                <h5 className="text-lg font-semibold mb-1">{card.title}</h5>
-                <p className="text-gray-600 mb-3 text-sm">{card.text}</p>
+                <h5 className="text-lg font-semibold mb-1 text-slate-800 dark:text-slate-100">{card.title}</h5>
+                <p className="text-slate-600 dark:text-slate-400 mb-3 text-sm">{card.text}</p>
                 <Link
                   href={card.link}
-                  className="inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors text-sm"
+                  className="inline-block bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 text-sm hover:scale-[1.03] active:scale-[0.98]"
                 >
                   Explore
                 </Link>

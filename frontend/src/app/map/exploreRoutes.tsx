@@ -7,7 +7,7 @@ interface Route {
   id: number;
   title: string;
   description: string;
-  icon: JSX.Element;
+  icon: React.ReactNode;
   duration?: string;
 }
 

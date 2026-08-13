@@ -15,7 +15,7 @@ export default function Bus() {
       setTo(a);
     };
   
-    const handleSearch = (e) => {
+    const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       alert(`Searching…
   From: ${from}
