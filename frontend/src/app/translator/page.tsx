@@ -100,7 +100,7 @@ export default function TranslatorPage() {
         recognition.continuous = true;
         recognition.interimResults = true;
         
-        recognition.onresult = (event: SpeechRecognitionEvent) => {
+        recognition.onresult = (event: any) => {
             let finalTranscript = '';
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
@@ -112,7 +112,7 @@ export default function TranslatorPage() {
             }
         };
 
-        recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+        recognition.onerror = (event: any) => {
             console.error('Speech recognition error:', event.error);
             setError(`Voice recognition error: ${event.error}. Please ensure your microphone is enabled.`);
             setIsListening(false);
