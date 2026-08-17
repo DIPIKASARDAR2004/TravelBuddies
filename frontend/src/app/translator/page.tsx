@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps */
 "use client";
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';

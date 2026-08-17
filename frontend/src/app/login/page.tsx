@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
@@ -86,6 +87,14 @@ export default function LoginPage() {
           <a href="#" className="text-blue-500">Privacy Policy</a>,{" "}
           <a href="#" className="text-blue-500">User Agreement</a> and{" "}
           <a href="#" className="text-blue-500">T&Cs</a>.
+        </p>
+
+        {/* Sign up link */}
+        <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+          Don&apos;t have an account?{' '}
+          <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
+            Sign up
+          </Link>
         </p>
       </div>
     </div>

@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+'use client';
+import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import safePlaces from './safe-places.json';
@@ -8,25 +9,40 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  iconRetinaUrl: (markerIcon2x as any).src || markerIcon2x,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  iconUrl: (markerIcon as any).src || markerIcon,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  shadowUrl: (markerShadow as any).src || markerShadow,
 });
 
-const OfflineMap: React.FC = () => {
-  // Ensure the code only runs in the browser
-  if (typeof window === 'undefined') {
-    return null;
-  }
+interface SafePlace {
+  latitude: number;
+  longitude: number;
+  name: string;
+  safetyLevel: string;
+  description: string;
+  contact: string;
+}
 
+const OfflineMap: React.FC = () => {
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const position: [number, number] = [28.6139, 77.2090]; // Default center
+  const [position] = useState<[number, number]>([28.6139, 77.2090]); // Default center
+  
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    // If map already exists, do nothing
-    if (mapRef.current) return;
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted || mapRef.current || !containerRef.current) return;
 
     const map = L.map(containerRef.current as HTMLElement, {
       center: position,
@@ -39,7 +55,7 @@ const OfflineMap: React.FC = () => {
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
 
-    safePlaces.forEach((place: any) => {
+    (safePlaces as SafePlace[]).forEach((place) => {
       const marker = L.marker([place.latitude, place.longitude]).addTo(map);
       const popupContent = `
         <div>
@@ -54,12 +70,13 @@ const OfflineMap: React.FC = () => {
 
     mapRef.current = map;
 
-    // Cleanup on unmount
     return () => {
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, []);
+  }, [isMounted, position]);
+
+  if (!isMounted) return null;
 
   return <div ref={containerRef} style={{ height: '500px', width: '100%' }} />;
 };

@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
  "use client";
 import { useState } from "react";
 import Link from "next/link";
@@ -203,7 +204,7 @@ The Bhopal Shatabdi (12002)</h4>
           </h4>
           <p>
             Imagine the thrill of feeling the wind in your hair, 
-            while looking at the changing scenes from a window-seat, in a bus. Makes you smile, doesn't it? 
+            while looking at the changing scenes from a window-seat, in a bus. Makes you smile, doesn&apos;t it? 
             Bus journeys are always filled with such memorable and fun moments, which we look back at, fondly.
              And in our continuous endeavour to bring to our customers the best travel experiences, 
              we now offer smarter bus booking. services on our platform.
@@ -232,7 +233,7 @@ The Bhopal Shatabdi (12002)</h4>
           <p>
             Booking bus tickets online is super easy and comfortable.
              All you have to do is follow the steps below: 
-             Tap on the Trains & Bus' icon on the Travel Buddies homepage
+             Tap on the Trains & Bus&apos; icon on the Travel Buddies homepage
           </p>
           </div>
           <div>
@@ -262,7 +263,7 @@ be sure of getting the highest standards of customer service, including regular 
           </div>
           <div>
           <h4>
-           What's more?
+           What&apos;s more?
 
           </h4>
           <p>
