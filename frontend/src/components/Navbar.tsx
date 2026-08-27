@@ -43,12 +43,14 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 py-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
       {/* Logo */}
       <div className="flex items-center gap-2">
-        <Link href="/" className="flex items-center gap-2 text-primary hover:opacity-90 transition-opacity">
-          <div className="bg-blue-600 text-white p-2 rounded-full">
-            <FaMapMarkerAlt className="text-xl" />
+        <Link href="/" className="flex items-center gap-2 group hover:opacity-90 transition-opacity">
+          <div className="bg-blue-600 text-white p-2 rounded-xl shadow-lg shadow-blue-200 dark:shadow-blue-900 group-hover:scale-105 transition-transform">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
           <div className="flex flex-col">
-            <span className="text-xl font-bold leading-tight text-slate-800 dark:text-white">TravelBuddies</span>
+            <span className="text-xl font-extrabold leading-tight tracking-tight text-slate-800 dark:text-white">
+              Travel<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Buddies</span>
+            </span>
             <span className="text-[10px] text-slate-500 font-medium">Travel Smart. Travel Safe.</span>
           </div>
         </Link>
