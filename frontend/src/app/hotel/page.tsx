@@ -104,7 +104,7 @@ export default function HotelBookingForm() {
             Discover Exceptional Stays
           </h1>
           <p className="text-lg md:text-xl text-white/90 text-center mb-10 max-w-2xl drop-shadow-md">
-            From lavish palaces to modern luxury retreats, book your perfect getaway with Travel Buddies.
+            From lavish palaces to modern luxury retreats, book your perfect getaway with Journey Pilot.
           </p>
 
           {/* Glassmorphism Search Form */}
@@ -262,7 +262,7 @@ export default function HotelBookingForm() {
       <footer className="bg-slate-900 text-slate-300 py-16 mt-12 border-t border-slate-800">
         <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           <div>
-            <h4 className="text-white font-bold text-lg mb-4">Travel Buddies Luxury Stays</h4>
+            <h4 className="text-white font-bold text-lg mb-4">Journey Pilot Luxury Stays</h4>
             <p className="text-sm leading-relaxed text-slate-400">
               Elevate your travel experience with our handpicked collection of luxury hotels, resorts, and heritage properties. Enjoy seamless booking, exclusive perks, and 24/7 concierge support.
             </p>
@@ -302,7 +302,7 @@ export default function HotelBookingForm() {
           </div>
         </div>
         <div className="max-w-6xl mx-auto px-6 mt-12 pt-8 border-t border-slate-800 text-center text-sm text-slate-500">
-          © 2026 Travel Buddies. All rights reserved.
+          © 2026 Journey Pilot. All rights reserved.
         </div>
       </footer>
     </main>

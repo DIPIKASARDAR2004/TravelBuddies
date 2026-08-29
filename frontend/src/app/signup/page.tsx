@@ -57,7 +57,7 @@ export default function SignupPage() {
       <div className="max-w-md w-full mx-auto space-y-8 bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
         <div className="text-center">
           <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white">
-            Join TravelBuddies
+            Join Journey Pilot
           </h2>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
             Create an account to start your journey

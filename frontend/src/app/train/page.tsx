@@ -200,7 +200,7 @@ The Bhopal Shatabdi (12002)</h4>
         <footer className="footer">
           <div>
           <h4>
-            Make Your Bus Booking Smoother With Travel Buddies
+            Make Your Bus Booking Smoother With Journey Pilot
           </h4>
           <p>
             Imagine the thrill of feeling the wind in your hair, 
@@ -208,13 +208,13 @@ The Bhopal Shatabdi (12002)</h4>
             Bus journeys are always filled with such memorable and fun moments, which we look back at, fondly.
              And in our continuous endeavour to bring to our customers the best travel experiences, 
              we now offer smarter bus booking. services on our platform.
-             Read on to know why you should make your upcoming bus ticket bookings, online on Travel Buddies.
+             Read on to know why you should make your upcoming bus ticket bookings, online on Journey Pilot.
           </p>
           </div>
 
           <div>
           <h4>
-           Advantages of booking bus tickets online on Travel Buddies
+           Advantages of booking bus tickets online on Journey Pilot
           </h4>
           <p>
             The most important part of any trip is planning because if you plan well, 
@@ -228,21 +228,21 @@ The Bhopal Shatabdi (12002)</h4>
           </div>
           <div>
           <h4>
-            How to Book Bus Online on Travel Buddies:
+            How to Book Bus Online on Journey Pilot:
           </h4>
           <p>
             Booking bus tickets online is super easy and comfortable.
              All you have to do is follow the steps below: 
-             Tap on the Trains & Bus&apos; icon on the Travel Buddies homepage
+             Tap on the Trains & Bus&apos; icon on the Journey Pilot homepage
           </p>
           </div>
           <div>
           <h4>
-            Why Travel Buddiesfor Bus Booking?
+            Why Journey Pilotfor Bus Booking?
           </h4>
           <p>
             The leading player in online Bus bookings in India, 
-            Travel Buddies offers lowest fares, 
+            Journey Pilot offers lowest fares, 
             exclusive discounts and a scamless online booking experience.
              Desktop or mobile site is a delightfully. customer friendly experience,
               and with just a few clicks you can complete your booking
@@ -250,13 +250,13 @@ The Bhopal Shatabdi (12002)</h4>
           </div>
           <div>
           <h4>
-            Reasons to Choose Travel Buddies for Bus Booking:
+            Reasons to Choose Journey Pilot for Bus Booking:
           </h4>
           <p>
             MySafety Assurance: All the buses available on our platform are MySafety-assured with regular 
             sanitization of the vehicle carried out after every trip, regular temperature checks done on passengers before boarding the bus, and the staff following all safety protocols.
 
-Customer First Policy: When you complete your online bus booking on Travel Buddies, 
+Customer First Policy: When you complete your online bus booking on Journey Pilot, 
 be sure of getting the highest standards of customer service, including regular trip-related updates on your device. Competitiv...
 
           </p>
@@ -269,7 +269,7 @@ be sure of getting the highest standards of customer service, including regular 
           <p>
             Online bus ticket booking also gives you the freedom to choose your mode of payment. 
             No more do you have to carry cash or pay for your tickets in cash. 
-            You can avail a variety of payment modes when you choose to book bus online on Travel Buddies. Here below is a list of the payment modes available on our platform: Debit Card.
+            You can avail a variety of payment modes when you choose to book bus online on Journey Pilot. Here below is a list of the payment modes available on our platform: Debit Card.
              Credit Card & Net Banking with banks like: HDFC Bank, ICICI Bank, Axis Bank, State Bank of India and many more, UPI mode of payment, Trip Money, Wallet & more, Google Pay, Pho...
 
           </p>
@@ -292,13 +292,13 @@ Seats are allocated, keeping the social dist...
           </div>
 <div>
           <h4>
-           Booking Bus Ticket with Travel Buddies.
+           Booking Bus Ticket with Journey Pilot.
 
 
           </h4>
           <p>
             With more than 12,000 bus routes spread across India and integration with over 1300 bus operators,
-             Travel Buddies online bus reservation system is simpler and smarter. It provides you a wide range of facilities,
+             Journey Pilot online bus reservation system is simpler and smarter. It provides you a wide range of facilities,
               right from choosing your pickup point to your preferred choice of seat (for instance, luxury buses with sleeper berths). 
              You can also choose from the widest range of available buses like Mercedes. Volvo Volvo AC,
              AC luxury, Deluxe Sleeper, Express and other private buses. The payment opt...

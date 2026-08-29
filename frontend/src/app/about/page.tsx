@@ -11,15 +11,15 @@ export default function Contact() {
         <section className="abo"style={{ maxWidth: 1200, margin: '8%', background: '#ffffffff', borderRadius: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.08)', padding: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '0.2rem '}}>
             <Image src="/imag.png" alt="Wanderlust Globe" width={140} height={160} />
-            <h1 style={{ fontSize: '3.1rem', fontWeight: 700, color: '#4689a4ff', margin: 5 }}>About Travel Buddies</h1>
+            <h1 style={{ fontSize: '3.1rem', fontWeight: 700, color: '#4689a4ff', margin: 5 }}>About Journey Pilot</h1>
           </div>
           <p className="pp"style={{ fontSize: '1.2rem', color: '#646464ff', marginBottom: '1.5rem' ,fontFamily:'sans-serif'}}>
            <h4 style={{color:"#3969a3ff"}}> Who We Are</h4>
-Travel Buddies is a community-driven travel platform created for passionate explorers who believe that the best adventures are shared. 
+Journey Pilot is a community-driven travel platform created for passionate explorers who believe that the best adventures are shared. 
 Whether you're planning a solo journey or looking for companions to explore new destinations, 
-Travel Buddies connects you with like-minded travelers around the world.Our mission is to make travel more meaningful, accessible, and social. We aim to bridge the gap between travelers through shared experiences, 
+Journey Pilot connects you with like-minded travelers around the world.Our mission is to make travel more meaningful, accessible, and social. We aim to bridge the gap between travelers through shared experiences, 
 helpful insights, and real connections. 
-At Travel Buddies, you're never traveling alone — you're part of a global family of explorers.
+At Journey Pilot, you're never traveling alone — you're part of a global family of explorers.
           </p>
 
 
