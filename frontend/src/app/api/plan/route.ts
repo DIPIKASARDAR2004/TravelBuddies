@@ -237,31 +237,62 @@ export async function POST(request: Request) {
     const formatUpgrade = (plan: any, name: string, tagline: string) => {
       const opt = formatOption(plan, name, tagline);
       const recommendedBudget = Math.ceil(plan.tripCost / 0.90);
+      const recommendedEmergencyReserve = recommendedBudget * 0.10;
+      const recommendedTripSpendingLimit = recommendedBudget - recommendedEmergencyReserve;
       const extraNeeded = Math.max(0, recommendedBudget - budget);
       
+      const changedCategories: string[] = [];
       const upgradeHighlights: string[] = [];
+
       if (bestValuePlan && bestValuePlan.tripCost <= tripSpendingLimit) {
-        if (plan.h.rating > bestValuePlan.h.rating) {
-          upgradeHighlights.push(`Hotel rating improves from ${bestValuePlan.h.rating}★ to ${plan.h.rating}★`);
+        // Hotel rating
+        const oldHRatingNum = Number((bestValuePlan.h.rating || 3.5).toFixed(1));
+        const newHRatingNum = Number((plan.h.rating || 3.5).toFixed(1));
+        if (newHRatingNum > oldHRatingNum) {
+          changedCategories.push('Hotel');
+          upgradeHighlights.push(`Hotel rating improves from ${oldHRatingNum.toFixed(1)}★ to ${newHRatingNum.toFixed(1)}★`);
         }
-        if (plan.r.rating > bestValuePlan.r.rating) {
-          upgradeHighlights.push(`Dining rating improves from ${bestValuePlan.r.rating}★ to ${plan.r.rating}★`);
+        // Hotel comfort
+        if (plan.h.comfort_level > bestValuePlan.h.comfort_level) {
+          if (!changedCategories.includes('Hotel')) changedCategories.push('Hotel');
+          upgradeHighlights.push(`Hotel comfort improves from level ${bestValuePlan.h.comfort_level} to level ${plan.h.comfort_level}`);
         }
-        if (calcActivity(plan.a) > calcActivity(bestValuePlan.a)) {
-          upgradeHighlights.push(`Higher-tier activity: ${plan.a.activity_name}`);
+        // Restaurant rating
+        const oldRRatingNum = Number((bestValuePlan.r.rating || 3.5).toFixed(1));
+        const newRRatingNum = Number((plan.r.rating || 3.5).toFixed(1));
+        if (newRRatingNum > oldRRatingNum) {
+          changedCategories.push('Restaurant');
+          upgradeHighlights.push(`Dining rating improves from ${oldRRatingNum.toFixed(1)}★ to ${newRRatingNum.toFixed(1)}★`);
         }
-        if (calcTransport(plan.t) > calcTransport(bestValuePlan.t)) {
-          upgradeHighlights.push(`Transport upgraded to: ${plan.t.transport_mode}`);
+        // Activity average rating
+        const oldActRatingRaw = bestValuePlan.a.length ? (bestValuePlan.a.reduce((s: number, a: any) => s + (a.rating || 0), 0) / bestValuePlan.a.length) : 0;
+        const newActRatingRaw = plan.a.length ? (plan.a.reduce((s: number, a: any) => s + (a.rating || 0), 0) / plan.a.length) : 0;
+        const oldActRatingNum = Number(oldActRatingRaw.toFixed(1));
+        const newActRatingNum = Number(newActRatingRaw.toFixed(1));
+        
+        if (newActRatingNum >= oldActRatingNum + 0.1) {
+          changedCategories.push('Activity');
+          upgradeHighlights.push(`Activity average rating improves from ${oldActRatingNum.toFixed(1)}★ to ${newActRatingNum.toFixed(1)}★`);
         }
-      }
-      if (upgradeHighlights.length === 0) {
-        upgradeHighlights.push("Overall improved quality");
+        // Transport comfort
+        if (plan.t.comfort_level > bestValuePlan.t.comfort_level) {
+          changedCategories.push('Transport');
+          upgradeHighlights.push(`Transport comfort improves from level ${bestValuePlan.t.comfort_level} to level ${plan.t.comfort_level}`);
+        }
       }
 
-      return { ...opt, recommendedBudget, extraNeeded, upgradeHighlights };
+      return { 
+        ...opt, 
+        recommendedBudget, 
+        recommendedEmergencyReserve, 
+        recommendedTripSpendingLimit, 
+        extraNeeded, 
+        changedCategories,
+        upgradeHighlights 
+      };
     };
 
-    const upgradePlans: any[] = []; // Disabled temporarily for multiple-activities
+    const upgradePlans = buildUpgradePlans(params, bestValuePlan, budget);
     upgradePlans.forEach(p => upgrades.push(formatUpgrade(p.plan, p.name, p.tagline)));
 
     // --------------------------------------------------------

@@ -5,6 +5,15 @@ import Link from "next/link";
 
 type ViewState = "FORM" | "TIERS" | "CUSTOMIZE";
 
+const formatINR = (value: number | string | null | undefined) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(value ?? 0));
+
+
 
 
 export default function PlanPage() {
@@ -69,7 +78,35 @@ export default function PlanPage() {
   // ==============================
   const handleSelectTier = (plan: any) => {
     // Deep clone the selected plan into our customization state
-    setCustomizedPlan(JSON.parse(JSON.stringify(plan)));
+    const customized = JSON.parse(JSON.stringify(plan));
+    
+    if (customized.recommendedBudget) {
+      const selectedUpgradeBudget = customized.recommendedBudget;
+      const emergencyReserve = Math.round((selectedUpgradeBudget * 0.10) * 100) / 100;
+      const tripSpendingLimit = Math.round((selectedUpgradeBudget - emergencyReserve) * 100) / 100;
+      const remainingSpendableBudget = Math.round((tripSpendingLimit - customized.tripCost) * 100) / 100;
+
+      customized.totalBudget = selectedUpgradeBudget;
+      customized.emergencyReserve = emergencyReserve;
+      customized.tripSpendingLimit = tripSpendingLimit;
+      customized.remainingSpendableBudget = remainingSpendableBudget;
+      customized.remainingBudget = remainingSpendableBudget;
+      customized.totalAllocated = Math.round((customized.tripCost + emergencyReserve) * 100) / 100;
+
+      setTripDetails(prev => ({
+        ...prev,
+        budget: selectedUpgradeBudget
+      }));
+    } else {
+      if (apiResponse && apiResponse.totalBudget) {
+        setTripDetails(prev => ({
+          ...prev,
+          budget: apiResponse.totalBudget
+        }));
+      }
+    }
+
+    setCustomizedPlan(customized);
     setView("CUSTOMIZE");
   };
 
@@ -109,7 +146,7 @@ export default function PlanPage() {
     const newRemainingBudget = updatedPlan.remainingBudget - costDifference;
     
     if (newRemainingBudget < 0) {
-      setModalError(`Cannot swap! This exceeds your total budget by ₹${Math.abs(newRemainingBudget)}`);
+      setModalError(`Cannot swap! This exceeds your total budget by ${formatINR(Math.abs(newRemainingBudget))}`);
       return;
     }
 
@@ -135,8 +172,8 @@ export default function PlanPage() {
 
     // Recalculate totals
     updatedPlan.tripCost = updatedPlan.accommodationCost + updatedPlan.foodCost + updatedPlan.activityCost + updatedPlan.transportCost;
-    updatedPlan.totalAllocated = updatedPlan.tripCost + updatedPlan.emergencyReserve;
-    updatedPlan.remainingBudget = tripDetails.budget - updatedPlan.totalAllocated;
+    updatedPlan.totalAllocated = Math.round((updatedPlan.tripCost + updatedPlan.emergencyReserve) * 100) / 100;
+    updatedPlan.remainingBudget = Math.round((tripDetails.budget - updatedPlan.totalAllocated) * 100) / 100;
 
     setCustomizedPlan(updatedPlan);
     setSwapModalOpen(false);
@@ -212,7 +249,7 @@ export default function PlanPage() {
                 Recommended Packages for {apiResponse.destination}
               </h2>
               <p className="text-lg text-gray-600 font-medium max-w-2xl mx-auto">
-                Select a base plan to customize. Your total budget is <span className="font-bold text-indigo-600">₹{apiResponse.totalBudget}</span>.
+                Select a base plan to customize. Your total budget is <span className="font-bold text-indigo-600">{formatINR(apiResponse.totalBudget)}</span>.
               </p>
             </div>
             
@@ -235,7 +272,7 @@ export default function PlanPage() {
                       <div className="flex justify-between items-end mb-4 border-b pb-4">
                         <div>
                           <p className="text-sm text-gray-500 font-medium">Trip Cost</p>
-                          <p className="text-3xl font-bold text-gray-900">₹{plan.tripCost}</p>
+                          <p className="text-3xl font-bold text-gray-900">{formatINR(plan.tripCost)}</p>
                         </div>
                       </div>
                       
@@ -249,7 +286,7 @@ export default function PlanPage() {
 
                     <div className="bg-amber-50 border border-amber-100 p-3 rounded-lg mb-3 text-center">
                       <p className="text-xs text-amber-700 font-medium">
-                        ₹{plan.emergencyReserve} protected separately as emergency reserve
+                        {formatINR(plan.emergencyReserve)} protected separately as emergency reserve
                         <span className="block text-amber-600">(not included in Trip Cost)</span>
                       </p>
                     </div>
@@ -257,7 +294,7 @@ export default function PlanPage() {
                     <div className="bg-gray-50 p-3 rounded-lg mb-4 text-center">
                       <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Remaining Spendable Budget</p>
                       <p className={`text-lg font-bold ${(plan.remainingSpendableBudget ?? plan.remainingBudget) >= 0 ? 'text-green-600' : 'text-orange-500'}`}>
-                        ₹{plan.remainingSpendableBudget ?? plan.remainingBudget}
+                        {formatINR(plan.remainingSpendableBudget ?? plan.remainingBudget)}
                       </p>
                     </div>
 
@@ -291,8 +328,8 @@ export default function PlanPage() {
                         <div className="flex justify-between items-end mb-4 border-b pb-4">
                           <div>
                             <p className="text-sm text-gray-500 font-medium">Recommended Budget</p>
-                            <p className="text-3xl font-bold text-gray-900">₹{plan.recommendedBudget}</p>
-                            <p className="text-sm font-bold text-orange-500 mt-1">Extra Needed: ₹{plan.extraNeeded}</p>
+                            <p className="text-3xl font-bold text-gray-900">{formatINR(plan.recommendedBudget)}</p>
+                            <p className="text-sm font-bold text-orange-500 mt-1">Extra Needed: {formatINR(plan.extraNeeded)}</p>
                           </div>
                         </div>
                         
@@ -348,17 +385,17 @@ export default function PlanPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center divide-y md:divide-y-0 md:divide-x divide-indigo-500/50">
                 <div className="pt-4 md:pt-0">
                   <p className="text-indigo-200 text-sm font-medium uppercase tracking-wider mb-1">Total Budget</p>
-                  <p className="text-4xl font-bold">₹{tripDetails.budget}</p>
+                  <p className="text-4xl font-bold">{formatINR(tripDetails.budget)}</p>
                 </div>
                 <div className="pt-4 md:pt-0">
                   <p className="text-indigo-200 text-sm font-medium uppercase tracking-wider mb-1">Trip Cost</p>
-                  <p className="text-4xl font-bold text-amber-300">₹{customizedPlan.tripCost}</p>
-                  <p className="text-indigo-300 text-xs mt-1">₹{customizedPlan.emergencyReserve} reserve protected separately</p>
+                  <p className="text-4xl font-bold text-amber-300">{formatINR(customizedPlan.tripCost)}</p>
+                  <p className="text-indigo-300 text-xs mt-1">{formatINR(customizedPlan.emergencyReserve)} reserve protected separately</p>
                 </div>
                 <div className="pt-4 md:pt-0">
                   <p className="text-indigo-200 text-sm font-medium uppercase tracking-wider mb-1">Remaining Spendable Budget</p>
                   <p className={`text-4xl font-bold ${customizedPlan.remainingBudget >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    ₹{customizedPlan.remainingBudget}
+                    {formatINR(customizedPlan.remainingBudget)}
                   </p>
                 </div>
               </div>
@@ -373,10 +410,10 @@ export default function PlanPage() {
                 <div>
                   <div className="flex justify-between items-start mb-2">
                     <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide">Accommodation</span>
-                    <span className="font-bold text-gray-900">₹{customizedPlan.accommodationCost} <span className="text-xs text-gray-400 font-normal">total</span></span>
+                    <span className="font-bold text-gray-900">{formatINR(customizedPlan.accommodationCost)} <span className="text-xs text-gray-400 font-normal">total</span></span>
                   </div>
                   <h4 className="text-lg font-bold text-gray-900 mb-1">{customizedPlan.selectedHotel?.name || "No Hotel Selected"}</h4>
-                  <p className="text-sm text-gray-500 mb-4">Price per night: ₹{customizedPlan.selectedHotel?.price}</p>
+                  <p className="text-sm text-gray-500 mb-4">Price per night: {formatINR(customizedPlan.selectedHotel?.price)}</p>
                 </div>
                 <button onClick={() => openSwapModal('hotel')} className="w-full py-2 bg-gray-50 hover:bg-gray-100 text-indigo-600 font-semibold rounded-lg transition border border-gray-200">
                   Swap Hotel
@@ -388,10 +425,10 @@ export default function PlanPage() {
                 <div>
                   <div className="flex justify-between items-start mb-2">
                     <span className="bg-orange-100 text-orange-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide">Food & Dining</span>
-                    <span className="font-bold text-gray-900">₹{customizedPlan.foodCost} <span className="text-xs text-gray-400 font-normal">total</span></span>
+                    <span className="font-bold text-gray-900">{formatINR(customizedPlan.foodCost)} <span className="text-xs text-gray-400 font-normal">total</span></span>
                   </div>
                   <h4 className="text-lg font-bold text-gray-900 mb-1">{customizedPlan.selectedRestaurant?.restaurant_name || "No Dining Selected"}</h4>
-                  <p className="text-sm text-gray-500 mb-4">Cost per meal: ₹{customizedPlan.selectedRestaurant?.cost_per_meal}</p>
+                  <p className="text-sm text-gray-500 mb-4">Cost per meal: {formatINR(customizedPlan.selectedRestaurant?.cost_per_meal)}</p>
                 </div>
                 <button onClick={() => openSwapModal('restaurant')} className="w-full py-2 bg-gray-50 hover:bg-gray-100 text-indigo-600 font-semibold rounded-lg transition border border-gray-200">
                   Swap Dining
@@ -403,10 +440,10 @@ export default function PlanPage() {
                 <div>
                   <div className="flex justify-between items-start mb-2">
                     <span className="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide">Activities</span>
-                    <span className="font-bold text-gray-900">₹{customizedPlan.activityCost} <span className="text-xs text-gray-400 font-normal">total</span></span>
+                    <span className="font-bold text-gray-900">{formatINR(customizedPlan.activityCost)} <span className="text-xs text-gray-400 font-normal">total</span></span>
                   </div>
                   <h4 className="text-lg font-bold text-gray-900 mb-1">{customizedPlan.selectedActivity?.activity_name || "No Activity Selected"}</h4>
-                  <p className="text-sm text-gray-500 mb-4">Cost per person: ₹{customizedPlan.selectedActivity?.cost_per_person}</p>
+                  <p className="text-sm text-gray-500 mb-4">Cost per person: {formatINR(customizedPlan.selectedActivity?.cost_per_person)}</p>
                 </div>
                 <button onClick={() => openSwapModal('activity')} className="w-full py-2 bg-gray-50 hover:bg-gray-100 text-indigo-600 font-semibold rounded-lg transition border border-gray-200">
                   Swap Activity
@@ -418,10 +455,10 @@ export default function PlanPage() {
                 <div>
                   <div className="flex justify-between items-start mb-2">
                     <span className="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide">Transport</span>
-                    <span className="font-bold text-gray-900">₹{customizedPlan.transportCost} <span className="text-xs text-gray-400 font-normal">total</span></span>
+                    <span className="font-bold text-gray-900">{formatINR(customizedPlan.transportCost)} <span className="text-xs text-gray-400 font-normal">total</span></span>
                   </div>
                   <h4 className="text-lg font-bold text-gray-900 mb-1">{customizedPlan.selectedTransport?.transport_mode || "No Transport Selected"}</h4>
-                  <p className="text-sm text-gray-500 mb-4">Cost per person: ₹{customizedPlan.selectedTransport?.cost_per_person}</p>
+                  <p className="text-sm text-gray-500 mb-4">Cost per person: {formatINR(customizedPlan.selectedTransport?.cost_per_person)}</p>
                 </div>
                 <button onClick={() => openSwapModal('transport')} className="w-full py-2 bg-gray-50 hover:bg-gray-100 text-indigo-600 font-semibold rounded-lg transition border border-gray-200">
                   Swap Transport
@@ -434,7 +471,7 @@ export default function PlanPage() {
                   <span className="bg-gray-200 text-gray-700 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide mb-2 inline-block">Emergency Buffer</span>
                   <p className="text-sm text-gray-600">Reserved funds for unexpected costs (10% of total budget)</p>
                 </div>
-                <span className="font-bold text-xl text-gray-900">₹{customizedPlan.emergencyReserve}</span>
+                <span className="font-bold text-xl text-gray-900">{formatINR(customizedPlan.emergencyReserve)}</span>
               </div>
 
             </div>
@@ -475,16 +512,16 @@ export default function PlanPage() {
                   let subtitle = "";
                   if (itemToSwap === 'hotel') {
                     title = item.hotel_name;
-                    subtitle = `₹${item.price_per_night} / night`;
+                    subtitle = `${formatINR(item.price_per_night)} / night`;
                   } else if (itemToSwap === 'restaurant') {
                     title = item.restaurant_name;
-                    subtitle = `₹${item.cost_per_meal} / meal`;
+                    subtitle = `${formatINR(item.cost_per_meal)} / meal`;
                   } else if (itemToSwap === 'activity') {
                     title = item.activity_name;
-                    subtitle = `₹${item.cost_per_person} / person`;
+                    subtitle = `${formatINR(item.cost_per_person)} / person`;
                   } else if (itemToSwap === 'transport') {
                     title = item.transport_mode;
-                    subtitle = `₹${item.cost_per_person} / person`;
+                    subtitle = `${formatINR(item.cost_per_person)} / person`;
                   }
 
                   return (
