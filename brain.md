@@ -1,6 +1,6 @@
 # PROJECT OVERVIEW
 
-JourneyPilot is a travel-planning platform built with Next.js App Router and Supabase. This is an existing partially implemented project, not a new project.
+Journey Pilot is a travel-planning platform built with Next.js App Router and Supabase. This is an existing partially implemented project, not a new project.
 
 Its planned modules include:
 - Intelligent budget-based trip planning
@@ -15,7 +15,7 @@ Its planned modules include:
 
 # DOCUMENT MAINTENANCE RULES
 
-- `brain.md` is the main source of truth for confirmed JourneyPilot product decisions.
+- `brain.md` is the main source of truth for confirmed Journey Pilot product decisions.
 - Current implementation notes must be updated after relevant code changes.
 - Only change IN REVIEW to LOCKED after explicit approval.
 - Never silently resolve a conflict between the code and the approved behaviour. Report the conflict first.
@@ -186,7 +186,7 @@ The exact formula, weights, minimum review count, fraud-detection method, and ex
 
 ### Priority
 - This is not urgent for the current prototype.
-- It becomes important before JourneyPilot recommends real businesses to real users.
+- It becomes important before Journey Pilot recommends real businesses to real users.
 - The current priority remains validating the core Plan Trip recommendation categories and budget calculations.
 
 ## Women-Friendly Rule

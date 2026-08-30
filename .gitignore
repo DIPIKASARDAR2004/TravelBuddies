@@ -5,49 +5,10 @@ Thumbs.db
 *.swp
 *.swo
 
-# Python / Django
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-venv/
-.venv/
-db.sqlite3
-db.sqlite3-journal
-media/
-local_settings.py
-
-# Node / Next.js
+# Global Node/Env
 node_modules/
-.next/
-out/
-.npm/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-.env*.local
 .env
-.vercel
-*.tsbuildinfo
-next-env.d.ts
+.env.*
 
 # IDE
 .vscode/
