@@ -37,7 +37,7 @@ export default function SOSButton() {
         className={`px-6 py-3 rounded-full text-white font-bold text-lg shadow-lg transition transform hover:scale-105 ${
           isSending
             ? "bg-gray-400 cursor-not-allowed"
-            : "bg-red-600 hover:bg-red-700 animate-pulse"
+            : "bg-red-600 hover:bg-red-700 dark:bg-red-800 dark:hover:bg-red-900 animate-pulse"
         }`}
       >
         {isSending ? "📡 Sending SOS..." : "🚨 SOS Emergency"}

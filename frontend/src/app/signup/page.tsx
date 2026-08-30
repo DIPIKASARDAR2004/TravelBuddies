@@ -3,6 +3,10 @@ import { useState } from "react";
 import Link from "next/link";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 export default function SignupPage() {
   const [tab, setTab] = useState("personal");
@@ -15,6 +19,8 @@ export default function SignupPage() {
   });
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const isPhoneValid = formData.phone.replace(/\D/g, "").length >= 10;
   const isFormValid = 
@@ -54,24 +60,24 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-24 pb-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full mx-auto space-y-8 bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
+      <Card className="max-w-md w-full mx-auto space-y-8 p-8 border-slate-100 dark:border-slate-700">
         <div className="text-center">
           <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white">
-            Join Journey Pilot
+            Join JourneyPilot
           </h2>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
             Create an account to start your journey
           </p>
         </div>
 
-        <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-700 rounded-lg">
+        <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
           <button
             type="button"
             onClick={() => setTab("personal")}
             className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
               tab === "personal" 
-                ? "bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm" 
-                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm" 
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
             Personal
@@ -81,8 +87,8 @@ export default function SignupPage() {
             onClick={() => setTab("business")}
             className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
               tab === "business" 
-                ? "bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm" 
-                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm" 
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
             MyBiz
@@ -92,8 +98,8 @@ export default function SignupPage() {
             onClick={() => setTab("host")}
             className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
               tab === "host" 
-                ? "bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm" 
-                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm" 
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
             Host
@@ -102,32 +108,28 @@ export default function SignupPage() {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
+            <Input
+              label="Full Name"
+              name="fullName"
+              type="text"
+              required
+              value={formData.fullName}
+              onChange={handleChange}
+              placeholder="John Doe"
+            />
+            
+            <Input
+              label="Email address"
+              name="email"
+              type="email"
+              required
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="you@example.com"
+            />
+            
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
-              <input
-                name="fullName"
-                type="text"
-                required
-                value={formData.fullName}
-                onChange={handleChange}
-                className="appearance-none block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-slate-700 dark:text-white"
-                placeholder="John Doe"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email address</label>
-              <input
-                name="email"
-                type="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                className="appearance-none block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-slate-700 dark:text-white"
-                placeholder="you@example.com"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Phone Number</label>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 ml-1">Phone Number</label>
               <PhoneInput
                 country={'in'}
                 value={formData.phone}
@@ -135,40 +137,55 @@ export default function SignupPage() {
                 inputStyle={{
                   width: '100%',
                   padding: '12px 12px 12px 48px',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #cbd5e1',
-                  background: 'transparent'
+                  borderRadius: '0.75rem',
+                  border: 'none',
+                  boxShadow: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
+                  background: 'var(--tw-bg-opacity, #ffffff)'
                 }}
-                containerClass="!w-full dark:[&>input]:text-white dark:[&>input]:border-slate-600"
+                containerClass="!w-full [&>input]:dark:bg-slate-800 [&>input]:dark:text-white"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
-              <input
+            
+            <div className="relative">
+              <Input
+                label="Password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="appearance-none block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-slate-700 dark:text-white"
                 placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-10 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Confirm Password</label>
-              <input
+            
+            <div className="relative">
+              <Input
+                label="Confirm Password"
                 name="confirmPassword"
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 required
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="appearance-none block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-slate-700 dark:text-white"
                 placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-4 top-10 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
             </div>
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center ml-1">
             <input
               id="terms"
               name="terms"
@@ -182,19 +199,13 @@ export default function SignupPage() {
             </label>
           </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={!isFormValid || loading}
-              className={`w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white transition-colors
-                ${isFormValid && !loading 
-                  ? 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500' 
-                  : 'bg-slate-400 dark:bg-slate-600 cursor-not-allowed'
-                }`}
-            >
-              {loading ? 'Creating account...' : 'Create Account'}
-            </button>
-          </div>
+          <Button
+            type="submit"
+            disabled={!isFormValid || loading}
+            fullWidth
+          >
+            {loading ? 'Creating account...' : 'Create Account'}
+          </Button>
         </form>
 
         <div className="mt-6">
@@ -208,14 +219,12 @@ export default function SignupPage() {
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-3">
-            <button type="button" className="w-full inline-flex justify-center py-2 px-4 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm bg-white dark:bg-slate-700 text-sm font-medium text-slate-500 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600">
-              <span className="sr-only">Sign up with Google</span>
+            <Button variant="outline" fullWidth>
               G
-            </button>
-            <button type="button" className="w-full inline-flex justify-center py-2 px-4 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm bg-white dark:bg-slate-700 text-sm font-medium text-slate-500 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600">
-              <span className="sr-only">Sign up with Apple</span>
+            </Button>
+            <Button variant="outline" fullWidth>
               @
-            </button>
+            </Button>
           </div>
         </div>
         
@@ -225,7 +234,7 @@ export default function SignupPage() {
             Log in
           </Link>
         </p>
-      </div>
+      </Card>
     </div>
   );
 }

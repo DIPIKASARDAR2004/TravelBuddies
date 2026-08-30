@@ -53,7 +53,7 @@ export default function Translator() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-700 via-pink-600 to-indigo-700 p-6 text-white">
       {/* Glass Card */}
-      <div className="w-full max-w-4xl bg-white/10 backdrop-blur-md shadow-2xl rounded-3xl border border-white/20 p-10">
+      <div className="w-full max-w-4xl bg-white dark:bg-slate-800/10 backdrop-blur-md shadow-2xl rounded-3xl border border-white/20 p-10">
         {/* Header */}
         <div className="flex flex-col items-center mb-8">
           <FaLanguage className="text-5xl text-yellow-300 animate-bounce mb-3" />

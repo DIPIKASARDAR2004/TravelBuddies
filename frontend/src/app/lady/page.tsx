@@ -12,9 +12,9 @@ export default function LadyPage() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100">
+    <main className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 dark:from-slate-900 dark:via-purple-950 dark:to-slate-900">
       {/* Hero Banner */}
-      <section className="text-center py-16 bg-gradient-to-r from-pink-500 to-pink-700 text-white rounded-b-[40px] shadow-lg">
+      <section className="text-center py-16 bg-gradient-to-r from-pink-500 to-pink-700 dark:from-purple-800 dark:to-indigo-950 text-white rounded-b-[40px] shadow-lg">
         <h1 className="text-5xl font-extrabold mb-4">👩‍🦰 Women Safety Hub</h1>
         <p className="text-lg opacity-90 max-w-2xl mx-auto">
           One-stop solution for safe & stress-free travel — from secure stays to
@@ -29,9 +29,9 @@ export default function LadyPage() {
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="bg-white rounded-2xl shadow-lg p-6"
+          className="glass-panel premium-shadow hover-lift rounded-2xl p-6"
         >
-          <h2 className="text-2xl font-bold text-pink-700 mb-4 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-pink-700 dark:text-purple-400 mb-4 flex items-center gap-2">
             🏨 Safe Stays
           </h2>
           <SafeStay onFilterSelect={setSelectedType} />
@@ -42,9 +42,9 @@ export default function LadyPage() {
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-white rounded-2xl shadow-lg p-6"
+          className="glass-panel premium-shadow hover-lift rounded-2xl p-6"
         >
-          <h2 className="text-2xl font-bold text-pink-700 mb-4 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-pink-700 dark:text-purple-400 mb-4 flex items-center gap-2">
             💰 Budget Calculator
           </h2>
           <BudgetCalculator selectedType={selectedType} />
@@ -55,9 +55,9 @@ export default function LadyPage() {
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="bg-white rounded-2xl shadow-lg p-6"
+          className="glass-panel premium-shadow hover-lift rounded-2xl p-6"
         >
-          <h2 className="text-2xl font-bold text-pink-700 mb-4 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-pink-700 dark:text-purple-400 mb-4 flex items-center gap-2">
             📍 Location Tracking
           </h2>
           <LocationTracking />
@@ -68,9 +68,9 @@ export default function LadyPage() {
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="bg-white rounded-2xl shadow-lg p-6"
+          className="glass-panel premium-shadow hover-lift rounded-2xl p-6"
         >
-          <h2 className="text-2xl font-bold text-pink-700 mb-4 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-pink-700 dark:text-purple-400 mb-4 flex items-center gap-2">
             🔍 Spy Camera Detection
           </h2>
           <SpyCameraDetection />
@@ -81,7 +81,7 @@ export default function LadyPage() {
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
-          className="bg-gradient-to-r from-red-500 to-pink-600 text-center rounded-2xl shadow-lg p-8"
+          className="bg-gradient-to-r from-red-500 to-pink-600 dark:from-red-900 dark:to-rose-950 text-center rounded-2xl shadow-lg p-8"
         >
           <h2 className="text-2xl font-bold text-white mb-4">🚨 Emergency SOS</h2>
           <SOSButton />

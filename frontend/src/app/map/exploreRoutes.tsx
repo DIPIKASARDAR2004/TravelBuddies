@@ -45,7 +45,7 @@ export default function ExploreRoutes() {
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
 
   return (
-    <div className="p-6 bg-white shadow-lg rounded-xl max-w-4xl mx-auto mt-10">
+    <div className="p-6 bg-white dark:bg-slate-800 shadow-lg rounded-xl max-w-4xl mx-auto mt-10">
       <h2 className="text-2xl font-bold mb-6 text-center">Explore Routes</h2>
       <div className="grid md:grid-cols-2 gap-6">
         {routes.map((route) => (

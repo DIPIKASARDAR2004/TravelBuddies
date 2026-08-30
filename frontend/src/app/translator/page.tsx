@@ -263,7 +263,7 @@ export default function TranslatorPage() {
       <select 
         value={selected}
         onChange={onChange}
-        className="appearance-none w-full bg-gray-50 border-2 border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-pink-500 focus:ring-2 focus:ring-pink-200 text-lg font-semibold"
+        className="appearance-none w-full bg-gray-50 border-2 border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white dark:bg-slate-800 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 text-lg font-semibold"
       >
         {languages.map(lang => (
             <option key={lang.code} value={lang.code}>{lang.name}</option>
@@ -278,7 +278,7 @@ export default function TranslatorPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-100 font-sans text-gray-800 pt-24">
       <main className="flex-grow container mx-auto p-4 md:p-6">
-        <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 border border-gray-200/80">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 border border-gray-200/80">
         <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-800">
               AI Language Translator

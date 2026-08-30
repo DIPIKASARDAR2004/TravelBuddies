@@ -51,7 +51,7 @@ export default function SafeStay() {
       {/* Stay Cards */}
       <div className="grid gap-4">
         {filteredStays.map((stay) => (
-          <div key={stay.id} className="border p-4 rounded-lg bg-white">
+          <div key={stay.id} className="border p-4 rounded-lg bg-white dark:bg-slate-800">
             <h2 className="text-xl font-semibold">{stay.name}</h2>
             <p>{stay.type}</p>
             <p>📍 {stay.location}</p>

@@ -39,7 +39,7 @@ export default function BudgetPackagesPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start p-6 bg-gradient-to-b from-blue-50 to-blue-100">
-      <div className="bg-white shadow-2xl rounded-3xl p-8 max-w-xl w-full mt-10">
+      <div className="bg-white dark:bg-slate-800 shadow-2xl rounded-3xl p-8 max-w-xl w-full mt-10">
         <h1 className="text-3xl font-bold mb-6 text-center text-blue-700">
           Budget Packages
         </h1>

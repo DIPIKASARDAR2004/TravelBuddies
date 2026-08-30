@@ -19,7 +19,7 @@ export default function HomePage() {
         </div>
 
         <div className="relative z-10 text-center max-w-4xl mx-auto flex flex-col items-center w-full">
-          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md border border-white/30 text-white px-4 py-1.5 rounded-full text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 bg-white dark:bg-slate-800/20 backdrop-blur-md border border-white/30 text-white px-4 py-1.5 rounded-full text-sm font-medium mb-6">
             <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
             Your journey, our protection
           </div>

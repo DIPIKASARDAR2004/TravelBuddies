@@ -3,6 +3,8 @@ import { useState } from "react";
 import Link from "next/link";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 export default function LoginPage() {
   const [tab, setTab] = useState("personal");
@@ -21,82 +23,108 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row bg-white rounded-xl shadow-lg p-4 max-w-2xl mx-auto mt-10">
-      <span>
-      <h2 className="text-xl font-bold text-center" >Sign up/Login now to</h2>
-      </span>
-      <div className="md:w-1/2 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 pt-20 px-4 sm:px-6 lg:px-8">
+      <Card className="max-w-md w-full p-8 space-y-8 border-slate-100 dark:border-slate-700">
+        <div className="text-center">
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white">
+            Welcome Back
+          </h2>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            Login to continue to JourneyPilot
+          </p>
+        </div>
+
         {/* Account type tabs */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
           <button
             onClick={() => setTab("personal")}
-            className={`flex-1 px-4 py-2 rounded font-medium ${
-              tab === "personal" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+              tab === "personal"
+                ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
-            PERSONAL ACCOUNT
+            Personal
           </button>
           <button
             onClick={() => setTab("business")}
-            className={`flex-1 px-4 py-2 rounded font-medium ${
-              tab === "business" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+              tab === "business"
+                ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
-            MYBIZ ACCOUNT
+            MyBiz
           </button>
         </div>
 
-        {/* Phone input */}
-        <PhoneInput
-          country={"in"}
-          value={phone}
-          onChange={setPhone}
-          inputStyle={{
-            width: "100%",
-            padding: "12px",
-            fontSize: "16px",
-            borderRadius: "6px",
-            border: "1px solid #ccc",
-          }}
-          containerStyle={{ marginBottom: "1rem" }}
-        />
+        <div className="space-y-6">
+          {/* Phone input */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              Phone Number
+            </label>
+            <PhoneInput
+              country={"in"}
+              value={phone}
+              onChange={setPhone}
+              inputStyle={{
+                width: "100%",
+                padding: "12px 12px 12px 48px",
+                borderRadius: "0.75rem",
+                border: "none",
+                boxShadow: "inset 0 2px 4px 0 rgb(0 0 0 / 0.05)",
+                background: "var(--tw-bg-opacity, #ffffff)"
+              }}
+              containerClass="!w-full [&>input]:dark:bg-slate-800 [&>input]:dark:text-white"
+            />
+          </div>
 
-        {/* Continue button */}
-        <button
-          onClick={handleSubmit}
-          disabled={!isPhoneValid}
-          className={`w-full py-2 rounded font-semibold transition ${
-            isPhoneValid
-              ? "bg-blue-600 text-white hover:bg-blue-700"
-              : "bg-gray-300 text-gray-500 cursor-not-allowed"
-          }`}
-        >
-          CONTINUE
-        </button>
-
-        {/* Social login */}
-        <div className="mt-4 text-center text-sm text-gray-500">Or Login/Signup With</div>
-        <div className="flex justify-center gap-4 mt-2">
-          <button className="bg-gray-100 p-2 rounded-full text-lg font-bold">G</button>
-          <button className="bg-gray-100 p-2 rounded-full text-lg font-bold">@</button>
+          <Button
+            fullWidth
+            onClick={handleSubmit}
+            disabled={!isPhoneValid}
+          >
+            CONTINUE
+          </Button>
         </div>
 
-        {/* Disclaimer */}
-        <p className="mt-4 text-xs text-gray-400 text-center">
+        <div className="mt-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-300 dark:border-slate-600"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white dark:bg-slate-800 text-slate-500">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            <Button variant="outline" fullWidth>
+              G
+            </Button>
+            <Button variant="outline" fullWidth>
+              @
+            </Button>
+          </div>
+        </div>
+
+        <p className="mt-4 text-xs text-slate-500 dark:text-slate-400 text-center">
           By proceeding, you agree to our{" "}
-          <a href="#" className="text-blue-500">Privacy Policy</a>,{" "}
-          <a href="#" className="text-blue-500">User Agreement</a> and{" "}
-          <a href="#" className="text-blue-500">T&Cs</a>.
+          <a href="#" className="text-blue-600 hover:text-blue-400">Privacy Policy</a>,{" "}
+          <a href="#" className="text-blue-600 hover:text-blue-400">User Agreement</a> and{" "}
+          <a href="#" className="text-blue-600 hover:text-blue-400">T&Cs</a>.
         </p>
 
-        {/* Sign up link */}
-        <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-          Don&apos;t have an account?{' '}
+        <p className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400">
+          Don&apos;t have an account?{" "}
           <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
             Sign up
           </Link>
         </p>
-      </div>
+      </Card>
     </div>
   );
 }

@@ -1,0 +1,137 @@
+import React from "react";
+import { usePlanStore } from "@/store/usePlanStore";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { formatINR } from "@/lib/utils";
+
+export default function TripCustomizer() {
+  const { customizedPlan, tripDetails, setView, setItemToSwap, setModalError, setSwapModalOpen } = usePlanStore();
+
+  if (!customizedPlan) return null;
+
+  const openSwapModal = (type: 'hotel' | 'restaurant' | 'activity' | 'transport') => {
+    setItemToSwap(type);
+    setModalError("");
+    setSwapModalOpen(true);
+  };
+
+  return (
+    <div className="animate-in fade-in zoom-in-95 duration-300">
+      
+      <Button 
+        variant="ghost" 
+        onClick={() => setView("TIERS")}
+        className="mb-8 gap-2 rounded-full"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        Back to Packages
+      </Button>
+
+      {/* Real-Time Math Section */}
+      <div className="bg-gradient-to-br from-indigo-900 to-indigo-700 rounded-3xl p-6 text-white shadow-xl mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center divide-y md:divide-y-0 md:divide-x divide-indigo-500/50">
+          <div className="pt-4 md:pt-0">
+            <p className="text-indigo-200 text-sm font-medium uppercase tracking-wider mb-1">Total Budget</p>
+            <p className="text-4xl font-bold">{formatINR(tripDetails.budget)}</p>
+          </div>
+          <div className="pt-4 md:pt-0">
+            <p className="text-indigo-200 text-sm font-medium uppercase tracking-wider mb-1">Trip Cost</p>
+            <p className="text-4xl font-bold text-amber-300">{formatINR(customizedPlan.tripCost)}</p>
+            <p className="text-indigo-300 text-xs mt-1">{formatINR(customizedPlan.emergencyReserve)} reserve protected separately</p>
+          </div>
+          <div className="pt-4 md:pt-0">
+            <p className="text-indigo-200 text-sm font-medium uppercase tracking-wider mb-1">Remaining Spendable Budget</p>
+            <p className={`text-4xl font-bold ${customizedPlan.remainingBudget >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {formatINR(customizedPlan.remainingBudget)}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Itinerary / Swapping Grid */}
+      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Customize Your Selections</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        
+        {/* Hotel Card */}
+        <Card hoverable className="p-5 flex flex-col justify-between border-white/20 dark:border-gray-700">
+          <div>
+            <div className="flex justify-between items-start mb-2">
+              <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide">Accommodation</span>
+              <span className="font-bold text-gray-900 dark:text-white">{formatINR(customizedPlan.accommodationCost)} <span className="text-xs text-gray-400 font-normal">total</span></span>
+            </div>
+            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{customizedPlan.selectedHotel?.name || "No Hotel Selected"}</h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Price per night: {formatINR(customizedPlan.selectedHotel?.price)}</p>
+          </div>
+          <Button variant="secondary" onClick={() => openSwapModal('hotel')} fullWidth>
+            Swap Hotel
+          </Button>
+        </Card>
+
+        {/* Food Card */}
+        <Card hoverable className="p-5 flex flex-col justify-between border-white/20 dark:border-gray-700">
+          <div>
+            <div className="flex justify-between items-start mb-2">
+              <span className="bg-orange-100 text-orange-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide">Food & Dining</span>
+              <span className="font-bold text-gray-900 dark:text-white">{formatINR(customizedPlan.foodCost)} <span className="text-xs text-gray-400 font-normal">total</span></span>
+            </div>
+            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{customizedPlan.selectedRestaurant?.restaurant_name || "No Dining Selected"}</h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Cost per meal: {formatINR(customizedPlan.selectedRestaurant?.cost_per_meal)}</p>
+          </div>
+          <Button variant="secondary" onClick={() => openSwapModal('restaurant')} fullWidth>
+            Swap Dining
+          </Button>
+        </Card>
+
+        {/* Activity Card */}
+        <Card hoverable className="p-5 flex flex-col justify-between border-white/20 dark:border-gray-700">
+          <div>
+            <div className="flex justify-between items-start mb-2">
+              <span className="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide">Activities</span>
+              <span className="font-bold text-gray-900 dark:text-white">{formatINR(customizedPlan.activityCost)} <span className="text-xs text-gray-400 font-normal">total</span></span>
+            </div>
+            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{customizedPlan.selectedActivity?.activity_name || "No Activity Selected"}</h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Cost per person: {formatINR(customizedPlan.selectedActivity?.cost_per_person)}</p>
+          </div>
+          <Button variant="secondary" onClick={() => openSwapModal('activity')} fullWidth>
+            Swap Activity
+          </Button>
+        </Card>
+
+        {/* Transport Card */}
+        <Card hoverable className="p-5 flex flex-col justify-between border-white/20 dark:border-gray-700">
+          <div>
+            <div className="flex justify-between items-start mb-2">
+              <span className="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide">Transport</span>
+              <span className="font-bold text-gray-900 dark:text-white">{formatINR(customizedPlan.transportCost)} <span className="text-xs text-gray-400 font-normal">total</span></span>
+            </div>
+            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{customizedPlan.selectedTransport?.transport_mode || "No Transport Selected"}</h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Cost per person: {formatINR(customizedPlan.selectedTransport?.cost_per_person)}</p>
+          </div>
+          <Button variant="secondary" onClick={() => openSwapModal('transport')} fullWidth>
+            Swap Transport
+          </Button>
+        </Card>
+
+        {/* Buffer Card */}
+        <div className="bg-gray-100 dark:bg-slate-800/80 p-5 rounded-2xl border border-gray-200 dark:border-slate-700 md:col-span-2 flex items-center justify-between">
+          <div>
+            <span className="bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide mb-2 inline-block">Emergency Buffer</span>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Reserved funds for unexpected costs (10% of total budget)</p>
+          </div>
+          <span className="font-bold text-xl text-gray-900 dark:text-white">{formatINR(customizedPlan.emergencyReserve)}</span>
+        </div>
+
+      </div>
+
+      {/* Confirm Button */}
+      <div className="text-center pb-20">
+        <Button 
+          size="lg"
+          className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white text-xl py-4 px-12 rounded-full shadow-lg shadow-green-200 dark:shadow-green-900 transition transform hover:scale-105"
+        >
+          Confirm & Book Trip
+        </Button>
+      </div>
+    </div>
+  );
+}

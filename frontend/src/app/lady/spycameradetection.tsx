@@ -27,12 +27,12 @@ export default function SpyCameraDetection() {
   }, [scanning, progress]);
 
   return (
-    <div className="p-4 bg-gradient-to-r from-pink-50 to-pink-100 rounded-xl shadow-md">
-      <h2 className="text-xl font-bold text-pink-800 mb-4">
+    <div className="p-4 glass-panel rounded-xl shadow-md">
+      <h2 className="text-xl font-bold text-pink-800 dark:text-pink-300 mb-4">
         🔍 Spy Camera Detection
       </h2>
 
-      <div className="mb-4 space-y-2 text-gray-700 text-sm">
+      <div className="mb-4 space-y-2 text-gray-700 dark:text-gray-300 text-sm">
         <p>✨ <strong>Step 1:</strong> Look for unusual objects.</p>
         <p>✨ <strong>Step 2:</strong> Use flashlight in dark.</p>
         <p>✨ <strong>Step 3:</strong> Scan with phone camera.</p>
@@ -42,7 +42,7 @@ export default function SpyCameraDetection() {
       {!scanning && !result && (
         <button
           onClick={startScan}
-          className="px-4 py-2 bg-pink-600 text-white text-sm font-semibold rounded-lg shadow hover:bg-pink-700 transition"
+          className="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white dark:bg-pink-700 dark:hover:bg-pink-600 text-sm font-semibold rounded-lg shadow hover:bg-pink-700 transition"
         >
           🚨 Start Scan
         </button>
@@ -50,14 +50,14 @@ export default function SpyCameraDetection() {
 
       {scanning && (
         <div className="mt-4">
-          <p className="mb-1 text-gray-800 text-sm font-semibold">Scanning...</p>
+          <p className="mb-1 text-gray-800 dark:text-gray-200 text-sm font-semibold">Scanning...</p>
           <div className="w-full bg-pink-200 rounded-full h-3 overflow-hidden">
             <div
               className="bg-pink-600 h-3 transition-all duration-300"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
-          <p className="text-xs text-gray-600 mt-1">{progress}%</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{progress}%</p>
         </div>
       )}
 
