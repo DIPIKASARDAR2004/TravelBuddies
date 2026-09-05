@@ -56,13 +56,13 @@ export default function TierSelector() {
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
         {apiResponse.withinBudget.map((plan: any, idx: number) => {
           const isPremium = plan.name === 'Premium Upgrade';
           const isBudget = plan.name === 'Best Value';
           
           return (
-            <Card key={idx} hoverable className={`relative p-6 transition flex flex-col 
+            <Card key={idx} hoverable className={`relative p-6 transition flex flex-col !overflow-visible 
               ${isPremium ? 'border-purple-200 shadow-purple-100 dark:border-purple-800' : isBudget ? 'border-green-200 shadow-green-100 dark:border-green-800' : 'border-blue-200 shadow-blue-100 dark:border-blue-800'}`}>
               
               <div className={`absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-sm font-bold text-white
@@ -120,9 +120,9 @@ export default function TierSelector() {
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Want to Upgrade?</h2>
             <p className="text-gray-500 dark:text-gray-400">These plans exceed your budget but offer meaningful improvements.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 opacity-90">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 opacity-90 pt-6">
             {apiResponse.upgrades.map((plan: any, idx: number) => (
-              <Card key={idx} hoverable className="relative p-6 border-orange-200 dark:border-orange-800 shadow-orange-100 flex flex-col">
+              <Card key={idx} hoverable className="relative p-6 border-orange-200 dark:border-orange-800 shadow-orange-100 flex flex-col !overflow-visible">
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-sm font-bold text-white bg-orange-500 whitespace-nowrap">
                   {plan.name}
                 </div>
