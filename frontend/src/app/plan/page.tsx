@@ -13,7 +13,7 @@ export default function PlanPage() {
 
   return (
     <div className="min-h-screen">
-      <main className="max-w-6xl mx-auto px-4 py-8 pt-24">
+      <main className="max-w-6xl mx-auto px-4 py-8">
         {view === "FORM" && <PlanForm />}
         {view === "TIERS" && <TierSelector />}
         {view === "CUSTOMIZE" && <TripCustomizer />}

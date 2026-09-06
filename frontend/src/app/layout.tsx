@@ -52,8 +52,8 @@ export default function RootLayout({
         className={`${jakarta.variable} ${jetbrains.variable} font-sans antialiased bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100`}
         suppressHydrationWarning
       >
-        <Navbar /> {/* ✅ Moved here */}
-        <main className="pageContent">{children}</main>
+        <Navbar />
+        <main className="pt-20">{children}</main>
       </body>
     </html>
   );
