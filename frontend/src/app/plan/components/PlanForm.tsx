@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
-export default function PlanForm() {
+export default function PlanForm({ womenOnly = false }: { womenOnly?: boolean }) {
   const { setTripDetails, setApiResponse, setLoading, setView, loading } = usePlanStore();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -20,7 +20,7 @@ export default function PlanForm() {
 
     setTripDetails({ destination, budget, travellers, days });
 
-    const data = { destination, totalBudget: budget, travellers, days };
+    const data = { destination, totalBudget: budget, travellers, days, womenOnly };
 
     try {
       // TODO: Move to dedicated API service file later

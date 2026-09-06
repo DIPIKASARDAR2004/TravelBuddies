@@ -61,6 +61,34 @@ export default function TripCustomizer() {
             </div>
             <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{customizedPlan.selectedHotel?.name || "No Hotel Selected"}</h4>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Price per night: {formatINR(customizedPlan.selectedHotel?.price)}</p>
+
+            {customizedPlan.selectedHotel?.is_women_friendly && (
+              <div className="mt-2 mb-4 bg-rose-50 dark:bg-rose-950/30 p-3 rounded-lg border border-rose-100 dark:border-rose-900/50">
+                <div className="mb-2">
+                  <span className="bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-200 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide border border-rose-200 dark:border-rose-800">
+                    Women-Friendly — Prototype Data
+                  </span>
+                </div>
+                <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-2">Why Journey Pilot Recommends This Stay</h5>
+                <ul className="text-xs space-y-1.5 text-slate-600 dark:text-slate-400">
+                  {[
+                    { label: "24×7 reception available", value: true },
+                    { label: "Secure room locks", value: true },
+                    { label: "CCTV in permitted common areas", value: true },
+                    { label: "Emergency-contact procedure", value: true },
+                    { label: "Women staff available", value: false },
+                    { label: "Late-night transport assistance", value: true }
+                  ].map((feature, idx) => feature.value ? (
+                    <li key={idx} className="flex gap-1.5">
+                      <span className="text-emerald-500 font-bold">✓</span> {feature.label}
+                    </li>
+                  ) : null)}
+                </ul>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-3 italic leading-tight">
+                  Based on prototype information. Please confirm these facilities with the property before booking.
+                </p>
+              </div>
+            )}
           </div>
           <Button variant="secondary" onClick={() => openSwapModal('hotel')} fullWidth>
             Swap Hotel

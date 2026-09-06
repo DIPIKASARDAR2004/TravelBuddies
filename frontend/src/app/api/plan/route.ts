@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   try {
     // 1. Parse and validate the incoming JSON body
     const body = await request.json();
-    const { destination, totalBudget, travellers, days } = body;
+    const { destination, totalBudget, travellers, days, womenOnly } = body;
 
     if (!destination || !totalBudget || !travellers || !days) {
       return NextResponse.json(
@@ -61,7 +61,12 @@ export async function POST(request: Request) {
     // 3. Apply minimum quality filters (rating >= 3.5)
     //    Only for Hotels and Restaurants which have ratings.
     // --------------------------------------------------------
-    const qualifiedHotels = (allHotels || []).filter(h => h.rating >= 3.5);
+    let qualifiedHotels = (allHotels || []).filter(h => h.rating >= 3.5);
+    
+    // Safety check filter for womenOnly mode
+    if (womenOnly) {
+      qualifiedHotels = qualifiedHotels.filter(h => h.is_women_friendly === true);
+    }
     const qualifiedRestaurants = (allRestaurants || []).filter(r => r.rating >= 3.5);
     // No rating filter for Activities or Transport
     const qualifiedActivities = allActivities || [];
@@ -311,7 +316,7 @@ export async function POST(request: Request) {
       upgrades,
       // Raw Supabase data passed through for the Swap Modal
       alternatives: {
-        hotel: allHotels || [],
+        hotel: womenOnly ? (allHotels || []).filter(h => h.is_women_friendly === true) : (allHotels || []),
         restaurant: allRestaurants || [],
         activity: allActivities || [],
         transport: allTransport || []
