@@ -432,3 +432,12 @@ For future Plan Trip recommendation-engine work:
 10. Run the Darjeeling Golden Test again after implementation.
 11. Fix and validate the backend before redesigning the frontend.
 12. Never call the algorithm final until it passes the approved Golden Test.
+
+---
+
+# PROTECTED PAYMENT PROTOTYPE (LOCKED / UPCOMING)
+- **Goal**: Simulate an escrow payment for Hotel bookings using Razorpay Test Mode.
+- **Security**: The final accommodation cost is strictly recalculated on the backend API (ignoring browser inputs) to prevent tampering.
+- **Database**: Payment lifecycle (Draft -> Protected -> Released/Refunded) tracked in a new `protected_bookings` Supabase table.
+- **Architecture**: Implemented on an isolated route (`/plan/checkout/[id]`) to prevent interference with the core planner. User selects Check-In/Check-Out dates on this page.
+- **Constraint**: MUST NOT alter existing Budget Planner, swap logic, emergency reserves, or recommendations.
