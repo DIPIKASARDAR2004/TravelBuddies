@@ -142,7 +142,8 @@ This section outlines the primary user flows, data logic, and component interact
 3. **Data Retrieval**: Django queries SQLite database and returns serialized JSON.
 4. **Display**: Frontend renders list of available options using generic result components.
 5. **Selection & Action**: User selects an option $\rightarrow$ Reviews details $\rightarrow$ Clicks "Book".
-6. **Confirmation**: Frontend sends `POST` request to Django API $\rightarrow$ Database updates $\rightarrow$ Confirmation displayed.
+6. **Protected Checkout**: User is routed to a secure checkout flow (e.g., `/plan/checkout/[id]`) integrating Razorpay.
+7. **Confirmation**: Frontend sends `POST` to payment API (e.g., `/api/payments/create-order`) $\rightarrow$ Booking draft created in Supabase (`protected_bookings` table) $\rightarrow$ Escrow payment collected $\rightarrow$ Confirmation displayed.
 
 ### 5.4 Smart Trip Planner Flow (`/plan`)
 1. **Input**: User inputs destination, budget, and travel style.

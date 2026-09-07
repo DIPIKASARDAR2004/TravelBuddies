@@ -20,7 +20,7 @@ This document outlines the core user experiences in JourneyPilot, designed for p
 *How a user reserves their travel logistics.*
 - **Step 1: Search** (Input locations and dates for Hotel, Bus, or Train)
 - **Step 2: Compare Options** (View available options, prices, and reviews)
-- **Step 3: Confirm Booking** (Select an option, make a payment, and receive confirmation)
+- **Step 3: Confirm Secure Booking** (Select an option, make a payment via the Protected Escrow system, and receive confirmation. Funds are held safely until check-in.)
 
 ## 4. Women Safety Module
 *How a user accesses emergency and safety features.*
