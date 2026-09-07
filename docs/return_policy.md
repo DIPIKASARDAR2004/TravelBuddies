@@ -1,28 +1,77 @@
-# Refund and Cancellation Policy (Escrow Model)
+# Journey Pilot — Protected Booking & Payment Policy
 
-Journey Pilot operates on a **Protected Payment (Escrow)** model. This means that when a user books a service (such as a hotel stay), their payment is held securely in an escrow/nodal account and is only released to the vendor/hotel *after* successful check-in or delivery of service.
+**Status:** Draft / Prototype Business Policy
 
-Because of this structure, Journey Pilot is uniquely positioned to handle refunds seamlessly if a dispute or cancellation occurs.
+This document defines the intended return, refund, cancellation, and dispute rules for Journey Pilot's protected-booking flow. It is not a final legal policy and must be reviewed before production use.
 
-## 1. Standard Cancellation Windows
-Our general cancellation policy aims to balance flexibility for the traveler with fairness to the host/hotel:
+## A. Target / Actual Journey Pilot Policy
+*The intended real-product protected-booking policy.*
 
-- **Free Cancellation (100% Refund):** If the user cancels the booking at least **48 hours** prior to the standard check-in time.
-- **Partial Refund (50% Refund):** If the user cancels between **24 to 48 hours** prior to check-in.
-- **No Refund:** Cancellations made **less than 24 hours** prior to check-in, or "no-shows," are generally not eligible for a refund, as the hotel is compensated for the blocked room.
+### 1. Core Principle
+Journey Pilot aims to protect both travellers and hotels.
+- A traveller should not pay for a verified service they did not receive.
+- A hotel should receive fair compensation for genuine late cancellations and completed service.
+- Journey Pilot earns commission only on the amount legitimately released to the hotel.
+- Disputed money should not be released blindly to either party.
+- Payment-gateway charges are separate from Journey Pilot's platform commission.
 
-## 2. Denied Entry & Service Failures (The Escrow Advantage)
-Because funds are held in escrow, travelers are fully protected against fraud or denied entry.
+### 2. Journey Pilot Commission
+**Proposed commission:** 5% of the amount actually released to the hotel.
 
-- **Hotel Denies Entry / Overbooked:** If a user arrives at the hotel and is denied entry due to overbooking or hotel negligence, the user must report this via the platform within **12 hours** of check-in time. The escrow release is paused, and upon verification, a **100% full refund** is issued to the user immediately.
-- **Service Mismatch:** If the accommodation significantly deviates from the platform listing (e.g., major safety concerns, completely missing advertised amenities), the user can raise a dispute on check-in day. The funds remain protected until the dispute is resolved.
+**Example 1: Successful ₹4,000 Booking**
+- Hotel gross entitlement: ₹4,000
+- Journey Pilot commission: ₹200
+- Hotel net payout: ₹3,800
 
-## 3. Platform & Processing Fees
-- Any flat **Journey Pilot platform fees** charged at the time of booking are generally **non-refundable** upon user-initiated cancellation.
-- If a cancellation is forced due to a vendor fault (e.g., hotel overbooking), the platform fee will also be fully refunded to the user.
+**Example 2: Partial Refund**
+If the customer receives a ₹2,000 refund and the hotel is entitled to ₹2,000:
+- Customer refund: ₹2,000
+- Hotel gross entitlement: ₹2,000
+- Journey Pilot commission: ₹100
+- Hotel net payout: ₹1,900
 
-## 4. Refund Processing Time
-- Once a refund is initiated and approved, the funds are routed back through Razorpay to the original payment method.
-- Processing typically takes **5 to 7 business days**, depending on the user's bank or card issuer.
+*Note: No Journey Pilot commission is charged on refunded money. The 5% rate is a proposed prototype/business assumption and is not yet a finalized commercial rate.*
 
-*Note: Specific partner hotels or holiday packages may have their own stricter cancellation policies explicitly stated on the booking page. In such cases, the specific listing's policy supersedes the standard platform policy.*
+### 3. Standard Customer Cancellation Policy
+| Time Before Check-In | Customer Refund | Hotel Compensation | Journey Pilot Commission |
+| :--- | :--- | :--- | :--- |
+| **≥ 72 Hours** | 100% | 0% | ₹0 |
+| **24–72 Hours** | 80% | 20% (gross) | 5% of hotel-earned portion |
+| **< 24 Hours** | 50% | 50% (gross) | 5% of hotel-earned portion |
+
+### 4. No-Show Policy
+A no-show should not automatically make an entire multi-night booking non-refundable.
+
+**Proposed rule:**
+- Hotel receives compensation equivalent to the first night, subject to an appropriate cap.
+- Remaining eligible unused nights may be refunded.
+- Journey Pilot commission applies only to the amount awarded to the hotel.
+
+### 5. Hotel Cancellation
+If the hotel cancels a confirmed booking:
+- Customer receives a **100% refund**
+- Hotel receives **₹0**
+- Journey Pilot commission is **₹0**
+- The cancellation is recorded against the hotel's reliability history.
+
+*Future actions may include warning, ranking reduction, temporary suspension, delisting after repeated violations, and alternative-stay recommendations.*
+
+### 6. Hotel Denies Valid Check-In / Overbooking
+
+If a traveller has a valid confirmed booking but the hotel refuses check-in due to overbooking, room unavailability, or hotel fault:
+
+- The traveller can immediately report Denied Check-In through Journey Pilot.
+
+- The hotel settlement is frozen immediately while the case is verified.
+
+- The traveller may submit current location, timestamp, photo/video evidence, and a short description.
+- The hotel receives a short response window to confirm or dispute the issue.
+- If the hotel does not respond, the settlement remains frozen and the case moves to Priority Review.
+- If the available evidence reasonably confirms that valid check-in was denied, the traveller receives a 100% refund.
+
+- The hotel receives ₹0 for the failed service.
+
+- Journey Pilot commission is ₹0.
+
+- The incident is recorded against the hotel’s reliability history.
+Repeated verified violations may lead to ranking reduction, suspension, or delisting.
