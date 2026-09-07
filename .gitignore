@@ -9,6 +9,7 @@ Thumbs.db
 node_modules/
 .env
 .env.*
+!.env.example
 
 # IDE
 .vscode/

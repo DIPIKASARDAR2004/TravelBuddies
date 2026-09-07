@@ -1,18 +1,21 @@
-﻿"use client";
+"use client";
 
 import { useEffect } from "react";
 import { usePlanStore } from "@/store/usePlanStore";
 import { motion } from "framer-motion";
-import { FiShield, FiInfo, FiPhoneCall, FiShare2, FiUsers, FiAlertTriangle } from "react-icons/fi";
-import { MdLocalPolice, MdLocalHospital } from "react-icons/md";
+import { FiShield, FiInfo, FiAlertTriangle } from "react-icons/fi";
 
 // Planner Components
 import PlanForm from "../plan/components/PlanForm";
 import TierSelector from "../plan/components/TierSelector";
 import TripCustomizer from "../plan/components/TripCustomizer";
 import SwapModal from "../plan/components/SwapModal";
-import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
+import TrustedContacts from "./trustedcontacts";
+import SOSButton from "./sosbutton";
+import LocationTracking from "./locationtracker";
+import NearbySafetyServices from "./nearbyservices";
+import TripSharing from "./tripsharing";
+import SafeStay from "./safestay";
 
 export default function WomenSafetyPage() {
   const { view, resetStore } = usePlanStore();
@@ -72,57 +75,16 @@ export default function WomenSafetyPage() {
           <p className="text-slate-500 dark:text-slate-400 mt-2">Essential safety tools and contacts available at any time.</p>
         </div>
 
-        {/* SOS & Emergency Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Button variant="danger" size="lg" className="col-span-2 md:col-span-1 flex flex-col items-center gap-2 h-auto py-6 relative overflow-hidden group bg-red-600 hover:bg-red-700 shadow-md shadow-red-500/20">
-            <FiAlertTriangle className="text-3xl animate-pulse group-hover:scale-110 transition-transform text-white" />
-            <span className="font-bold text-white">Emergency SOS</span>
-            <div className="absolute top-2 right-2 text-[9px] font-bold tracking-wider bg-white/20 px-1.5 py-0.5 rounded uppercase text-white">Demo</div>
-          </Button>
+        <SOSButton />
+        <LocationTracking />
 
-          <Button variant="danger" size="lg" className="col-span-2 md:col-span-1 flex flex-col items-center gap-2 h-auto py-6 relative overflow-hidden group">
-            <FiPhoneCall className="text-2xl group-hover:scale-110 transition-transform" />
-            <span>Emergency Help</span>
-            <div className="absolute top-2 right-2 text-[9px] font-bold tracking-wider bg-white/20 px-1.5 py-0.5 rounded uppercase text-white">Demo</div>
-          </Button>
-          
-          <Button variant="outline" size="lg" className="col-span-2 md:col-span-1 flex flex-col items-center gap-2 h-auto py-6 relative group border-slate-200 dark:border-slate-700">
-            <FiShare2 className="text-2xl group-hover:scale-110 transition-transform" />
-            <span>Share Trip</span>
-            <div className="absolute top-2 right-2 text-[9px] font-bold tracking-wider bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded uppercase">Demo</div>
-          </Button>
-          
-          <Button variant="outline" size="lg" className="col-span-2 md:col-span-1 flex flex-col items-center gap-2 h-auto py-6 relative group border-slate-200 dark:border-slate-700">
-            <FiUsers className="text-2xl group-hover:scale-110 transition-transform" />
-            <span>Trusted Contact</span>
-            <div className="absolute top-2 right-2 text-[9px] font-bold tracking-wider bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded uppercase">Demo</div>
-          </Button>
-        </div>
+        <TrustedContacts />
 
-        {/* Nearby Help UI */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-start gap-4">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl">
-              <MdLocalPolice className="text-2xl" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-slate-900 dark:text-white">Nearest Police Station</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Distance: ~1.2 km</p>
-              <span className="inline-block mt-2 text-[10px] font-bold tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-1 rounded-md uppercase">Prototype / Demo</span>
-            </div>
-          </Card>
+        <TripSharing />
 
-          <Card className="p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-start gap-4">
-            <div className="p-3 bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl">
-              <MdLocalHospital className="text-2xl" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-slate-900 dark:text-white">General Hospital</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Distance: ~3.5 km</p>
-              <span className="inline-block mt-2 text-[10px] font-bold tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-1 rounded-md uppercase">Prototype / Demo</span>
-            </div>
-          </Card>
-        </div>
+        <SafeStay />
+
+        <NearbySafetyServices />
 
         {/* Late Return Notice */}
         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-5 flex gap-4 items-start">
