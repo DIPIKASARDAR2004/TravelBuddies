@@ -41,7 +41,7 @@ This document outlines the core user experiences in JourneyPilot, designed for p
 ## The Tech Stack (High-Level overview)
 *(For the hexagon graphic on your slide)*
 - **Frontend / Interface**: Next.js & React (What the user sees and interacts with)
-- **Backend Booking Logic**: Django & Python (The engine that processes bookings)
+- **Backend Booking Logic**: Next.js API Routes & Server Actions (The engine that processes bookings)
 - **User Database & Auth**: Supabase (Securely stores user profiles and itineraries)
 - **Maps & Location**: Leaflet (Provides mapping and offline location tracking)
 

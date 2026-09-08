@@ -1,70 +1,40 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient, UnauthenticatedError, requireUser } from "@/lib/supabaseServer";
 import { validateTripInput } from "@/lib/trips";
+import { withAuth, parseJson, ApiHandlerContext } from "@/lib/apiHandler";
 
 const tripFields = "id, title, destination, start_date, end_date, sharing, created_at, updated_at";
+export const GET = withAuth(async ({ user, supabase }: ApiHandlerContext) => {
+              const { data, error } = await supabase
+          .from("trips")
+          .select(tripFields)
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
 
-function unauthorizedResponse(error: unknown) {
-  if (error instanceof UnauthenticatedError) {
-    return NextResponse.json({ error: error.message }, { status: error.statusCode });
-  }
+        if (error) {
+          console.error("Trip list failed:", error.message);
+          return NextResponse.json({ error: "Unable to load trips." }, { status: 500 });
+        }
 
-  return null;
-}
+        return NextResponse.json({ trips: data ?? [] });
+    });
+export const POST = withAuth(async ({ user, supabase, request }: ApiHandlerContext) => {
+          const body = await parseJson(request);
+        const validation = validateTripInput(body);
 
-async function parseJson(request: Request) {
-  try {
-    return (await request.json()) as unknown;
-  } catch {
-    return null;
-  }
-}
+        if (!validation.valid) {
+          return NextResponse.json({ error: validation.error }, { status: 400 });
+        }
 
-export async function GET() {
-  try {
-    const user = await requireUser();
-    const supabase = await createSupabaseServerClient();
-    const { data, error } = await supabase
-      .from("trips")
-      .select(tripFields)
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+            const { data, error } = await supabase
+          .from("trips")
+          .insert({ user_id: user.id, ...validation.value })
+          .select(tripFields)
+          .single();
 
-    if (error) {
-      console.error("Trip list failed:", error.message);
-      return NextResponse.json({ error: "Unable to load trips." }, { status: 500 });
-    }
+        if (error) {
+          console.error("Trip create failed:", error.message);
+          return NextResponse.json({ error: "Unable to create trip." }, { status: 500 });
+        }
 
-    return NextResponse.json({ trips: data ?? [] });
-  } catch (error) {
-    return unauthorizedResponse(error) ?? NextResponse.json({ error: "Unable to load trips." }, { status: 500 });
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const user = await requireUser();
-    const body = await parseJson(request);
-    const validation = validateTripInput(body);
-
-    if (!validation.valid) {
-      return NextResponse.json({ error: validation.error }, { status: 400 });
-    }
-
-    const supabase = await createSupabaseServerClient();
-    const { data, error } = await supabase
-      .from("trips")
-      .insert({ user_id: user.id, ...validation.value })
-      .select(tripFields)
-      .single();
-
-    if (error) {
-      console.error("Trip create failed:", error.message);
-      return NextResponse.json({ error: "Unable to create trip." }, { status: 500 });
-    }
-
-    return NextResponse.json({ trip: data }, { status: 201 });
-  } catch (error) {
-    return unauthorizedResponse(error) ?? NextResponse.json({ error: "Unable to create trip." }, { status: 500 });
-  }
-}
+        return NextResponse.json({ trip: data }, { status: 201 });
+    });

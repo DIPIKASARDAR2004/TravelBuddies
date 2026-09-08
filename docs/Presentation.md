@@ -14,7 +14,7 @@
 * **All-in-One Consolidation:** We eliminate context switching by combining logistics (booking), finance (bill splitting/currency conversion), and mapping (Leaflet) into a single unified platform.
 
 ## Feasibility
-* **Technical Readiness:** High. We utilize a robust, modern, and proven technology stack (Next.js 15, React 19, Django REST Framework, and Supabase).
+* **Technical Readiness:** High. We utilize a robust, modern, and proven technology stack (Next.js 15, React 19, Next.js Server Actions, and Supabase). The codebase is highly modular and adheres to DRY and Separation of Concerns (SoC) principles.
 * **Data Availability:** Mapping data (Leaflet) and generative AI APIs are readily accessible and easy to integrate into our existing decoupled architecture.
 
 ## Challenges

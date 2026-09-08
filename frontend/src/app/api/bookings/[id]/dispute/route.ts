@@ -3,7 +3,18 @@ import { supabase } from '@/lib/supabaseClient';
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const bookingId = (await params).id;
+    const { id: bookingId } = await params;
+    
+    // Attempt to parse the dispute reason from the request body
+    let disputeReason = 'DENIED_ENTRY';
+    try {
+      const body = await request.json();
+      if (body.reason) {
+        disputeReason = body.reason;
+      }
+    } catch {
+      // Ignore JSON parse errors, default reason applies
+    }
 
     if (!bookingId) {
       return NextResponse.json({ error: 'Missing booking ID' }, { status: 400 });
@@ -21,27 +32,30 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     if (booking.status !== 'PROTECTED') {
-      return NextResponse.json({ error: 'Only PROTECTED bookings can be released' }, { status: 400 });
+      return NextResponse.json({ error: 'Only PROTECTED bookings can be disputed' }, { status: 400 });
     }
 
-    // Simulate the release by updating the DB status
+    // Update the booking status to DISPUTED to freeze settlement
     const { error: updateError } = await supabase
       .from('protected_bookings')
-      .update({ status: 'RELEASED' })
+      .update({ 
+        status: 'DISPUTED',
+        dispute_reason: disputeReason
+      })
       .eq('id', bookingId);
 
     if (updateError) {
-      return NextResponse.json({ error: 'Failed to release booking' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to update booking status to disputed' }, { status: 500 });
     }
 
     return NextResponse.json({ 
       success: true, 
-      status: 'RELEASED',
-      message: 'Payment Released — Simulated' 
+      status: 'DISPUTED',
+      message: 'Booking marked as disputed. Payout frozen.' 
     });
 
   } catch (error: any) {
-    console.error('Release Error:', error);
+    console.error('Dispute Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

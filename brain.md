@@ -377,14 +377,19 @@ Use this as the main test case for future recommendation-engine work. The exact 
 
 # CURRENT IMPLEMENTATION — OBSERVED CODE
 
-*Last Inspected: 2026-08-24*  
+*Last Inspected: 2026-09-08*  
 *Backend Route: `frontend/src/app/api/plan/route.ts`*
 
 This section describes ONLY what was actually verified in the code. It is not necessarily the approved product behavior.
 
-- **Within-Budget logic:** Observed in the inspected code: Best Value is calculated using a 65% quality / 35% affordability split. Better Stay shifts focus to hotel budgets. More Experiences scales down Activities/Transport as a fallback (which conflicts with Explorer Mode priorities).
-- **Upgrades:** Observed in the inspected code: The math for `recommendedBudget` and `extraNeeded` is in place. Slight Upgrade explicitly filters for `extraNeeded <= budget * 0.05`. Comfortable and Premium upgrades currently use basic combinatorial and percentile filtering.
-- **General Rules:** Observed in the inspected code: `is_women_friendly` is not used for Plan Trip ranking; Transport records are treated as local transport; the 10% reserve formula is present; and hotel/restaurant ratings are used instead of pure price.
+- **Modular Architecture:** The codebase has been heavily refactored for better Separation of Concerns. 
+  - `api/plan/route.ts` relies on `src/lib/recommendation/planService.ts` for logic.
+  - The `translator` uses custom hooks (`useSpeechRecognition`) and services (`translationService.ts`).
+  - Transport pages (`bus/page.tsx` and `train/page.tsx`) share DRY components (`TransportSearchForm` and `TransportFooter`).
+  - Checkout pages (`plan/checkout/[id]/page.tsx`) use `useRazorpay` and modular UI components.
+- **Within-Budget logic:** Observed in the inspected code: Best Value is calculated using `balanceScore` and combinatorial subsets. Better Stay shifts focus to hotel subsets. More Experiences prioritizes activities.
+- **Upgrades:** The math for `recommendedBudget` and `extraNeeded` is in place. Upgrades now use `overallQuality` scoring on subsets rather than basic percentile filtering.
+- **General Rules:** `is_women_friendly` is not used for Plan Trip ranking; Transport records are treated as local transport; the 10% reserve formula is present; and hotel/restaurant ratings are used instead of pure price.
 
 ---
 
@@ -438,6 +443,7 @@ For future Plan Trip recommendation-engine work:
 # PROTECTED PAYMENT PROTOTYPE (LOCKED / UPCOMING)
 - **Goal**: Simulate an escrow payment for Hotel bookings using Razorpay Test Mode.
 - **Security**: The final accommodation cost is strictly recalculated on the backend API (ignoring browser inputs) to prevent tampering.
-- **Database**: Payment lifecycle (Draft -> Protected -> Released/Refunded) tracked in a new `protected_bookings` Supabase table.
-- **Architecture**: Implemented on an isolated route (`/plan/checkout/[id]`) to prevent interference with the core planner. User selects Check-In/Check-Out dates on this page.
+- **Database**: Payment lifecycle (Draft -> Protected -> Released/Refunded/Disputed) tracked in the `protected_bookings` Supabase table.
+- **Architecture**: Implemented on an isolated route (`/plan/checkout/[id]`) to prevent interference with the core planner.
+- **Return Policy**: The escrow cancellation rules, tiered refunds (100% / 80% / 50%), and 5% platform commission are defined in [Return Policy](file:///home/master_soojan/Linux_Workspaces/Projects_SW/TravelBuddies/docs/return_policy.md).
 - **Constraint**: MUST NOT alter existing Budget Planner, swap logic, emergency reserves, or recommendations.

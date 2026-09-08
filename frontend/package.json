@@ -9,7 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.112.3",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.116.0",
     "framer-motion": "^12.23.22",
     "leaflet": "^1.9.4",
     "next": "^15.5.18",
@@ -32,6 +33,7 @@
     "eslint": "^9",
     "eslint-config-next": "^15.5.18",
     "tailwindcss": "^4",
+    "ts-morph": "^28.0.0",
     "typescript": "^5"
   },
   "overrides": {

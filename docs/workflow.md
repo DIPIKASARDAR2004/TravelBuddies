@@ -10,36 +10,13 @@ JourneyPilot is built with a decoupled architecture:
 - **Frontend**: Next.js 15 (App Router), React 19, TypeScript, and Tailwind CSS.
   - UI libraries: Framer Motion, Swiper, React Icons.
   - Maps: Leaflet & React-Leaflet integration for Offline Maps and Safe Places tracking.
-- **Backend**: Django 5.2, Django REST Framework (DRF), and SQLite3.
-  - Apps: `bus`, `train`, `hotel`, `core`.
+- **Backend**: Next.js Server Actions & API Routes, Supabase (PostgreSQL).
 - **Environment**: Developed natively in WSL 2 (Ubuntu) on Windows.
 
 ## 2. Setting Up the Development Environment (WSL)
 
-### Backend (Django) Setup
-1. Open your WSL terminal and navigate to the project directory:
-   ```bash
-   cd /home/master_soojan/Linux_Workspaces/Projects_SW/JourneyPilot
-   ```
-2. Create and activate a Python virtual environment:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Run database migrations:
-   ```bash
-   cd backend
-   python manage.py migrate
-   ```
-5. Start the development server:
-   ```bash
-   python manage.py runserver
-   ```
-   *The backend API will be available at `http://127.0.0.1:8000/api/`.*
+### Backend & Database Setup
+1. Supabase is used as the database and backend. Make sure your `.env.local` contains the `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 
 ### Frontend (Next.js) Setup
 1. Open a new WSL terminal and navigate to the frontend directory:
@@ -71,11 +48,8 @@ JourneyPilot is built with a decoupled architecture:
 - `/holyday`: Holiday packages (Student Offers, Special Trips)
 - `/login` & `/signup`: Authentication flows supporting Personal, Corporate (MyBiz), and Host accounts.
 
-### Backend API Endpoints (DRF)
-The backend exposes RESTful APIs for booking entities.
-- **Hotels**: `GET /api/hotels/`, `POST /api/hotels/`, `GET /api/hotels/<id>/`
-- **Trains**: `GET /api/trains/`, `POST /api/trains/`, `GET /api/trains/<id>/`
-- **Buses**: `GET /api/buses/`, `POST /api/buses/`, `GET /api/buses/<id>/`
+### Backend API Endpoints (Next.js)
+The backend exposes RESTful APIs for booking entities in the `frontend/src/app/api/` folder.
 
 ---
 
@@ -93,11 +67,7 @@ Before committing your code, ensure you run the pre-commit checklist to avoid br
    ```
    Ensure the build passes with 0 errors.
 3. **Run Backend Checks**:
-   ```bash
-   cd backend
-   python manage.py check
-   python manage.py test
-   ```
+   (Managed by Next.js and Supabase types)
 4. **Stage & Commit**:
    ```bash
    git add .
@@ -125,9 +95,8 @@ This section outlines the primary user flows, data logic, and component interact
 - **Frontend (Next.js 15)**: 
   - Handles UI state, routing, and renders pages (App Router).
   - Server actions/API routes (`/api/*`) handle secure, middle-tier logic.
-- **Backend (Django / Supabase)**: 
-  - Django (DRF) handles legacy/complex business logic for bookings (Hotels, Buses, Trains) and uses SQLite3.
-  - Supabase handles User Auth, real-time data, and specific feature databases (e.g., Trip Planning, Itineraries).
+- **Backend (Supabase)**: 
+  - Supabase handles User Auth, real-time data, business logic (Edge Functions/Database Webhooks), and core databases (e.g., Trip Planning, Itineraries, Bookings).
 
 ### 5.2 User Authentication Flow
 1. **Unauthenticated State**: User arrives at the `/` (Home) page as a Guest.
@@ -138,8 +107,8 @@ This section outlines the primary user flows, data logic, and component interact
 
 ### 5.3 Core Booking Flow (Hotel / Bus / Train)
 1. **Input**: User selects mode (e.g., `/hotel`) and inputs search parameters (Location, Dates, Guests).
-2. **Processing**: Frontend sends `GET` request to Django API (e.g., `/api/hotels/?location=XYZ`).
-3. **Data Retrieval**: Django queries SQLite database and returns serialized JSON.
+2. **Processing**: Frontend sends request to Next.js API (e.g., `/api/hotels/`).
+3. **Data Retrieval**: Supabase returns serialized JSON.
 4. **Display**: Frontend renders list of available options using generic result components.
 5. **Selection & Action**: User selects an option $\rightarrow$ Reviews details $\rightarrow$ Clicks "Book".
 6. **Protected Checkout**: User is routed to a secure checkout flow (e.g., `/plan/checkout/[id]`) integrating Razorpay.

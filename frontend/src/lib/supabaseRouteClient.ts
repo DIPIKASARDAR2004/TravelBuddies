@@ -25,7 +25,7 @@ export function createSupabaseRouteClient(request: Request) {
             };
           });
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
         pendingCookies.push(...cookiesToSet);
       },
     },

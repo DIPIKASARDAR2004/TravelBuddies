@@ -1,17 +1,27 @@
+import { NextResponse } from 'next/server';
+import { createSupabaseServerClient } from '@/lib/supabaseServer';
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { phone } = body;
+    const { email, password } = body;
 
-    if (!phone || !/^\d{10,}$/.test(phone)) {
-      return new Response(JSON.stringify({ message: "Invalid phone number" }), { status: 400 });
+    if (!email || !password) {
+      return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
     }
 
-    // Simulate OTP send
-    console.log("Sending OTP to:", phone);
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    return new Response(JSON.stringify({ message: "OTP sent successfully" }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 401 });
+    }
+
+    return NextResponse.json({ message: "Login successful", user: data.user }, { status: 200 });
   } catch (error) {
-    return new Response(JSON.stringify({ message: "Internal server error" }), { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

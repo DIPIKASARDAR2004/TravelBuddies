@@ -1,20 +1,32 @@
+import { NextResponse } from 'next/server';
+import { createSupabaseServerClient } from '@/lib/supabaseServer';
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { fullName, email, phone, password, accountType } = body;
+    const { fullName, email, password } = body;
 
-    if (!fullName || !email || !phone || !password) {
-      return new Response(JSON.stringify({ message: "All fields are required" }), { status: 400 });
+    if (!email || !password || !fullName) {
+      return NextResponse.json({ error: "All fields are required" }, { status: 400 });
     }
 
-    // Simulate successful account creation
-    console.log("Creating account for:", { fullName, email, accountType });
-
-    return new Response(JSON.stringify({ message: "Account created successfully! Please login." }), { 
-      status: 201,
-      headers: { 'Content-Type': 'application/json' }
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+        }
+      }
     });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ message: "Account created successfully" }, { status: 201 });
   } catch (error) {
-    return new Response(JSON.stringify({ message: "Internal server error" }), { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

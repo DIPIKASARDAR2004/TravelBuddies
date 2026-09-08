@@ -43,9 +43,12 @@ export default function SignupPage() {
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
-      alert(data.message);
+      
       if (res.ok) {
+        alert(data.message || "Account created successfully!");
         window.location.href = "/login";
+      } else {
+        alert(data.error || "Signup failed");
       }
     } catch (error) {
       alert("Something went wrong");
@@ -140,9 +143,9 @@ export default function SignupPage() {
                   borderRadius: '0.75rem',
                   border: 'none',
                   boxShadow: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
-                  background: 'var(--tw-bg-opacity, #ffffff)'
+                  background: 'transparent'
                 }}
-                containerClass="!w-full [&>input]:dark:bg-slate-800 [&>input]:dark:text-white"
+                containerClass="!w-full [&>input]:bg-white [&>input]:text-slate-900 [&>input]:dark:bg-slate-800 [&>input]:dark:text-white [&>input]:border-slate-200 [&>input]:dark:border-slate-700"
               />
             </div>
             
