@@ -21,6 +21,13 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [touched, setTouched] = useState({
+    fullName: false,
+    email: false,
+    phone: false,
+    password: false,
+    confirmPassword: false
+  });
 
   const isPhoneValid = formData.phone.replace(/\D/g, "").length >= 10;
   const isFormValid = 
@@ -59,6 +66,7 @@ export default function SignupPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setTouched({ ...touched, [e.target.name]: true });
   };
 
   return (
@@ -110,26 +118,38 @@ export default function SignupPage() {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <Input
-              label="Full Name"
-              name="fullName"
-              type="text"
-              required
-              value={formData.fullName}
-              onChange={handleChange}
-              placeholder="John Doe"
-            />
+          <div className="space-y-5">
+            <div>
+              <Input
+                label="Full Name"
+                name="fullName"
+                type="text"
+                required
+                value={formData.fullName}
+                onChange={handleChange}
+                onBlur={() => setTouched({ ...touched, fullName: true })}
+                placeholder="John Doe"
+              />
+              {touched.fullName && formData.fullName.length <= 2 && (
+                <p className="text-red-500 text-xs mt-1.5 ml-1">Full name must be at least 3 characters.</p>
+              )}
+            </div>
             
-            <Input
-              label="Email address"
-              name="email"
-              type="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-            />
+            <div>
+              <Input
+                label="Email address"
+                name="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                onBlur={() => setTouched({ ...touched, email: true })}
+                placeholder="you@example.com"
+              />
+              {touched.email && !formData.email.includes("@") && (
+                <p className="text-red-500 text-xs mt-1.5 ml-1">Please enter a valid email address.</p>
+              )}
+            </div>
             
             <div>
               <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 ml-1">Phone Number</label>
@@ -137,6 +157,7 @@ export default function SignupPage() {
                 country={'in'}
                 value={formData.phone}
                 onChange={(phone) => setFormData({ ...formData, phone })}
+                onBlur={() => setTouched({ ...touched, phone: true })}
                 inputStyle={{
                   width: '100%',
                   padding: '12px 12px 12px 48px',
@@ -147,6 +168,9 @@ export default function SignupPage() {
                 }}
                 containerClass="!w-full [&>input]:bg-white [&>input]:text-slate-900 [&>input]:dark:bg-slate-800 [&>input]:dark:text-white [&>input]:border-slate-200 [&>input]:dark:border-slate-700"
               />
+              {touched.phone && !isPhoneValid && (
+                <p className="text-red-500 text-xs mt-1.5 ml-1">Please enter a valid phone number (min 10 digits).</p>
+              )}
             </div>
             
             <div className="relative">
@@ -157,6 +181,7 @@ export default function SignupPage() {
                 required
                 value={formData.password}
                 onChange={handleChange}
+                onBlur={() => setTouched({ ...touched, password: true })}
                 placeholder="••••••••"
               />
               <button
@@ -166,6 +191,9 @@ export default function SignupPage() {
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
+              {touched.password && formData.password.length < 6 && (
+                <p className="text-red-500 text-xs mt-1.5 ml-1">Password must be at least 6 characters.</p>
+              )}
             </div>
             
             <div className="relative">
@@ -176,6 +204,7 @@ export default function SignupPage() {
                 required
                 value={formData.confirmPassword}
                 onChange={handleChange}
+                onBlur={() => setTouched({ ...touched, confirmPassword: true })}
                 placeholder="••••••••"
               />
               <button
@@ -185,6 +214,9 @@ export default function SignupPage() {
               >
                 {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
+              {touched.confirmPassword && formData.password !== formData.confirmPassword && (
+                <p className="text-red-500 text-xs mt-1.5 ml-1">Passwords do not match.</p>
+              )}
             </div>
           </div>
 

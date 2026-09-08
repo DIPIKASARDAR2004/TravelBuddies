@@ -33,9 +33,4 @@ This checklist provides a structured way to manually test the core features of t
 - [ ] **SOS Button:** Click the SOS button and verify the simulated emergency alert triggers correctly.
 - [ ] **Live Tracking:** Verify that the map loads (Leaflet) and plots the user's simulated location.
 
-## 6. AI Language Translator (`/translator`)
-- [ ] **UI Integrity:** Ensure the language selectors, input fields, and icons load correctly.
-- [ ] **Voice Input:** Click the microphone icon, speak into the mic, and verify text appears in the input box (requires browser permission).
-- [ ] **Translation Service:** Enter text, click "Translate", and verify the Gemini AI API returns a valid translation without error.
-- [ ] **Swap Languages:** Click the swap arrow and ensure the source and target languages exchange, along with the text.
-- [ ] **TTS & Copy:** Test the 'speak' (volume icon) and 'copy to clipboard' features on the translated text.
+

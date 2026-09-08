@@ -13,7 +13,7 @@ export default function HotelBookingForm() {
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0 overflow-hidden">
           <img
-            src="https://images.unsplash.com/photo-1542314831-c6a4d274868c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"
+            src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?q=80&w=2000&auto=format&fit=crop"
             alt="Luxury Hotel"
             className="w-full h-full object-cover"
           />

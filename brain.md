@@ -384,7 +384,7 @@ This section describes ONLY what was actually verified in the code. It is not ne
 
 - **Modular Architecture:** The codebase has been heavily refactored for better Separation of Concerns. 
   - `api/plan/route.ts` relies on `src/lib/recommendation/planService.ts` for logic.
-  - The `translator` uses custom hooks (`useSpeechRecognition`) and services (`translationService.ts`).
+  - **Authentication:** Fully migrated to Supabase SSR (Server-Side Rendering) Auth. API routes `/api/login` and `/api/signup` handle session creation, while components like `Navbar.tsx` dynamically render User Profile / Logout states based on active sessions.
   - Transport pages (`bus/page.tsx` and `train/page.tsx`) share DRY components (`TransportSearchForm` and `TransportFooter`).
   - Checkout pages (`plan/checkout/[id]/page.tsx`) use `useRazorpay` and modular UI components.
 - **Within-Budget logic:** Observed in the inspected code: Best Value is calculated using `balanceScore` and combinatorial subsets. Better Stay shifts focus to hotel subsets. More Experiences prioritizes activities.

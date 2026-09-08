@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FaMoon, FaSun, FaChevronDown, FaBars, FaTimes } from 'react-icons/fa';
+import { FaMoon, FaSun, FaChevronDown, FaBars, FaTimes, FaUserCircle, FaSignOutAlt } from 'react-icons/fa';
+import { supabaseBrowser as supabase } from '@/lib/supabaseBrowserClient';
 
 interface NavItem {
   href: string;
@@ -22,6 +23,7 @@ const navItems: NavItem[] = [
 export default function Navbar() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -29,7 +31,28 @@ export default function Navbar() {
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
     setTheme(initialTheme);
+
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    };
+    checkUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      if (authListener && authListener.subscription) {
+        authListener.subscription.unsubscribe();
+      }
+    };
   }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.reload();
+  };
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -90,26 +113,44 @@ export default function Navbar() {
           </button>
           
           <div className="hidden md:flex items-center gap-3">
-            <Link 
-              href="/login" 
-              className={`px-5 py-2 text-sm font-medium border rounded-lg transition-colors ${
-                pathname === '/login'
-                  ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-slate-800'
-                  : 'text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
-              }`}
-            >
-              Login
-            </Link>
-            <Link 
-              href="/signup" 
-              className={`px-5 py-2 text-sm font-medium rounded-lg transition-colors shadow-sm ${
-                pathname === '/signup'
-                  ? 'bg-blue-700 text-white shadow-md'
-                  : 'text-white bg-blue-600 hover:bg-blue-700'
-              }`}
-            >
-              Sign Up
-            </Link>
+            {user ? (
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                  <FaUserCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <span>{user.email?.split('@')[0]}</span>
+                </div>
+                <button 
+                  onClick={handleLogout}
+                  className="px-4 py-2 text-sm font-medium border rounded-lg text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2"
+                >
+                  <FaSignOutAlt />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link 
+                  href="/login" 
+                  className={`px-5 py-2 text-sm font-medium border rounded-lg transition-colors ${
+                    pathname === '/login'
+                      ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-slate-800'
+                      : 'text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  Login
+                </Link>
+                <Link 
+                  href="/signup" 
+                  className={`px-5 py-2 text-sm font-medium rounded-lg transition-colors shadow-sm ${
+                    pathname === '/signup'
+                      ? 'bg-blue-700 text-white shadow-md'
+                      : 'text-white bg-blue-600 hover:bg-blue-700'
+                  }`}
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -144,28 +185,46 @@ export default function Navbar() {
             ))}
           </ul>
           <div className="flex flex-col space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <Link 
-              href="/login" 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`text-center px-5 py-2.5 text-sm font-medium border rounded-lg ${
-                pathname === '/login'
-                  ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-slate-800'
-                  : 'text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
-              }`}
-            >
-              Login
-            </Link>
-            <Link 
-              href="/signup" 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`text-center px-5 py-2.5 text-sm font-medium rounded-lg shadow-sm ${
-                pathname === '/signup'
-                  ? 'bg-blue-700 text-white shadow-md'
-                  : 'text-white bg-blue-600 hover:bg-blue-700'
-              }`}
-            >
-              Sign Up
-            </Link>
+            {user ? (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-3 px-2 py-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                  <FaUserCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <span>{user.email?.split('@')[0]}</span>
+                </div>
+                <button 
+                  onClick={handleLogout}
+                  className="w-full text-center px-5 py-2.5 text-sm font-medium border rounded-lg text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center gap-2"
+                >
+                  <FaSignOutAlt />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link 
+                  href="/login" 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`text-center px-5 py-2.5 text-sm font-medium border rounded-lg ${
+                    pathname === '/login'
+                      ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-slate-800'
+                      : 'text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  Login
+                </Link>
+                <Link 
+                  href="/signup" 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`text-center px-5 py-2.5 text-sm font-medium rounded-lg shadow-sm ${
+                    pathname === '/signup'
+                      ? 'bg-blue-700 text-white shadow-md'
+                      : 'text-white bg-blue-600 hover:bg-blue-700'
+                  }`}
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
