@@ -52,7 +52,9 @@ export default function SwapModal() {
         name: newItem.hotel_name,
         price: newItem.price_per_night,
         rating: newItem.rating,
-        is_women_friendly: newItem.is_women_friendly
+        is_women_friendly: newItem.is_women_friendly,
+        latitude: newItem.latitude,
+        longitude: newItem.longitude
       };
       updatedPlan.accommodationCost = newCost;
     } else if (itemToSwap === 'restaurant') {
@@ -60,6 +62,7 @@ export default function SwapModal() {
       updatedPlan.foodCost = newCost;
     } else if (itemToSwap === 'activity') {
       updatedPlan.selectedActivity = newItem;
+      updatedPlan.selectedActivities = [newItem];
       updatedPlan.activityCost = newCost;
     } else if (itemToSwap === 'transport') {
       updatedPlan.selectedTransport = newItem;

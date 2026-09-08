@@ -3,7 +3,8 @@ import { supabase } from '@/lib/supabaseClient';
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const bookingId = (await params).id;
+    const resolvedParams = await params;
+    const bookingId = resolvedParams.id;
 
     if (!bookingId) {
       return NextResponse.json({ error: 'Missing booking ID' }, { status: 400 });

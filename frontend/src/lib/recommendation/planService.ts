@@ -21,7 +21,9 @@ export const formatHotel = (hotel: any) => ({
   name: hotel.hotel_name,
   price: hotel.price_per_night,
   rating: hotel.rating,
-  is_women_friendly: hotel.is_women_friendly
+  is_women_friendly: hotel.is_women_friendly,
+  latitude: hotel.latitude,
+  longitude: hotel.longitude
 });
 
 export const formatRestaurant = (r: any) => ({
@@ -32,7 +34,9 @@ export const formatRestaurant = (r: any) => ({
 
 export const formatActivity = (a: any) => ({
   activity_name: a.activity_name,
-  cost_per_person: a.cost_per_person
+  cost_per_person: a.cost_per_person,
+  latitude: a.latitude,
+  longitude: a.longitude
 });
 
 export const formatTransport = (t: any) => ({

@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     // Fetch ALL matching records
     const { data: allHotels } = await supabase
       .from('Hotels')
-      .select('hotel_name, price_per_night, rating, comfort_level, is_women_friendly, destination')
+      .select('hotel_name, price_per_night, rating, comfort_level, is_women_friendly, destination, latitude, longitude')
       .ilike('destination', `%${destination}%`)
       .order('price_per_night', { ascending: true });
 
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
     const { data: allActivities } = await supabase
       .from('activities')
-      .select('activity_name, cost_per_person, rating')
+      .select('activity_name, cost_per_person, rating, latitude, longitude')
       .ilike('destination', `%${destination}%`)
       .order('cost_per_person', { ascending: true });
 
@@ -73,6 +73,7 @@ export async function POST(request: Request) {
         error: 'Insufficient data for this destination to build a complete plan.'
       }, { status: 400 });
     }
+
 
     // Base minimums
     const minH = getBudgetItem(qualifiedHotels);
