@@ -2,12 +2,13 @@
 
 import React, { useState } from "react";
 import ExploreRoutes from "./exploreRoutes";
-import dynamic from "next/dynamic";
-const OfflineMap = dynamic(() => import("@/app/map/OfflineMap").then(mod => mod.default), { ssr: false });
+import GoogleTripMap from "./GoogleTripMap";
+import { usePlanStore } from "@/store/usePlanStore";
 
 
 export default function MapPage() {
   const [showExplore, setShowExplore] = useState(false);
+  const { customizedPlan } = usePlanStore();
 
   return (
     <div className="p-6">
@@ -21,7 +22,11 @@ export default function MapPage() {
       </button>
 
       {showExplore && <ExploreRoutes />}
-<OfflineMap />
+      
+      <div className="mb-10">
+        <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-white">Trip Map</h2>
+        <GoogleTripMap plan={customizedPlan} />
+      </div>
     </div>
   );
 }

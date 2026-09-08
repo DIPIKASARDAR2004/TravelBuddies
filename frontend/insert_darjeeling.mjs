@@ -9,10 +9,10 @@ const supabase = createClient(urlMatch[1], keyMatch[1]);
 
 async function insertData() {
   const newHotels = [
-    { destination: 'Darjeeling', hotel_name: 'Hill View Residency', price_per_night: 1500, rating: 4.3, is_women_friendly: true },
-    { destination: 'Darjeeling', hotel_name: 'Cedar Grove Inn', price_per_night: 2000, rating: 4.5, is_women_friendly: false },
-    { destination: 'Darjeeling', hotel_name: 'Summit Valley Hotel', price_per_night: 3500, rating: 4.7, is_women_friendly: true },
-    { destination: 'Darjeeling', hotel_name: 'Alpine Heights Retreat', price_per_night: 5200, rating: 4.8, is_women_friendly: true }
+    { destination: 'Darjeeling', hotel_name: 'Hill View Residency', price_per_night: 1500, rating: 4.3, is_women_friendly: true, latitude: 27.037, longitude: 88.261 },
+    { destination: 'Darjeeling', hotel_name: 'Cedar Grove Inn', price_per_night: 2000, rating: 4.5, is_women_friendly: false, latitude: 27.042, longitude: 88.265 },
+    { destination: 'Darjeeling', hotel_name: 'Summit Valley Hotel', price_per_night: 3500, rating: 4.7, is_women_friendly: true, latitude: 27.039, longitude: 88.263 },
+    { destination: 'Darjeeling', hotel_name: 'Alpine Heights Retreat', price_per_night: 5200, rating: 4.8, is_women_friendly: true, latitude: 27.045, longitude: 88.268 }
   ];
 
   const newRestaurants = [
@@ -22,8 +22,8 @@ async function insertData() {
   ];
 
   const newActivities = [
-    { destination: 'Darjeeling', activity_name: 'Darjeeling Ropeway Ride', cost_per_person: 750 },
-    { destination: 'Darjeeling', activity_name: 'Premium Tea Estate Tasting Experience', cost_per_person: 2800 }
+    { destination: 'Darjeeling', activity_name: 'Darjeeling Ropeway Ride', cost_per_person: 750, latitude: 27.051, longitude: 88.256 },
+    { destination: 'Darjeeling', activity_name: 'Premium Tea Estate Tasting Experience', cost_per_person: 2800, latitude: 27.050, longitude: 88.257 }
   ];
 
   const newTransport = [

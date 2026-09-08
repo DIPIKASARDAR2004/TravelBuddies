@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     // --------------------------------------------------------
     const { data: allHotels } = await supabase
       .from('Hotels')
-      .select('hotel_name, price_per_night, rating, comfort_level, is_women_friendly, destination')
+      .select('hotel_name, price_per_night, rating, comfort_level, is_women_friendly, destination, latitude, longitude')
       .ilike('destination', `%${destination}%`)
       .order('price_per_night', { ascending: true });
 
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     // Activities and Transport do not have rating columns in our schema
     const { data: allActivities } = await supabase
       .from('activities')
-      .select('activity_name, cost_per_person, rating')
+      .select('activity_name, cost_per_person, rating, latitude, longitude')
       .ilike('destination', `%${destination}%`)
       .order('cost_per_person', { ascending: true });
 
@@ -130,7 +130,9 @@ export async function POST(request: Request) {
       name: hotel.hotel_name,
       price: hotel.price_per_night,
       rating: hotel.rating,
-      is_women_friendly: hotel.is_women_friendly
+      is_women_friendly: hotel.is_women_friendly,
+      latitude: hotel.latitude,
+      longitude: hotel.longitude
     });
 
     const formatRestaurant = (r: any) => ({
@@ -141,7 +143,9 @@ export async function POST(request: Request) {
 
     const formatActivity = (a: any) => ({
       activity_name: a.activity_name,
-      cost_per_person: a.cost_per_person
+      cost_per_person: a.cost_per_person,
+      latitude: a.latitude,
+      longitude: a.longitude
     });
 
     const formatTransport = (t: any) => ({
