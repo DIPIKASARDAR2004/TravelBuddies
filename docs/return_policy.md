@@ -1,77 +1,79 @@
-# Journey Pilot — Protected Booking & Payment Policy
+# Journey Pilot Booking & Refund Policy
 
-**Status:** Draft / Prototype Business Policy
+This page outlines the rules for cancellations, refunds, and problem resolution when you book a stay through Journey Pilot. Our goal is to ensure a fair and secure experience for both you (the traveller) and the hotel.
 
-This document defines the intended return, refund, cancellation, and dispute rules for Journey Pilot's protected-booking flow. It is not a final legal policy and must be reviewed before production use.
+## 1. Our Core Promise
+- **You are protected:** You will never pay for a service you didn't receive.
+- **Fair to hotels:** Hotels are fairly compensated for real services and late cancellations.
+- **Secure money handling:** If there is a dispute, your money is held safely and will not be blindly released to the hotel.
 
-## A. Target / Actual Journey Pilot Policy
-*The intended real-product protected-booking policy.*
+## 2. Standard Cancellation & Refunds
+If your plans change and you need to cancel your booking:
 
-### 1. Core Principle
-Journey Pilot aims to protect both travellers and hotels.
-- A traveller should not pay for a verified service they did not receive.
-- A hotel should receive fair compensation for genuine late cancellations and completed service.
-- Journey Pilot earns commission only on the amount legitimately released to the hotel.
-- Disputed money should not be released blindly to either party.
-- Payment-gateway charges are separate from Journey Pilot's platform commission.
+| When you cancel | Your Refund | Hotel Compensation |
+| :--- | :--- | :--- |
+| **3 Days (72+ hours) before check-in** | **100% Full Refund** | Hotel gets nothing |
+| **1 to 3 Days (24–72 hours) before check-in** | **80% Refund** | Hotel gets 20% |
+| **Less than 24 hours before check-in** | **50% Refund** | Hotel gets 50% |
 
-### 2. Journey Pilot Commission
-**Proposed commission:** 5% of the amount actually released to the hotel.
+## 3. If You Don't Show Up (No-Show)
+If you miss your check-in without cancelling, your entire trip is **not** automatically lost.
+- The hotel is compensated for the **first night** of your stay.
+- You will be refunded for any remaining unused nights.
 
-**Example 1: Successful ₹4,000 Booking**
-- Hotel gross entitlement: ₹4,000
-- Journey Pilot commission: ₹200
-- Hotel net payout: ₹3,800
+## 4. If the Hotel Cancels Your Booking
+If the hotel cancels your confirmed booking for any reason:
+- You will immediately receive a **100% Full Refund**.
+- The hotel receives nothing, and a strike is recorded against their reliability score on Journey Pilot.
 
-**Example 2: Partial Refund**
-If the customer receives a ₹2,000 refund and the hotel is entitled to ₹2,000:
-- Customer refund: ₹2,000
-- Hotel gross entitlement: ₹2,000
-- Journey Pilot commission: ₹100
-- Hotel net payout: ₹1,900
+## 5. If the Hotel Denies You Check-In
+If you arrive with a confirmed booking but the hotel refuses to let you check in (e.g., they are overbooked or claim they have no rooms):
+1. **Report it immediately** through the Journey Pilot app.
+2. Your payment is instantly frozen.
+3. You can upload photos/video or a quick description of the issue.
+4. If the hotel cannot justify the denial, you receive a **100% Full Refund**.
 
-*Note: No Journey Pilot commission is charged on refunded money. The 5% rate is a proposed prototype/business assumption and is not yet a finalized commercial rate.*
+## 7. Room Defect / Service Issue Policy
 
-### 3. Standard Customer Cancellation Policy
-| Time Before Check-In | Customer Refund | Hotel Compensation | Journey Pilot Commission |
-| :--- | :--- | :--- | :--- |
-| **≥ 72 Hours** | 100% | 0% | ₹0 |
-| **24–72 Hours** | 80% | 20% (gross) | 5% of hotel-earned portion |
-| **< 24 Hours** | 50% | 50% (gross) | 5% of hotel-earned portion |
+If the traveller finds a defect or serious problem in the hotel room after check-in:
 
-### 4. No-Show Policy
-A no-show should not automatically make an entire multi-night booking non-refundable.
+- The traveller can report the issue through Report Room Problem.
+- The traveller may upload photo/video evidence and a short description.
+- The disputed part of the hotel settlement remains protected/on hold until the issue is resolved.
 
-**Proposed rule:**
-- Hotel receives compensation equivalent to the first night, subject to an appropriate cap.
-- Remaining eligible unused nights may be refunded.
-- Journey Pilot commission applies only to the amount awarded to the hotel.
+### Minor Problems
 
-### 5. Hotel Cancellation
-If the hotel cancels a confirmed booking:
-- Customer receives a **100% refund**
-- Hotel receives **₹0**
-- Journey Pilot commission is **₹0**
-- The cancellation is recorded against the hotel's reliability history.
+Examples:
+- AC/fan not working
+- TV/Wi-Fi issue
+- Hot water unavailable
+- Minor cleanliness problem
 
-*Future actions may include warning, ranking reduction, temporary suspension, delisting after repeated violations, and alternative-stay recommendations.*
+The hotel gets a reasonable chance to:
+- repair the problem, or
+- provide another equivalent room.
 
-### 6. Hotel Denies Valid Check-In / Overbooking
+If resolved quickly → stay continues and normal payment applies.
 
-If a traveller has a valid confirmed booking but the hotel refuses check-in due to overbooking, room unavailability, or hotel fault:
+### Major Problems
 
-- The traveller can immediately report Denied Check-In through Journey Pilot.
+Examples:
+- Broken door lock
+- Severe hygiene issue
+- Unsafe electrical fault
+- Room materially different from booking
+- Essential promised facility completely unavailable
+- Serious privacy/security concern
 
-- The hotel settlement is frozen immediately while the case is verified.
+If the hotel cannot fix the issue or provide a suitable replacement:
+- Traveller may request room change, partial refund, or early checkout.
+- Hotel receives payment only for the satisfactory service actually provided.
+- Unused/affected stay amount may be refunded.
+- Journey Pilot commission applies only to the amount finally released to the hotel.
 
-- The traveller may submit current location, timestamp, photo/video evidence, and a short description.
-- The hotel receives a short response window to confirm or dispute the issue.
-- If the hotel does not respond, the settlement remains frozen and the case moves to Priority Review.
-- If the available evidence reasonably confirms that valid check-in was denied, the traveller receives a 100% refund.
+### If Hotel and Customer Disagree
 
-- The hotel receives ₹0 for the failed service.
+Issue Reported → Settlement Frozen → Customer Evidence → Hotel Response → Review → Full Refund / Partial Refund / Release to Hotel
 
-- Journey Pilot commission is ₹0.
-
-- The incident is recorded against the hotel’s reliability history.
-Repeated verified violations may lead to ranking reduction, suspension, or delisting.
+> **Important rule:**
+> A small defect should first be given a chance to be fixed, but a serious safety or service failure should not force the traveller to continue the stay.

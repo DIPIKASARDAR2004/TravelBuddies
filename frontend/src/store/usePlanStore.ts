@@ -8,6 +8,7 @@ interface TripDetails {
   travellers: number;
   days: number;
   destination: string;
+  dates?: { startDate: string; endDate: string };
 }
 
 interface PlanStore {

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import CheckoutSummary from '../components/CheckoutSummary';
 import CheckoutActions from '../components/CheckoutActions';
+import { usePlanStore } from '@/store/usePlanStore';
 
 export default function CheckoutPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = use(params);
@@ -14,8 +15,9 @@ export default function CheckoutPage({ params }: { params: Promise<{ id: string 
   
   const [booking, setBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
+  const { tripDetails } = usePlanStore();
+  const [checkIn, setCheckIn] = useState(tripDetails?.dates?.startDate || '');
+  const [checkOut, setCheckOut] = useState(tripDetails?.dates?.endDate || '');
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 

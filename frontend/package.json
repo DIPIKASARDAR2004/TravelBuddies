@@ -18,7 +18,10 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-icons": "^5.5.0",
+    "react-markdown": "^10.1.0",
     "react-phone-input-2": "^2.15.1",
+    "react-tailwindcss-datepicker": "^2.0.0",
+    "remark-gfm": "^4.0.1",
     "swiper": "^12.1.4",
     "zustand": "^5.0.15"
   },

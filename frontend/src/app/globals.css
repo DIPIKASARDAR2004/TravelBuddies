@@ -2,11 +2,13 @@
 
 @variant dark (&:where(.dark, .dark *));
 
-/* 🌈 Font & Theme Variables */
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
 :root {
   --background: #ffffff;
   --foreground: #1e293b;
-  --font-sans: var(--font-jakarta);
   --font-mono: var(--font-mono);
 
   --bg: #f8fafc; /* premium soft light-slate background */
@@ -564,31 +566,6 @@ margin-left: 2px;
 /* ------- Fields ------- */
 .hotel-field{ flex:1 1 180px; display:flex; flex-direction:column; gap:6px;height: 120px; }
 .hotel-label{ font-size:20px; color:var(--text-secondary); letter-spacing:.0px;height: 80px; }
-
-.hotel-input,.hotel-select,.hotel-date{
-  width:100%;
-  padding:10px 12px;
-  border:1px solid var(--input-border);
-  border-radius:6px;
-  outline:none;
-  background:var(--input-bg);
-  color:var(--text);
-  font-size: 24px;
-  height: 200px;
-  font-family: Verdana, Geneva, Tahoma, sans-serif;
-}
-.hotel-input:hover{
-  background:var(--muted);
-  border:var(--primary) 1px solid;
-}
-.hotel-select:hover{
-  background:var(--muted);
-  border:var(--primary) 1px solid;
-}
-.hotel-date:hover{
-  background:var(--muted);
-  border:var(--primary) 1px solid;
-}
 
 .hotel-card {
   display:grid;

@@ -28,7 +28,7 @@ export default function LoginPage() {
       const data = await res.json();
       
       if (res.ok) {
-        window.location.href = "/lady"; // Redirect to authenticated area
+        window.location.href = "/safety"; // Redirect to authenticated area
       } else {
         alert(data.error || "Login failed");
       }

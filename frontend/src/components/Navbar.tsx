@@ -13,11 +13,12 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: '/explore', label: 'Explore', hasDropdown: true },
+  { href: '/explore', label: 'Explore' },
   { href: '/plan', label: 'Plan Trip' },
   { href: '/hotel', label: 'Stays' },
-  { href: '/lady', label: 'Safety' },
+  { href: '/safety', label: 'Safety' },
   { href: '/map', label: 'Map' },
+  { href: '/policies', label: 'Policies' },
 ];
 
 export default function Navbar() {
@@ -66,7 +67,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-[9999] bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+    <nav className="fixed top-0 left-0 w-full z-[9999] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-sm dark:shadow-none border-b border-slate-200/50 dark:border-slate-800 transition-all duration-300">
       <div className="flex justify-between items-center px-6 py-4">
         {/* Logo */}
         <div className="flex items-center gap-2">
