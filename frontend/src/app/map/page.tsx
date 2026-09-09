@@ -3,12 +3,13 @@
 import React, { useState } from "react";
 import ExploreRoutes from "./exploreRoutes";
 import GoogleTripMap from "./GoogleTripMap";
+import DayWiseItinerary from "./DayWiseItinerary";
 import { usePlanStore } from "@/store/usePlanStore";
-
 
 export default function MapPage() {
   const [showExplore, setShowExplore] = useState(false);
-  const { customizedPlan } = usePlanStore();
+  const { customizedPlan, tripDetails } = usePlanStore();
+  const [enrichedItinerary, setEnrichedItinerary] = useState<any[]>([]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-28 pb-12 px-4 sm:px-6 lg:px-8">
@@ -33,7 +34,7 @@ export default function MapPage() {
           </div>
         )}
         
-        <div className="rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800 bg-slate-200 dark:bg-slate-800 flex flex-col">
+        <div className="rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800 bg-slate-200 dark:bg-slate-800 flex flex-col mb-10">
           <div className="bg-white/90 dark:bg-slate-900/90 px-4 py-3 shadow-sm border-b border-slate-100 dark:border-slate-800">
             <h2 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
@@ -42,9 +43,16 @@ export default function MapPage() {
           </div>
           {/* Apply CSS filters for dark mode map rendering */}
           <div className="flex-1 h-[60vh] min-h-[500px] dark:contrast-125 dark:saturate-50 dark:brightness-75 dark:invert dark:hue-rotate-[180deg] [&_img]:transition-all">
-            <GoogleTripMap plan={customizedPlan} />
+            <GoogleTripMap 
+              plan={customizedPlan} 
+              days={tripDetails.days}
+              onEnrichedItineraryReady={(itinerary) => setEnrichedItinerary(itinerary)}
+            />
           </div>
         </div>
+
+        {/* Day Wise Itinerary injected below the map */}
+        <DayWiseItinerary itinerary={enrichedItinerary} />
       </div>
     </div>
   );
