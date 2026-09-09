@@ -3,12 +3,13 @@
 import React, { useState } from "react";
 import ExploreRoutes from "./exploreRoutes";
 import GoogleTripMap from "./GoogleTripMap";
+import DayWiseItinerary from "./DayWiseItinerary";
 import { usePlanStore } from "@/store/usePlanStore";
-
 
 export default function MapPage() {
   const [showExplore, setShowExplore] = useState(false);
-  const { customizedPlan } = usePlanStore();
+  const { customizedPlan, tripDetails } = usePlanStore();
+  const [enrichedItinerary, setEnrichedItinerary] = useState<any[]>([]);
 
   return (
     <div className="p-6">
@@ -25,7 +26,13 @@ export default function MapPage() {
       
       <div className="mb-10">
         <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-white">Trip Map</h2>
-        <GoogleTripMap plan={customizedPlan} />
+        <GoogleTripMap 
+          plan={customizedPlan} 
+          days={tripDetails.days}
+          onEnrichedItineraryReady={(itinerary) => setEnrichedItinerary(itinerary)}
+        />
+        
+        <DayWiseItinerary itinerary={enrichedItinerary} />
       </div>
     </div>
   );

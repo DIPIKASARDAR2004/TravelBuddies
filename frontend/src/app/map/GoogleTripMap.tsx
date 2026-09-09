@@ -1,106 +1,202 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { APIProvider, Map, AdvancedMarker, Pin, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
+import { buildDayItinerary } from '@/lib/itinerary/buildDayItinerary';
 
-function TripDirections({ plan }: { plan?: any }) {
+const DEFAULT_ACTIVITY_DURATION_MINUTES = 90;
+const DEFAULT_DAY_START_MINUTES = 9 * 60; // 9:00 AM
+
+function TripDirections({ 
+  plan, 
+  days,
+  onEnrichedItineraryReady 
+}: { 
+  plan?: any,
+  days?: number,
+  onEnrichedItineraryReady?: (itinerary: any[], totalDist: number, totalDur: number) => void 
+}) {
   const map = useMap();
   const routesLibrary = useMapsLibrary('routes');
   
   const [distanceKm, setDistanceKm] = useState<number | null>(null);
   const [durationMins, setDurationMins] = useState<number | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string>('');
 
   useEffect(() => {
-    if (!map || !routesLibrary || !plan) return;
+    if (!map || !routesLibrary || !plan || !days) return;
 
-    let polyline: any = null;
+    let polylines: any[] = [];
+    let isCancelled = false;
 
     const hotelLat = plan.selectedHotel?.latitude;
     const hotelLng = plan.selectedHotel?.longitude;
     
-    if (!hotelLat || !hotelLng) return;
+    if (!hotelLat || !hotelLng) {
+      if (onEnrichedItineraryReady) onEnrichedItineraryReady([], 0, 0);
+      return;
+    }
 
-    const validActivities = (plan.selectedActivities || []).filter((a: any) => a.latitude && a.longitude);
-    if (validActivities.length === 0) return;
+    const isValidCoord = (val: any) => {
+      const num = Number(val);
+      return isFinite(num) && num >= -90 && num <= 90; // rough check, lng is -180 to 180
+    };
 
-    const origin = { lat: Number(hotelLat), lng: Number(hotelLng) };
-    const destination = { lat: Number(validActivities[validActivities.length - 1].latitude), lng: Number(validActivities[validActivities.length - 1].longitude) };
-    
-    const intermediates = validActivities.slice(0, -1).map((a: any) => ({
-      lat: Number(a.latitude), lng: Number(a.longitude)
-    }));
+    if (!isValidCoord(hotelLat) || !isValidCoord(hotelLng)) {
+      if (onEnrichedItineraryReady) onEnrichedItineraryReady([], 0, 0);
+      return;
+    }
 
-    const calculateRoute = async () => {
-      try {
-        const { Route } = routesLibrary as any;
-        if (!Route || !Route.computeRoutes) {
-          setErrorMsg("Routing API not available.");
-          return;
+    const hotelLoc = new google.maps.LatLng(Number(hotelLat), Number(hotelLng));
+    const baseItinerary = buildDayItinerary(plan, days);
+
+    const calculateRoutes = async () => {
+      const Route = (routesLibrary as any).Route;
+      if (!Route || !Route.computeRoutes) return;
+
+      let totalOverallDistance = 0;
+      let totalOverallDuration = 0;
+
+      const enrichedPromises = baseItinerary.map(async (day) => {
+        const enrichedDay: any = {
+          dayNumber: day.dayNumber,
+          activities: day.activities,
+          hotelDepartureTime: DEFAULT_DAY_START_MINUTES,
+          hotelReturnTime: null,
+          routeLegs: [],
+          totalDrivingDistanceKm: 0,
+          totalDrivingDurationMins: 0,
+          error: null
+        };
+
+        const validActivities = day.activities.filter(a => {
+          const lat = Number(a.latitude);
+          const lng = Number(a.longitude);
+          return isFinite(lat) && isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+        });
+
+        if (validActivities.length === 0) {
+          return enrichedDay;
         }
 
-        // Format for Routes API using explicit google.maps.LatLng instances
-        const request: any = {
-          origin: new google.maps.LatLng(origin.lat, origin.lng),
-          destination: new google.maps.LatLng(destination.lat, destination.lng),
+        const intermediates = validActivities.map(a => ({
+          location: new google.maps.LatLng(Number(a.latitude), Number(a.longitude))
+        }));
+
+        const request = {
+          origin: hotelLoc,
+          destination: hotelLoc,
           travelMode: 'DRIVING',
-          fields: ['path', 'distanceMeters', 'durationMillis']
+          fields: ['path', 'legs', 'distanceMeters', 'durationMillis']
         };
 
         if (intermediates.length > 0) {
-          request.intermediates = intermediates.map((i: any) => ({
-            location: new google.maps.LatLng(i.lat, i.lng)
-          }));
+          (request as any).intermediates = intermediates;
         }
 
-        const response = await Route.computeRoutes(request);
+        try {
+          const response = await Route.computeRoutes(request);
+          if (isCancelled) return null;
 
-        if (response && response.routes && response.routes.length > 0) {
-          const route = response.routes[0];
-          
-          if (route.path) {
-            polyline = new google.maps.Polyline({
-              path: route.path,
-              map: map,
-              strokeColor: '#3b82f6',
-              strokeWeight: 6,
-              strokeOpacity: 0.7,
+          if (response && response.routes && response.routes.length > 0) {
+            const route = response.routes[0];
+            
+            if (route.path) {
+              const polyline = new google.maps.Polyline({
+                path: route.path,
+                map: map,
+                strokeColor: '#3b82f6',
+                strokeWeight: 6,
+                strokeOpacity: 0.7,
+              });
+              polylines.push(polyline);
+            }
+
+            if (route.legs) {
+              route.legs.forEach((leg: any) => {
+                const distKm = (leg.distanceMeters || 0) / 1000;
+                const durMins = Math.round((leg.durationMillis || 0) / 60000);
+                enrichedDay.routeLegs.push({ durationMins: durMins, distanceKm: distKm });
+                enrichedDay.totalDrivingDistanceKm += distKm;
+                enrichedDay.totalDrivingDurationMins += durMins;
+              });
+            }
+
+            let currentTime = enrichedDay.hotelDepartureTime;
+            route.legs.forEach((leg: any, idx: number) => {
+              const durMins = Math.round((leg.durationMillis || 0) / 60000);
+              currentTime += durMins;
+              
+              if (idx < validActivities.length) {
+                const act = validActivities[idx];
+                act.estimatedStartTime = currentTime;
+                const actDur = act.duration_minutes && act.duration_minutes > 0 
+                  ? act.duration_minutes 
+                  : DEFAULT_ACTIVITY_DURATION_MINUTES;
+                currentTime += actDur;
+                act.estimatedEndTime = currentTime;
+              }
             });
+            enrichedDay.hotelReturnTime = currentTime;
+            
+          } else {
+            enrichedDay.error = "No route available";
           }
-
-          if (route.distanceMeters) {
-            setDistanceKm(route.distanceMeters / 1000);
-          }
-          if (route.durationMillis) {
-            setDurationMins(Math.round(route.durationMillis / 60000));
-          }
-          setErrorMsg('');
-        } else {
-          setErrorMsg("No route available.");
+        } catch (err) {
+          if (isCancelled) return null;
+          console.error(`Routing error for day ${day.dayNumber}:`, err);
+          enrichedDay.error = "Failed to compute route";
         }
-      } catch (err: any) {
-        console.error("Routing error:", err);
-        setErrorMsg("Failed to compute route.");
+        
+        return enrichedDay;
+      });
+
+      const results = await Promise.allSettled(enrichedPromises);
+      if (isCancelled) return;
+
+      const finalItinerary = results
+        .map(r => r.status === 'fulfilled' ? r.value : null)
+        .filter(Boolean);
+
+      finalItinerary.forEach(day => {
+        totalOverallDistance += day.totalDrivingDistanceKm;
+        totalOverallDuration += day.totalDrivingDurationMins;
+      });
+
+      setDistanceKm(totalOverallDistance);
+      setDurationMins(totalOverallDuration);
+
+      if (onEnrichedItineraryReady) {
+        onEnrichedItineraryReady(finalItinerary, totalOverallDistance, totalOverallDuration);
+      }
+
+      // Fit bounds to hotel and activities
+      const bounds = new google.maps.LatLngBounds();
+      bounds.extend(hotelLoc);
+      let hasValidActCoords = false;
+      baseItinerary.forEach(day => {
+        day.activities.forEach(a => {
+          const actLat = Number(a.latitude);
+          const actLng = Number(a.longitude);
+          if (isFinite(actLat) && isFinite(actLng) && actLat >= -90 && actLat <= 90 && actLng >= -180 && actLng <= 180) {
+             bounds.extend(new google.maps.LatLng(actLat, actLng));
+             hasValidActCoords = true;
+          }
+        });
+      });
+      if (hasValidActCoords) {
+        map.fitBounds(bounds, { padding: 40 });
       }
     };
 
-    calculateRoute();
+    calculateRoutes();
 
     return () => {
-      if (polyline) {
-        polyline.setMap(null);
-      }
+      isCancelled = true;
+      polylines.forEach(p => p.setMap(null));
+      polylines = [];
     };
-  }, [map, routesLibrary, plan]);
+  }, [map, routesLibrary, plan, days]);
 
-  if (errorMsg) {
-    return (
-      <div className="absolute top-4 left-4 z-10 bg-red-100/90 text-red-700 px-4 py-2 rounded-lg shadow-md font-medium text-sm backdrop-blur-sm">
-        {errorMsg}
-      </div>
-    );
-  }
-
-  if (distanceKm !== null && durationMins !== null) {
+  if (distanceKm !== null && durationMins !== null && distanceKm > 0) {
     const hours = Math.floor(durationMins / 60);
     const mins = durationMins % 60;
     const timeString = hours > 0 ? `${hours}h ${mins}m` : `${mins} mins`;
@@ -109,7 +205,7 @@ function TripDirections({ plan }: { plan?: any }) {
       <div className="absolute top-4 left-4 z-10 bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-100 px-5 py-3 rounded-xl shadow-lg font-bold text-sm backdrop-blur-md border border-slate-200 dark:border-slate-800 flex flex-col gap-1">
         <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-          Total Driving Route
+          Total Scheduled Driving
         </div>
         <div className="text-lg">{distanceKm.toFixed(1)} km • {timeString}</div>
       </div>
@@ -119,7 +215,15 @@ function TripDirections({ plan }: { plan?: any }) {
   return null;
 }
 
-export default function GoogleTripMap({ plan }: { plan?: any }) {
+export default function GoogleTripMap({ 
+  plan, 
+  days,
+  onEnrichedItineraryReady 
+}: { 
+  plan?: any,
+  days?: number,
+  onEnrichedItineraryReady?: (itinerary: any[], totalDist: number, totalDur: number) => void 
+}) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
   const defaultCenter = { lat: 27.037, lng: 88.261 };
@@ -156,7 +260,11 @@ export default function GoogleTripMap({ plan }: { plan?: any }) {
             return null;
           })}
 
-          <TripDirections plan={plan} />
+          <TripDirections 
+            plan={plan} 
+            days={days} 
+            onEnrichedItineraryReady={onEnrichedItineraryReady} 
+          />
         </Map>
       </APIProvider>
     </div>

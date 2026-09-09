@@ -39,9 +39,9 @@ When implementing these flows, be cautious of files shared with Safety and Payme
 - [ ] 5. Build Google Map
 - [ ] 6. Connect finalized Plan Trip
 - [ ] 7. Add markers
-- [ ] 8. Add route, distance and time
-- [ ] 9. Build Smart Day-wise Guide
-- [ ] 10. Add Late-Night Travel Alerts
+- [x] 8. Add route, distance and time
+- [x] 9. Build Smart Day-wise Guide
+- [x] 10. Add Late-Night Travel Alerts
 - [ ] 11. Connect Safety Map
 - [ ] 12. Add Vlogger Mode
 - [ ] 13. Enable Safety-Aware Route Comparison only after a verified transport/lighting data source exists
