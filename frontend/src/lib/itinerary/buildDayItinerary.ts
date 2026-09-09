@@ -19,6 +19,16 @@ export function buildDayItinerary(plan: any, days: number): ItineraryDay[] {
     activitiesToSchedule = [plan.selectedActivity];
   }
 
+  if (plan.extraItems && Array.isArray(plan.extraItems)) {
+    const customActivities = plan.extraItems
+      .filter((item: any) => item.type === 'activity')
+      .map((item: any) => item.rawItem);
+    
+    if (customActivities.length > 0) {
+      activitiesToSchedule = [...activitiesToSchedule, ...customActivities];
+    }
+  }
+
   const uniqueActivities: any[] = [];
   const seen = new Set();
   

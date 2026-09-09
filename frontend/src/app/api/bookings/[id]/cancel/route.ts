@@ -1,16 +1,12 @@
 import { NextResponse } from 'next/server';
-import Razorpay from 'razorpay';
-import { supabase } from '@/lib/supabaseClient';
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-});
+import { razorpayClient as razorpay } from '@/lib/services/razorpay';
+import { createSupabaseServerClient } from '@/lib/supabaseServer';
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const resolvedParams = await params;
     const bookingId = resolvedParams.id;
+    const supabase = await createSupabaseServerClient();
 
     if (!bookingId) {
       return NextResponse.json({ error: 'Missing booking ID' }, { status: 400 });

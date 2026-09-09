@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { validateTrustedContactInput } from "@/lib/trustedContacts";
-import { withAuth, parseJson, ApiHandlerContext } from "@/lib/apiHandler";
+import { validateTrustedContactInput } from '@/lib/services/trustedContacts';
+import { withAuth, parseJson, ApiHandlerContext } from '@/lib/services/apiHandler';
 
 const contactFields = "id, name, phone, email, relationship, is_active, created_at, updated_at";
 export const GET = withAuth(async ({ user, supabase }: ApiHandlerContext) => {

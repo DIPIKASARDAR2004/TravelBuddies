@@ -7,6 +7,8 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { apiClient } from "@/lib/services/apiClient";
+import toast from "react-hot-toast";
 
 export default function SignupPage() {
   const [tab, setTab] = useState("personal");
@@ -44,21 +46,15 @@ export default function SignupPage() {
     
     setLoading(true);
     try {
-      const res = await fetch("/api/signup", {
+      const data = await apiClient("/api/signup", {
         method: "POST",
         body: JSON.stringify({ ...formData, accountType: tab }),
-        headers: { "Content-Type": "application/json" },
       });
-      const data = await res.json();
       
-      if (res.ok) {
-        alert(data.message || "Account created successfully!");
-        window.location.href = "/login";
-      } else {
-        alert(data.error || "Signup failed");
-      }
-    } catch (error) {
-      alert("Something went wrong");
+      toast.success(data.message || "Account created successfully!");
+      window.location.href = "/login";
+    } catch (error: any) {
+      // apiClient handles toast.error automatically
     } finally {
       setLoading(false);
     }

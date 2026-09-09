@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { FiAlertTriangle } from "react-icons/fi";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import type { EmergencyAlert } from "@/lib/emergencyAlerts";
+import type { EmergencyAlert } from '@/lib/services/emergencyAlerts';
 
 async function getErrorMessage(response: Response, fallback: string) {
   try {

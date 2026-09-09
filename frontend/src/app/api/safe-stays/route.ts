@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { validateSafeStayInput } from "@/lib/safeStays";
-import { withAuth, parseJson, ApiHandlerContext } from "@/lib/apiHandler";
+import { validateSafeStayInput } from '@/lib/services/safeStays';
+import { withAuth, parseJson, ApiHandlerContext } from '@/lib/services/apiHandler';
 
 const stayFields = "id, stay_name, address, check_in, check_out, status, created_at, updated_at";
 export const GET = withAuth(async ({ user, supabase }: ApiHandlerContext) => {

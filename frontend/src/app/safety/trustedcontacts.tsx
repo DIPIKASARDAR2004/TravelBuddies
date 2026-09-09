@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { FiEdit2, FiTrash2, FiUsers } from "react-icons/fi";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import type { TrustedContact, TrustedContactInput } from "@/lib/trustedContacts";
+import type { TrustedContact, TrustedContactInput } from '@/lib/services/trustedContacts';
 
 const emptyForm: TrustedContactInput = {
   name: "",

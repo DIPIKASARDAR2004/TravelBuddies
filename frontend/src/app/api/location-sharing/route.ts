@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { validateCoordinates } from "@/lib/locationShares";
-import { withAuth, parseJson, ApiHandlerContext } from "@/lib/apiHandler";
+import { validateCoordinates } from '@/lib/services/locationShares';
+import { withAuth, parseJson, ApiHandlerContext } from '@/lib/services/apiHandler';
 
 const locationFields = "id, latitude, longitude, sharing, updated_at";
 

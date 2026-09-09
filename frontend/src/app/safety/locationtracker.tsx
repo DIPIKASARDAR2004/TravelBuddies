@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { FiMapPin } from "react-icons/fi";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import type { LocationShare } from "@/lib/locationShares";
+import type { LocationShare } from '@/lib/services/locationShares';
 
 async function getErrorMessage(response: Response, fallback: string) {
   try {

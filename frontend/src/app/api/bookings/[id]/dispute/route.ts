@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { createSupabaseServerClient } from '@/lib/supabaseServer';
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: bookingId } = await params;
+    const supabase = await createSupabaseServerClient();
     
     // Attempt to parse the dispute reason from the request body
     let disputeReason = 'DENIED_ENTRY';

@@ -13,11 +13,13 @@ This checklist provides a structured way to manually test the core features of t
 - [ ] **Swap Functionality:** Click the swap button (⇄) in the search form to ensure the 'From' and 'To' fields exchange values correctly.
 - [ ] **Search Submission:** Submit the form and verify the alert pops up with the correct captured data.
 
-## 2. Intelligent Trip Planner (`/plan/checkout/[id]`)
+## 3. Intelligent Trip Planner (`/plan`)
 - [ ] **Recommendation Engine:** Verify that selecting Darjeeling with ₹15,000 for 2 travellers / 2 days returns valid plans (Best Value, Better Stay, More Experiences).
 - [ ] **Calculation Integrity:** Ensure the total trip cost does not exceed the `tripSpendingLimit` (Budget minus 10% emergency reserve).
 - [ ] **Quality Constraints:** Verify that no hotel or restaurant under a 3.5 rating is recommended.
 - [ ] **Upgrades:** Check that "Slight Upgrade" or "Comfortable Upgrade" appear correctly and calculate the `extraNeeded` accurately if budget permits.
+- [ ] **Trip Customizer:** Verify that clicking "+" adds the item to the "Custom Additions" section and correctly recalculates the budget. Test deleting custom items.
+- [ ] **Map Persistence:** Click "View Trip on Map", verify the interactive map loads, and test the "Back to Trip Planner" button to ensure it preserves state without data loss.
 
 ## 4. Protected Checkout & Escrow System (`/plan/checkout/[id]`)
 - [ ] **Initial State:** Verify the booking summary loads correctly and the payment status is `PAYMENT_PENDING`.
@@ -33,4 +35,6 @@ This checklist provides a structured way to manually test the core features of t
 - [ ] **SOS Button:** Click the SOS button and verify the simulated emergency alert triggers correctly.
 - [ ] **Live Tracking:** Verify that the map loads (Leaflet) and plots the user's simulated location.
 
-
+## 6. Global Features
+- [ ] **JourneyPilot Chatbot:** Click the floating robot icon and test sending a travel-related prompt. Verify it answers correctly using `gemini-3.6-flash`.
+- [ ] **Chatbot Guardrails:** Ask the chatbot an off-topic question (e.g. anatomy, math, coding) and verify it politely declines to answer.

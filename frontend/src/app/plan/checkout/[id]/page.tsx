@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseBrowser as supabase } from '@/lib/supabaseBrowserClient';
 import { useRouter } from 'next/navigation';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import CheckoutSummary from '../components/CheckoutSummary';
@@ -113,9 +113,8 @@ export default function CheckoutPage({ params }: { params: Promise<{ id: string 
                 <input 
                   type="date" 
                   value={checkIn} 
-                  onChange={(e) => setCheckIn(e.target.value)}
-                  disabled={booking.status !== 'PAYMENT_PENDING'}
-                  className="w-full p-2 border rounded-md text-sm disabled:bg-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:disabled:bg-gray-700"
+                  readOnly
+                  className="w-full p-2 border rounded-md text-sm bg-gray-100 text-gray-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed"
                 />
               </div>
               <div>
@@ -123,9 +122,8 @@ export default function CheckoutPage({ params }: { params: Promise<{ id: string 
                 <input 
                   type="date" 
                   value={checkOut} 
-                  onChange={(e) => setCheckOut(e.target.value)}
-                  disabled={booking.status !== 'PAYMENT_PENDING'}
-                  className="w-full p-2 border rounded-md text-sm disabled:bg-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:disabled:bg-gray-700"
+                  readOnly
+                  className="w-full p-2 border rounded-md text-sm bg-gray-100 text-gray-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed"
                 />
               </div>
             </div>

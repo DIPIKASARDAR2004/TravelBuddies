@@ -1,15 +1,11 @@
 import { NextResponse } from 'next/server';
-import Razorpay from 'razorpay';
-import { supabase } from '@/lib/supabaseClient';
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-});
+import { razorpayClient as razorpay } from '@/lib/services/razorpay';
+import { createSupabaseServerClient } from '@/lib/supabaseServer';
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: bookingId } = await params;
+    const supabase = await createSupabaseServerClient();
     
     // Parse action: 'CANCEL' or 'NO_SHOW'
     let action = 'CANCEL';

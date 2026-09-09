@@ -6,8 +6,8 @@ import {
   parseRadius,
   type NearbySafetyService,
   type ServiceCategory,
-} from "@/lib/nearbySafetyServices";
-import { withAuth, parseJson, ApiHandlerContext } from "@/lib/apiHandler";
+} from '@/lib/services/nearbySafetyServices';
+import { withAuth, parseJson, ApiHandlerContext } from '@/lib/services/apiHandler';
 
 const OVERPASS_ENDPOINT = "https://overpass-api.de/api/interpreter";
 const categoryFilters: Record<ServiceCategory, string> = {

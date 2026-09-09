@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FiSearch } from "react-icons/fi";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import type { NearbySafetyService, ServiceCategory } from "@/lib/nearbySafetyServices";
+import type { NearbySafetyService, ServiceCategory } from '@/lib/services/nearbySafetyServices';
 
 const categories: Array<{ value: ServiceCategory; label: string }> = [
   { value: "police", label: "Police stations" },

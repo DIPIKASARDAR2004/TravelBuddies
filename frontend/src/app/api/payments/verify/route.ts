@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { supabase } from '@/lib/supabaseClient';
+import { createSupabaseServerClient } from '@/lib/supabaseServer';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, booking_id } = body;
+    const supabase = await createSupabaseServerClient();
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !booking_id) {
       return NextResponse.json({ error: 'Missing payment verification details' }, { status: 400 });

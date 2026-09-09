@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { buildBasePlans } from '@/lib/recommendation/basePlanner';
 import { buildUpgradePlans } from '@/lib/recommendation/upgradePlanner';
 import {
@@ -24,6 +24,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    const supabase = await createSupabaseServerClient();
     const budget = Number(totalBudget);
     const numTravellers = Number(travellers);
     const numDays = Number(days);

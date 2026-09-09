@@ -386,7 +386,9 @@ This section describes ONLY what was actually verified in the code. It is not ne
   - `api/plan/route.ts` relies on `src/lib/recommendation/planService.ts` for logic.
   - **Authentication:** Fully migrated to Supabase SSR (Server-Side Rendering) Auth. API routes `/api/login` and `/api/signup` handle session creation, while components like `Navbar.tsx` dynamically render User Profile / Logout states based on active sessions.
   - Transport pages (`bus/page.tsx` and `train/page.tsx`) share DRY components (`TransportSearchForm` and `TransportFooter`).
-  - Checkout pages (`plan/checkout/[id]/page.tsx`) use `useRazorpay` and modular UI components.
+  - Checkout pages (`plan/checkout/[id]/page.tsx`) use `useRazorpay` and modular UI components. Date inputs are read-only to prevent checkout tampering.
+- **Trip Planner & Map:** State is persisted using Zustand `sessionStorage` persistence to prevent data loss across hard reloads or soft map navigation. The TripCustomizer supports "Adding" items from alternatives, not just swapping. The interactive `/map` allows back-navigation natively to preserve exact store context.
+- **Chatbot:** Global Floating `<Chatbot />` integrated with `models/gemini-3.6-flash`. The backend route (`api/chat/route.ts`) enforces strict system guardrails, blocking non-travel-related queries.
 - **Within-Budget logic:** Observed in the inspected code: Best Value is calculated using `balanceScore` and combinatorial subsets. Better Stay shifts focus to hotel subsets. More Experiences prioritizes activities.
 - **Upgrades:** The math for `recommendedBudget` and `extraNeeded` is in place. Upgrades now use `overallQuality` scoring on subsets rather than basic percentile filtering.
 - **General Rules:** `is_women_friendly` is not used for Plan Trip ranking; Transport records are treated as local transport; the 10% reserve formula is present; and hotel/restaurant ratings are used instead of pure price.

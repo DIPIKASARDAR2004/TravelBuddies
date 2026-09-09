@@ -5,21 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FaMoon, FaSun, FaChevronDown, FaBars, FaTimes, FaUserCircle, FaSignOutAlt } from 'react-icons/fa';
 import { supabaseBrowser as supabase } from '@/lib/supabaseBrowserClient';
-
-interface NavItem {
-  href: string;
-  label: string;
-  hasDropdown?: boolean;
-}
-
-const navItems: NavItem[] = [
-  { href: '/explore', label: 'Explore' },
-  { href: '/plan', label: 'Plan Trip' },
-  { href: '/hotel', label: 'Stays' },
-  { href: '/safety', label: 'Safety' },
-  { href: '/map', label: 'Map' },
-  { href: '/policies', label: 'Policies' },
-];
+import { NAV_ITEMS, NavItem } from '@/constants/navigation';
 
 export default function Navbar() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -86,7 +72,7 @@ export default function Navbar() {
 
         {/* Center Links (Desktop) */}
         <ul className="hidden md:flex items-center gap-8">
-          {navItems.map(({ href, label, hasDropdown }) => (
+          {NAV_ITEMS.map(({ href, label, hasDropdown }) => (
             <li key={label}>
               <Link 
                 href={href} 
@@ -169,7 +155,7 @@ export default function Navbar() {
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xl flex flex-col py-4 px-6 space-y-4">
           <ul className="flex flex-col space-y-4">
-            {navItems.map(({ href, label }) => (
+            {NAV_ITEMS.map(({ href, label }) => (
               <li key={label}>
                 <Link 
                   href={href} 

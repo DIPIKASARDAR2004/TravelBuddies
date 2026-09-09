@@ -17,7 +17,7 @@ export default function EscrowBanner() {
         </div>
         
         <Link 
-          href="/escrow" 
+          href="/policies" 
           className="flex items-center gap-2 text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 font-medium transition-colors"
         >
           Learn how our escrow system works

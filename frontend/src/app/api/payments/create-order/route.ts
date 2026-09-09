@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server';
-import Razorpay from 'razorpay';
-import { supabase } from '@/lib/supabaseClient';
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-});
+import { razorpayClient as razorpay } from '@/lib/services/razorpay';
+import { createSupabaseServerClient } from '@/lib/supabaseServer';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { hotel, destination, travellers, days, checkInDate, checkOutDate } = body;
+    
+    const supabase = await createSupabaseServerClient();
 
     if (!hotel || !travellers || !days) {
       return NextResponse.json({ error: 'Missing required trip details' }, { status: 400 });

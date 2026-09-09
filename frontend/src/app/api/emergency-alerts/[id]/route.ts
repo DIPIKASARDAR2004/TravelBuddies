@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { withAuth, parseJson, ApiHandlerContext } from "@/lib/apiHandler";
+import { withAuth, parseJson, ApiHandlerContext } from '@/lib/services/apiHandler';
 
 const alertFields = "id, latitude, longitude, message, status, created_at, resolved_at";
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

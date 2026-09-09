@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { FiEdit2, FiHome, FiTrash2 } from "react-icons/fi";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import type { SafeStay, SafeStayStatus } from "@/lib/safeStays";
+import type { SafeStay, SafeStayStatus } from '@/lib/services/safeStays';
 
 type StayForm = {
   stay_name: string;

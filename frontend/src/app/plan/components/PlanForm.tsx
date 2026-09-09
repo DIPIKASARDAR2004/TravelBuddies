@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { FiShield } from "react-icons/fi";
+import { apiClient } from "@/lib/services/apiClient";
+import toast from "react-hot-toast";
 
 export default function PlanForm({ womenOnly = false }: { womenOnly?: boolean }) {
   const { setTripDetails, setApiResponse, setLoading, setView, loading } = usePlanStore();
@@ -41,30 +43,28 @@ export default function PlanForm({ womenOnly = false }: { womenOnly?: boolean })
       budget, 
       travellers, 
       days: calculatedDays,
-      dates: { startDate, endDate }
+      dates: { startDate, endDate },
+      isSafetyTrip: womenOnly
     });
 
     const data = { destination, totalBudget: budget, travellers, days: calculatedDays, womenOnly };
 
     try {
-      // TODO: Move to dedicated API service file later
-      const response = await fetch("/api/plan", {
+      const result = await apiClient("/api/plan", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
-      const result = await response.json();
       setApiResponse(result);
       
       if (result.isTripPossible && result.withinBudget && result.withinBudget.length > 0) {
         setView("TIERS");
       } else {
-        alert(result.error || "Trip not possible with this budget! Try increasing your budget.");
+        toast.error(result.error || "Trip not possible with this budget! Try increasing your budget.");
       }
     } catch (error) {
       console.error("Error connecting to API:", error);
-      alert("Failed to connect to backend");
+      // apiClient already handles toast.error for network issues
     } finally {
       setLoading(false);
     }

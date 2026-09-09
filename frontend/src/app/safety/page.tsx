@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { usePlanStore } from "@/store/usePlanStore";
 import { motion } from "framer-motion";
 import { FiShield, FiInfo, FiAlertTriangle } from "react-icons/fi";
@@ -14,17 +14,29 @@ import TrustedContacts from "./trustedcontacts";
 import SOSButton from "./sosbutton";
 import LocationTracking from "./locationtracker";
 import NearbySafetyServices from "./nearbyservices";
-import TripSharing from "./tripsharing";
 import SafeStay from "./safestay";
 
 export default function WomenSafetyPage() {
   const { view, resetStore } = usePlanStore();
+  const [mounted, setMounted] = useState(false);
 
   // Reset the store when mounting this page so it doesn't carry over standard trips
+  // BUT don't reset if we are just returning from the map for an active safety trip
   useEffect(() => {
-    resetStore();
+    if (usePlanStore.getState().tripDetails.isSafetyTrip !== true) {
+      resetStore();
+    }
+    setMounted(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-rose-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
@@ -75,12 +87,10 @@ export default function WomenSafetyPage() {
           <p className="text-slate-500 dark:text-slate-400 mt-2">Essential safety tools and contacts available at any time.</p>
         </div>
 
-        <SOSButton />
-        <LocationTracking />
-
         <TrustedContacts />
 
-        <TripSharing />
+        <SOSButton />
+        <LocationTracking />
 
         <SafeStay />
 

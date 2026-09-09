@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { validateTripInput } from "@/lib/trips";
-import { withAuth, parseJson, ApiHandlerContext } from "@/lib/apiHandler";
+import { validateTripInput } from '@/lib/services/trips';
+import { withAuth, parseJson, ApiHandlerContext } from '@/lib/services/apiHandler';
 
 const tripFields = "id, title, destination, start_date, end_date, sharing, created_at, updated_at";
 export const GET = withAuth(async ({ user, supabase }: ApiHandlerContext) => {

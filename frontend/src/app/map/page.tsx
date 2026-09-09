@@ -5,8 +5,11 @@ import ExploreRoutes from "./exploreRoutes";
 import GoogleTripMap from "./GoogleTripMap";
 import DayWiseItinerary from "./DayWiseItinerary";
 import { usePlanStore } from "@/store/usePlanStore";
+import { useRouter } from "next/navigation";
+import { FaArrowLeft } from "react-icons/fa";
 
 export default function MapPage() {
+  const router = useRouter();
   const [showExplore, setShowExplore] = useState(false);
   const { customizedPlan, tripDetails } = usePlanStore();
   const [enrichedItinerary, setEnrichedItinerary] = useState<any[]>([]);
@@ -14,6 +17,14 @@ export default function MapPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-28 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
+        <button 
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 font-medium transition-colors mb-6 bg-white dark:bg-slate-900 px-4 py-2 rounded-full shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md"
+        >
+          <FaArrowLeft className="text-sm" />
+          Back to Trip Planner
+        </button>
+        
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
           <div>
             <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">Interactive Trip <span className="text-blue-600 dark:text-blue-400">Map</span></h1>

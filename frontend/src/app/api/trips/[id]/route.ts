@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { validateTripInput } from "@/lib/trips";
-import { withAuth, parseJson, ApiHandlerContext } from "@/lib/apiHandler";
+import { validateTripInput } from '@/lib/services/trips';
+import { withAuth, parseJson, ApiHandlerContext } from '@/lib/services/apiHandler';
 
 const tripFields = "id, title, destination, start_date, end_date, sharing, created_at, updated_at";
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

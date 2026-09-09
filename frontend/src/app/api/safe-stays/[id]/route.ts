@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { validateSafeStayInput } from "@/lib/safeStays";
-import { withAuth, parseJson, ApiHandlerContext } from "@/lib/apiHandler";
+import { validateSafeStayInput } from '@/lib/services/safeStays';
+import { withAuth, parseJson, ApiHandlerContext } from '@/lib/services/apiHandler';
 
 const stayFields = "id, stay_name, address, check_in, check_out, status, created_at, updated_at";
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

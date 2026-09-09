@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { validateEmergencyAlertInput } from "@/lib/emergencyAlerts";
-import { withAuth, parseJson, ApiHandlerContext } from "@/lib/apiHandler";
+import { validateEmergencyAlertInput } from '@/lib/services/emergencyAlerts';
+import { withAuth, parseJson, ApiHandlerContext } from '@/lib/services/apiHandler';
 
 const alertFields = "id, latitude, longitude, message, status, created_at, resolved_at";
 export const GET = withAuth(async ({ user, supabase }: ApiHandlerContext) => {

@@ -8,6 +8,7 @@ export default function SwapModal() {
     swapModalOpen, 
     setSwapModalOpen, 
     itemToSwap, 
+    modalMode,
     modalError, 
     setModalError, 
     apiResponse,
@@ -39,15 +40,27 @@ export default function SwapModal() {
       newCost = newItem.cost_per_person * tripDetails.travellers;
     }
 
-    const costDifference = newCost - oldCost;
+    const costDifference = modalMode === 'add' ? newCost : (newCost - oldCost);
     const newRemainingBudget = updatedPlan.remainingBudget - costDifference;
     
     if (newRemainingBudget < 0) {
-      setModalError(`Cannot swap! This exceeds your total budget by ${formatINR(Math.abs(newRemainingBudget))}`);
+      setModalError(`Cannot ${modalMode}! This exceeds your total budget by ${formatINR(Math.abs(newRemainingBudget))}`);
       return;
     }
 
-    if (itemToSwap === 'hotel') {
+    if (modalMode === 'add') {
+      let title = "";
+      if (itemToSwap === 'hotel') title = newItem.hotel_name;
+      else if (itemToSwap === 'restaurant') title = newItem.restaurant_name;
+      else if (itemToSwap === 'activity') title = newItem.activity_name;
+      else if (itemToSwap === 'transport') title = newItem.transport_mode;
+
+      if (!updatedPlan.extraItems) updatedPlan.extraItems = [];
+      updatedPlan.extraItems.push({ type: itemToSwap, name: title, price: newCost, rawItem: newItem });
+      
+      updatedPlan.tripCost += newCost;
+    } else {
+      if (itemToSwap === 'hotel') {
       updatedPlan.selectedHotel = {
         name: newItem.hotel_name,
         price: newItem.price_per_night,
@@ -68,8 +81,9 @@ export default function SwapModal() {
       updatedPlan.selectedTransport = newItem;
       updatedPlan.transportCost = newCost;
     }
+      updatedPlan.tripCost = updatedPlan.accommodationCost + updatedPlan.foodCost + updatedPlan.activityCost + updatedPlan.transportCost;
+    }
 
-    updatedPlan.tripCost = updatedPlan.accommodationCost + updatedPlan.foodCost + updatedPlan.activityCost + updatedPlan.transportCost;
     updatedPlan.totalAllocated = Math.round((updatedPlan.tripCost + updatedPlan.emergencyReserve) * 100) / 100;
     updatedPlan.remainingBudget = Math.round((tripDetails.budget - updatedPlan.totalAllocated) * 100) / 100;
 
@@ -81,7 +95,7 @@ export default function SwapModal() {
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="p-6 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center bg-gray-50 dark:bg-slate-900">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white capitalize">Swap {itemToSwap}</h3>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white capitalize">{modalMode === 'add' ? 'Add' : 'Swap'} {itemToSwap}</h3>
           <button onClick={() => setSwapModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none">&times;</button>
         </div>
         
@@ -118,7 +132,7 @@ export default function SwapModal() {
                     <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{subtitle}</p>
                   </div>
                   <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleSwapItem(item); }}>
-                    Select
+                    {modalMode === 'add' ? 'Add' : 'Select'}
                   </Button>
                 </div>
               );

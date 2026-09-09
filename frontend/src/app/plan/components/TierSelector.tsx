@@ -106,7 +106,7 @@ export default function TierSelector() {
                 className={`text-white
                   ${isPremium ? 'bg-purple-600 hover:bg-purple-700' : isBudget ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}`}
               >
-                Customize {plan.name}
+                Customize
               </Button>
             </Card>
           );

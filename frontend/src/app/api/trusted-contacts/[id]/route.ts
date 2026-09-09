@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { validateTrustedContactInput } from "@/lib/trustedContacts";
-import { withAuth, parseJson, ApiHandlerContext } from "@/lib/apiHandler";
+import { validateTrustedContactInput } from '@/lib/services/trustedContacts';
+import { withAuth, parseJson, ApiHandlerContext } from '@/lib/services/apiHandler';
 
 const contactFields = "id, name, phone, email, relationship, is_active, created_at, updated_at";
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

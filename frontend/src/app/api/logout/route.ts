@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { createSupabaseRouteClient } from "@/lib/supabaseRouteClient";
+import { createSupabaseServerClient } from "@/lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
-    const { supabase, applyCookies } = createSupabaseRouteClient(req);
+    const supabase = await createSupabaseServerClient();
     await supabase.auth.signOut();
-    return applyCookies(NextResponse.json({ message: "Signed out successfully" }));
+    return NextResponse.json({ message: "Signed out successfully" });
   } catch {
     return NextResponse.json({ message: "Sign out failed" }, { status: 500 });
   }
