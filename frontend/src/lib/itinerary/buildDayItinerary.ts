@@ -1,9 +1,6 @@
-export interface ItineraryDay {
-  dayNumber: number;
-  activities: any[];
-}
+import { ActivityOption, ItineraryDay, PlannerExtraItem, PlannerPackage } from "@/types";
 
-export function buildDayItinerary(plan: any, days: number): ItineraryDay[] {
+export function buildDayItinerary(plan: PlannerPackage | null | undefined, days: number): ItineraryDay[] {
   const result: ItineraryDay[] = [];
   for (let i = 1; i <= days; i++) {
     result.push({ dayNumber: i, activities: [] });
@@ -11,7 +8,7 @@ export function buildDayItinerary(plan: any, days: number): ItineraryDay[] {
 
   if (!plan || !days) return result;
 
-  let activitiesToSchedule: any[] = [];
+  let activitiesToSchedule: ActivityOption[] = [];
   
   if (plan.selectedActivities && Array.isArray(plan.selectedActivities) && plan.selectedActivities.length > 0) {
     activitiesToSchedule = [...plan.selectedActivities];
@@ -21,15 +18,15 @@ export function buildDayItinerary(plan: any, days: number): ItineraryDay[] {
 
   if (plan.extraItems && Array.isArray(plan.extraItems)) {
     const customActivities = plan.extraItems
-      .filter((item: any) => item.type === 'activity')
-      .map((item: any) => item.rawItem);
+      .filter((item: PlannerExtraItem) => item.type === 'activity')
+      .map((item: PlannerExtraItem) => item.rawItem as ActivityOption);
     
     if (customActivities.length > 0) {
       activitiesToSchedule = [...activitiesToSchedule, ...customActivities];
     }
   }
 
-  const uniqueActivities: any[] = [];
+  const uniqueActivities: ActivityOption[] = [];
   const seen = new Set();
   
   for (const act of activitiesToSchedule) {

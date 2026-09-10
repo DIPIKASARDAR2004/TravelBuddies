@@ -7,15 +7,18 @@ import DayWiseItinerary from "./DayWiseItinerary";
 import { usePlanStore } from "@/store/usePlanStore";
 import { useRouter } from "next/navigation";
 import { FaArrowLeft } from "react-icons/fa";
+import { EnrichedItineraryDay } from "@/types";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { StatusBanner } from "@/components/ui/StatusBanner";
 
 export default function MapPage() {
   const router = useRouter();
   const [showExplore, setShowExplore] = useState(false);
   const { customizedPlan, tripDetails } = usePlanStore();
-  const [enrichedItinerary, setEnrichedItinerary] = useState<any[]>([]);
+  const [enrichedItinerary, setEnrichedItinerary] = useState<EnrichedItineraryDay[]>([]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-28 pb-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#dbeafe,transparent_26%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] pt-28 pb-12 px-4 dark:bg-[radial-gradient(circle_at_top,#082f49,transparent_24%),linear-gradient(180deg,#020617_0%,#111827_100%)] sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         <button 
           onClick={() => router.back()}
@@ -24,19 +27,29 @@ export default function MapPage() {
           <FaArrowLeft className="text-sm" />
           Back to Trip Planner
         </button>
-        
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">Interactive Trip <span className="text-blue-600 dark:text-blue-400">Map</span></h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">View your custom itinerary and explore nearby routes.</p>
-          </div>
-          
-          <button
-            onClick={() => setShowExplore(!showExplore)}
-            className="px-6 py-3 bg-blue-600 text-white font-medium rounded-xl shadow-md hover:bg-blue-700 hover:shadow-lg transition-all"
-          >
-            {showExplore ? "Hide Routes" : "Explore Routes"}
-          </button>
+
+        <div className="mb-8 rounded-[2rem] border border-slate-200 bg-white/85 p-6 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-800 dark:bg-slate-950/75 md:p-8">
+          <SectionHeader
+            eyebrow="Map preview"
+            title="Interactive trip map"
+            description="See how the selected stay and experiences flow together before checkout, including estimated route legs and late-return guidance."
+            actions={
+              <button
+                onClick={() => setShowExplore(!showExplore)}
+                className="rounded-xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-sky-700"
+              >
+                {showExplore ? "Hide nearby routes" : "Explore nearby routes"}
+              </button>
+            }
+          />
+
+          {!customizedPlan ? (
+            <div className="mt-6">
+              <StatusBanner title="No plan selected">
+                Finish the package selection step first, then come back here to preview the route-aware itinerary.
+              </StatusBanner>
+            </div>
+          ) : null}
         </div>
 
         {showExplore && (
@@ -52,7 +65,6 @@ export default function MapPage() {
               Live Trip Map
             </h2>
           </div>
-          {/* Apply CSS filters for dark mode map rendering */}
           <div className="flex-1 h-[60vh] min-h-[500px] dark:contrast-125 dark:saturate-50 dark:brightness-75 dark:invert dark:hue-rotate-[180deg] [&_img]:transition-all">
             <GoogleTripMap 
               plan={customizedPlan} 
@@ -62,7 +74,6 @@ export default function MapPage() {
           </div>
         </div>
 
-        {/* Day Wise Itinerary injected below the map */}
         <DayWiseItinerary itinerary={enrichedItinerary} />
       </div>
     </div>

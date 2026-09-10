@@ -1,84 +1,111 @@
-import { PlanParams } from './basePlanner';
-
 import {
-  hotelQuality as baseObjectHotelQuality,
+  getAverageActivityRating,
+  getSubsets,
+  hotelQuality as hotelObjectQuality,
   restaurantObjectQuality,
   transportObjectQuality,
   upgradeActivityQuality,
-  getAverageActivityRating,
-  getSubsets
-} from './scoringUtils';
+} from "./scoringUtils";
+import {
+  NamedPlan,
+  PlanParams,
+  RecommendationActivity,
+  RecommendationHotel,
+  RecommendationPlanCandidate,
+  RecommendationRestaurant,
+  RecommendationTransport,
+  RecommendationUpgradeCandidate,
+} from "./types";
 
-// ─── Quality Scorers (Must mirror basePlanner) ───────────────────────────────
-
-function hotelQuality(hotel: any): number {
-  return baseObjectHotelQuality(hotel);
+function hotelQuality(hotel: RecommendationHotel) {
+  return hotelObjectQuality(hotel);
 }
 
-function restaurantQuality(restaurant: any): number {
+function restaurantQuality(restaurant: RecommendationRestaurant) {
   return restaurantObjectQuality(restaurant);
 }
 
-function activityQuality(activities: any[]): number {
+function activityQuality(activities: RecommendationActivity[]) {
   return upgradeActivityQuality(activities);
 }
 
-function transportQuality(transport: any): number {
+function transportQuality(transport: RecommendationTransport) {
   return transportObjectQuality(transport);
 }
 
-function calcOverallQuality(h: any, r: any, a: any[], t: any): number {
-  return (hotelQuality(h) + restaurantQuality(r) + activityQuality(a) + transportQuality(t)) / 4;
+function calcOverallQuality(
+  hotel: RecommendationHotel,
+  restaurant: RecommendationRestaurant,
+  activities: RecommendationActivity[],
+  transport: RecommendationTransport,
+) {
+  return (hotelQuality(hotel) + restaurantQuality(restaurant) + activityQuality(activities) + transportQuality(transport)) / 4;
 }
 
-function calcBalanceScore(h: any, r: any, a: any[], t: any): number {
-  return Math.min(hotelQuality(h), restaurantQuality(r), activityQuality(a), transportQuality(t));
+function calcBalanceScore(
+  hotel: RecommendationHotel,
+  restaurant: RecommendationRestaurant,
+  activities: RecommendationActivity[],
+  transport: RecommendationTransport,
+) {
+  return Math.min(hotelQuality(hotel), restaurantQuality(restaurant), activityQuality(activities), transportQuality(transport));
 }
 
-function isIdenticalPlan(p1: any, p2: any): boolean {
-  if (!p1 || !p2) return false;
-  if (p1.h?.hotel_name !== p2.h?.hotel_name) return false;
-  if (p1.r?.restaurant_name !== p2.r?.restaurant_name) return false;
-  if (p1.t?.transport_mode !== p2.t?.transport_mode) return false;
-  if (p1.a?.length !== p2.a?.length) return false;
-  const a1 = [...p1.a].sort((x, y) => x.activity_name.localeCompare(y.activity_name));
-  const a2 = [...p2.a].sort((x, y) => x.activity_name.localeCompare(y.activity_name));
-  return a1.every((act, i) => act.activity_name === a2[i].activity_name);
+function sortActivitiesByName(activities: RecommendationActivity[]) {
+  return [...activities].sort((left, right) => left.activity_name.localeCompare(right.activity_name));
 }
 
-// ─── Meaningful Improvement Checkers ──────────────────────────────────────────
+function isIdenticalPlan(
+  left: Pick<RecommendationPlanCandidate, "h" | "r" | "a" | "t"> | null,
+  right: Pick<RecommendationPlanCandidate, "h" | "r" | "a" | "t"> | null,
+) {
+  if (!left || !right) return false;
+  if (left.h.hotel_name !== right.h.hotel_name) return false;
+  if (left.r.restaurant_name !== right.r.restaurant_name) return false;
+  if (left.t.transport_mode !== right.t.transport_mode) return false;
+  if (left.a.length !== right.a.length) return false;
 
-function isRatingImproved(newRating: number, oldRating: number): boolean {
+  const leftActivities = sortActivitiesByName(left.a);
+  const rightActivities = sortActivitiesByName(right.a);
+  return leftActivities.every((activity, index) => activity.activity_name === rightActivities[index].activity_name);
+}
+
+function isRatingImproved(newRating?: number | null, oldRating?: number | null) {
   return Number((newRating || 3.5).toFixed(1)) > Number((oldRating || 3.5).toFixed(1));
 }
 
-function isComfortImproved(newComfort: number, oldComfort: number): boolean {
+function isComfortImproved(newComfort?: number | null, oldComfort?: number | null) {
   return (newComfort || 1) > (oldComfort || 1);
 }
 
-function isActivityImproved(newActs: any[], oldActs: any[]): boolean {
-  return getAverageActivityRating(newActs) >= getAverageActivityRating(oldActs) + 0.10 - 0.0001;
+function isActivityImproved(newActivities: RecommendationActivity[], oldActivities: RecommendationActivity[]) {
+  return getAverageActivityRating(newActivities) >= getAverageActivityRating(oldActivities) + 0.1 - 0.0001;
 }
 
-function isHotelMeaningfullyImproved(newH: any, oldH: any): boolean {
-  const oldHQ = hotelQuality(oldH);
-  const newHQ = hotelQuality(newH);
-  const visibleImprovement = isRatingImproved(newH.rating, oldH.rating) || isComfortImproved(newH.comfort_level, oldH.comfort_level);
-  return newHQ > oldHQ + 0.0001 && visibleImprovement;
+function isHotelMeaningfullyImproved(newHotel: RecommendationHotel, oldHotel: RecommendationHotel) {
+  const oldHotelQuality = hotelQuality(oldHotel);
+  const newHotelQuality = hotelQuality(newHotel);
+  const visibleImprovement =
+    isRatingImproved(newHotel.rating, oldHotel.rating) ||
+    isComfortImproved(newHotel.comfort_level, oldHotel.comfort_level);
+
+  return newHotelQuality > oldHotelQuality + 0.0001 && visibleImprovement;
 }
 
-function isRestaurantMeaningfullyImproved(newR: any, oldR: any): boolean {
-  return isRatingImproved(newR.rating, oldR.rating);
+function isRestaurantMeaningfullyImproved(newRestaurant: RecommendationRestaurant, oldRestaurant: RecommendationRestaurant) {
+  return isRatingImproved(newRestaurant.rating, oldRestaurant.rating);
 }
 
-function isTransportMeaningfullyImproved(newT: any, oldT: any): boolean {
-  return isComfortImproved(newT.comfort_level, oldT.comfort_level);
+function isTransportMeaningfullyImproved(newTransport: RecommendationTransport, oldTransport: RecommendationTransport) {
+  return isComfortImproved(newTransport.comfort_level, oldTransport.comfort_level);
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-export function buildUpgradePlans(params: PlanParams, bestValuePlan: any, originalTotalBudget: number) {
-  const upgrades: { plan: any; name: string; tagline: string }[] = [];
+export function buildUpgradePlans(
+  params: PlanParams,
+  bestValuePlan: RecommendationPlanCandidate | null,
+  originalTotalBudget: number,
+): NamedPlan<RecommendationUpgradeCandidate>[] {
+  const upgrades: NamedPlan<RecommendationUpgradeCandidate>[] = [];
 
   if (!bestValuePlan || bestValuePlan.tripCost > originalTotalBudget) {
     return upgrades;
@@ -86,177 +113,250 @@ export function buildUpgradePlans(params: PlanParams, bestValuePlan: any, origin
 
   const slightMax = originalTotalBudget * 0.05;
   const comfortMax = originalTotalBudget * 0.25;
-  const premiumMax = originalTotalBudget * 0.50;
+  const premiumMax = originalTotalBudget * 0.5;
 
   const {
-    qualifiedHotels, qualifiedRestaurants, qualifiedActivities, qualifiedTransport,
-    calcAccommodation, calcFood, calcActivity, calcTransport
+    qualifiedHotels,
+    qualifiedRestaurants,
+    qualifiedActivities,
+    qualifiedTransport,
+    calcAccommodation,
+    calcFood,
+    calcActivity,
+    calcTransport,
   } = params;
 
-  const bvH = bestValuePlan.h;
-  const bvR = bestValuePlan.r;
-  const bvA = bestValuePlan.a;
-  const bvT = bestValuePlan.t;
+  const baseHotel = bestValuePlan.h;
+  const baseRestaurant = bestValuePlan.r;
+  const baseActivities = bestValuePlan.a;
+  const baseTransport = bestValuePlan.t;
 
-  const qH = hotelQuality(bvH);
-  const qR = restaurantQuality(bvR);
-  const qA = activityQuality(bvA);
-  const qT = transportQuality(bvT);
+  const baseHotelQuality = hotelQuality(baseHotel);
+  const baseRestaurantQuality = restaurantQuality(baseRestaurant);
+  const baseActivityQuality = activityQuality(baseActivities);
+  const baseTransportQuality = transportQuality(baseTransport);
 
-  // Generate meaningfully better single items
-  const betterHotels = qualifiedHotels.filter(h => isHotelMeaningfullyImproved(h, bvH));
-  const betterRestaurants = qualifiedRestaurants.filter(r => isRestaurantMeaningfullyImproved(r, bvR));
-  const betterTransports = qualifiedTransport.filter(t => isTransportMeaningfullyImproved(t, bvT));
-  
-  const targetActCount = bvA.length;
-  let betterActivities: any[][] = [];
-  if (targetActCount > 0) {
-    const allActivitySubsets = getSubsets(qualifiedActivities, targetActCount);
-    betterActivities = allActivitySubsets.filter(acts => isActivityImproved(acts, bvA));
+  const betterHotels = qualifiedHotels.filter((hotel) => isHotelMeaningfullyImproved(hotel, baseHotel));
+  const betterRestaurants = qualifiedRestaurants.filter((restaurant) =>
+    isRestaurantMeaningfullyImproved(restaurant, baseRestaurant),
+  );
+  const betterTransports = qualifiedTransport.filter((transport) =>
+    isTransportMeaningfullyImproved(transport, baseTransport),
+  );
+
+  const targetActivityCount = baseActivities.length;
+  let betterActivitySets: RecommendationActivity[][] = [];
+  if (targetActivityCount > 0) {
+    const allActivitySubsets = getSubsets(qualifiedActivities, targetActivityCount);
+    betterActivitySets = allActivitySubsets.filter((activities) => isActivityImproved(activities, baseActivities));
   }
 
-  // Cost and metrics calculator for a candidate
-  const evaluateCandidate = (h: any, r: any, a: any[], t: any) => {
-    const tripCost = calcAccommodation(h) + calcFood(r) + calcActivity(a) + calcTransport(t);
-    const recommendedBudget = Math.ceil(tripCost / 0.90);
+  const evaluateCandidate = (
+    hotel: RecommendationHotel,
+    restaurant: RecommendationRestaurant,
+    activities: RecommendationActivity[],
+    transport: RecommendationTransport,
+  ): RecommendationUpgradeCandidate => {
+    const tripCost = calcAccommodation(hotel) + calcFood(restaurant) + calcActivity(activities) + calcTransport(transport);
+    const recommendedBudget = Math.ceil(tripCost / 0.9);
     const extraNeeded = recommendedBudget - originalTotalBudget;
-    
-    // Quality gains
+
     let changedCount = 0;
     let totalQualityGain = 0;
-    if (h !== bvH) { changedCount++; totalQualityGain += (hotelQuality(h) - qH); }
-    if (r !== bvR) { changedCount++; totalQualityGain += (restaurantQuality(r) - qR); }
-    if (a !== bvA) { changedCount++; totalQualityGain += (activityQuality(a) - qA); }
-    if (t !== bvT) { changedCount++; totalQualityGain += (transportQuality(t) - qT); }
-
-    const overallQuality = calcOverallQuality(h, r, a, t);
-    const balanceScore = calcBalanceScore(h, r, a, t);
+    if (hotel !== baseHotel) {
+      changedCount += 1;
+      totalQualityGain += hotelQuality(hotel) - baseHotelQuality;
+    }
+    if (restaurant !== baseRestaurant) {
+      changedCount += 1;
+      totalQualityGain += restaurantQuality(restaurant) - baseRestaurantQuality;
+    }
+    if (activities !== baseActivities) {
+      changedCount += 1;
+      totalQualityGain += activityQuality(activities) - baseActivityQuality;
+    }
+    if (transport !== baseTransport) {
+      changedCount += 1;
+      totalQualityGain += transportQuality(transport) - baseTransportQuality;
+    }
 
     return {
-      h, r, a, t, tripCost, recommendedBudget, extraNeeded, changedCount, totalQualityGain, overallQuality, balanceScore
+      h: hotel,
+      r: restaurant,
+      a: activities,
+      t: transport,
+      tripCost,
+      recommendedBudget,
+      extraNeeded,
+      changedCount,
+      totalQualityGain,
+      overallQuality: calcOverallQuality(hotel, restaurant, activities, transport),
+      balanceScore: calcBalanceScore(hotel, restaurant, activities, transport),
+      hRating: hotel.rating ?? 3.5,
+      hComfortLevel: hotel.comfort_level ?? 2,
+      rRating: restaurant.rating ?? 3.5,
+      tComfortLevel: transport.comfort_level ?? 1,
     };
   };
 
-  // ─── A. SLIGHT UPGRADE ───────────────────────────────────────────────────────
-  let slightPlanCand = null;
-  const slightCandidates = [];
+  let slightPlanCandidate: RecommendationUpgradeCandidate | null = null;
+  const slightCandidates: RecommendationUpgradeCandidate[] = [];
 
-  for (const h of betterHotels) slightCandidates.push(evaluateCandidate(h, bvR, bvA, bvT));
-  for (const r of betterRestaurants) slightCandidates.push(evaluateCandidate(bvH, r, bvA, bvT));
-  for (const t of betterTransports) slightCandidates.push(evaluateCandidate(bvH, bvR, bvA, t));
-  for (const a of betterActivities) slightCandidates.push(evaluateCandidate(bvH, bvR, a, bvT));
+  for (const hotel of betterHotels) slightCandidates.push(evaluateCandidate(hotel, baseRestaurant, baseActivities, baseTransport));
+  for (const restaurant of betterRestaurants) slightCandidates.push(evaluateCandidate(baseHotel, restaurant, baseActivities, baseTransport));
+  for (const transport of betterTransports) slightCandidates.push(evaluateCandidate(baseHotel, baseRestaurant, baseActivities, transport));
+  for (const activities of betterActivitySets) slightCandidates.push(evaluateCandidate(baseHotel, baseRestaurant, activities, baseTransport));
 
-  const validSlight = slightCandidates.filter(c => c.extraNeeded > 0 && c.extraNeeded <= slightMax);
-  
-  if (validSlight.length > 0) {
-    validSlight.sort((a, b) => {
-      if (a.extraNeeded !== b.extraNeeded) return a.extraNeeded - b.extraNeeded;
-      if (Math.abs(b.totalQualityGain - a.totalQualityGain) > 0.0001) return b.totalQualityGain - a.totalQualityGain;
-      return a.tripCost - b.tripCost;
+  const validSlightCandidates = slightCandidates.filter(
+    (candidate) => candidate.extraNeeded > 0 && candidate.extraNeeded <= slightMax,
+  );
+
+  if (validSlightCandidates.length > 0) {
+    validSlightCandidates.sort((left, right) => {
+      if (left.extraNeeded !== right.extraNeeded) return left.extraNeeded - right.extraNeeded;
+      if (Math.abs(right.totalQualityGain - left.totalQualityGain) > 0.0001) {
+        return right.totalQualityGain - left.totalQualityGain;
+      }
+      return left.tripCost - right.tripCost;
     });
-    slightPlanCand = validSlight[0];
-    upgrades.push({ plan: slightPlanCand, name: "Slight Upgrade", tagline: "One small but meaningful improvement" });
+
+    slightPlanCandidate = validSlightCandidates[0];
+    upgrades.push({
+      plan: slightPlanCandidate,
+      name: "Slight Upgrade",
+      tagline: "One small but meaningful improvement",
+    });
   }
 
-  // ─── B. COMFORTABLE UPGRADE ──────────────────────────────────────────────────
-  let comfortablePlanCand = null;
-  const comfortableCandidates = [];
+  let comfortablePlanCandidate: RecommendationUpgradeCandidate | null = null;
+  const comfortableCandidates: RecommendationUpgradeCandidate[] = [...slightCandidates];
 
-  // 1-category
-  comfortableCandidates.push(...slightCandidates);
-  
-  // 2-category
-  for (const h of betterHotels) {
-    for (const r of betterRestaurants) comfortableCandidates.push(evaluateCandidate(h, r, bvA, bvT));
-    for (const t of betterTransports) comfortableCandidates.push(evaluateCandidate(h, bvR, bvA, t));
-    for (const a of betterActivities) comfortableCandidates.push(evaluateCandidate(h, bvR, a, bvT));
-  }
-  for (const r of betterRestaurants) {
-    for (const t of betterTransports) comfortableCandidates.push(evaluateCandidate(bvH, r, bvA, t));
-    for (const a of betterActivities) comfortableCandidates.push(evaluateCandidate(bvH, r, a, bvT));
-  }
-  for (const t of betterTransports) {
-    for (const a of betterActivities) comfortableCandidates.push(evaluateCandidate(bvH, bvR, a, t));
+  for (const hotel of betterHotels) {
+    for (const restaurant of betterRestaurants) {
+      comfortableCandidates.push(evaluateCandidate(hotel, restaurant, baseActivities, baseTransport));
+    }
+    for (const transport of betterTransports) {
+      comfortableCandidates.push(evaluateCandidate(hotel, baseRestaurant, baseActivities, transport));
+    }
+    for (const activities of betterActivitySets) {
+      comfortableCandidates.push(evaluateCandidate(hotel, baseRestaurant, activities, baseTransport));
+    }
   }
 
-  const validComfortable = comfortableCandidates.filter(c => {
-    if (c.extraNeeded <= slightMax || c.extraNeeded > comfortMax) return false;
-    if (slightPlanCand) {
-      if (c.recommendedBudget <= slightPlanCand.recommendedBudget) return false;
-      if (isIdenticalPlan(c, slightPlanCand)) return false;
-      if (c.totalQualityGain <= slightPlanCand.totalQualityGain + 0.0001) return false;
+  for (const restaurant of betterRestaurants) {
+    for (const transport of betterTransports) {
+      comfortableCandidates.push(evaluateCandidate(baseHotel, restaurant, baseActivities, transport));
+    }
+    for (const activities of betterActivitySets) {
+      comfortableCandidates.push(evaluateCandidate(baseHotel, restaurant, activities, baseTransport));
+    }
+  }
+
+  for (const transport of betterTransports) {
+    for (const activities of betterActivitySets) {
+      comfortableCandidates.push(evaluateCandidate(baseHotel, baseRestaurant, activities, transport));
+    }
+  }
+
+  const validComfortableCandidates = comfortableCandidates.filter((candidate) => {
+    if (candidate.extraNeeded <= slightMax || candidate.extraNeeded > comfortMax) return false;
+    if (slightPlanCandidate) {
+      if (candidate.recommendedBudget <= slightPlanCandidate.recommendedBudget) return false;
+      if (isIdenticalPlan(candidate, slightPlanCandidate)) return false;
+      if (candidate.totalQualityGain <= slightPlanCandidate.totalQualityGain + 0.0001) return false;
     }
     return true;
   });
 
-  if (validComfortable.length > 0) {
-    validComfortable.sort((a, b) => {
-      const qpeA = a.totalQualityGain / a.extraNeeded;
-      const qpeB = b.totalQualityGain / b.extraNeeded;
-      if (Math.abs(qpeB - qpeA) > 0.0001) return qpeB - qpeA;
-      if (Math.abs(b.totalQualityGain - a.totalQualityGain) > 0.0001) return b.totalQualityGain - a.totalQualityGain;
-      return a.extraNeeded - b.extraNeeded;
+  if (validComfortableCandidates.length > 0) {
+    validComfortableCandidates.sort((left, right) => {
+      const leftQualityPerExtra = left.totalQualityGain / left.extraNeeded;
+      const rightQualityPerExtra = right.totalQualityGain / right.extraNeeded;
+      if (Math.abs(rightQualityPerExtra - leftQualityPerExtra) > 0.0001) {
+        return rightQualityPerExtra - leftQualityPerExtra;
+      }
+      if (Math.abs(right.totalQualityGain - left.totalQualityGain) > 0.0001) {
+        return right.totalQualityGain - left.totalQualityGain;
+      }
+      return left.extraNeeded - right.extraNeeded;
     });
-    comfortablePlanCand = validComfortable[0];
-    upgrades.push({ plan: comfortablePlanCand, name: "Comfortable Upgrade", tagline: "A clearly more comfortable trip" });
+
+    comfortablePlanCandidate = validComfortableCandidates[0];
+    upgrades.push({
+      plan: comfortablePlanCandidate,
+      name: "Comfortable Upgrade",
+      tagline: "A clearly more comfortable trip",
+    });
   }
 
-  // ─── C. PREMIUM UPGRADE ──────────────────────────────────────────────────────
-  let premiumPlanCand = null;
+  const getTop = <T,>(items: T[], qualityFn: (item: T) => number) =>
+    [...items].sort((left, right) => qualityFn(right) - qualityFn(left)).slice(0, 3);
 
-  const getTop = (items: any[], qFn: (i: any) => number) => {
-    const sorted = [...items].sort((a, b) => qFn(b) - qFn(a));
-    return sorted.slice(0, 3);
-  };
-  
-  const topBetterHotels = getTop(betterHotels, hotelQuality);
-  const topBetterRestaurants = getTop(betterRestaurants, restaurantQuality);
-  const topBetterTransports = getTop(betterTransports, transportQuality);
-  const topBetterActivities = getTop(betterActivities, activityQuality);
+  const topHotels = [baseHotel, ...getTop(betterHotels, hotelQuality)];
+  const topRestaurants = [baseRestaurant, ...getTop(betterRestaurants, restaurantQuality)];
+  const topTransports = [baseTransport, ...getTop(betterTransports, transportQuality)];
+  const topActivitySets = getTop(betterActivitySets, activityQuality);
+  const activityIncludesBase = topActivitySets.some((activities) =>
+    isIdenticalPlan(
+      { h: baseHotel, r: baseRestaurant, a: activities, t: baseTransport },
+      { h: baseHotel, r: baseRestaurant, a: baseActivities, t: baseTransport },
+    ),
+  );
+  const premiumActivitySets = activityIncludesBase ? topActivitySets : [baseActivities, ...topActivitySets];
 
-  const topH = [bvH, ...topBetterHotels];
-  const topR = [bvR, ...topBetterRestaurants];
-  const topT = [bvT, ...topBetterTransports];
-  
-  const aContainsBv = topBetterActivities.some(a => isIdenticalPlan({ a }, { a: bvA }));
-  const topA = aContainsBv ? topBetterActivities : [bvA, ...topBetterActivities];
-
-  const premiumCandidates = [];
-  for (const h of topH) {
-    for (const r of topR) {
-      for (const t of topT) {
-        for (const a of topA) {
-          if (h === bvH && r === bvR && t === bvT && a === bvA) continue; // Must be better in at least one category
-          // Ensure no category becomes worse
-          if (hotelQuality(h) < qH || restaurantQuality(r) < qR || activityQuality(a) < qA || transportQuality(t) < qT) continue;
-          premiumCandidates.push(evaluateCandidate(h, r, a, t));
+  const premiumCandidates: RecommendationUpgradeCandidate[] = [];
+  for (const hotel of topHotels) {
+    for (const restaurant of topRestaurants) {
+      for (const transport of topTransports) {
+        for (const activities of premiumActivitySets) {
+          if (hotel === baseHotel && restaurant === baseRestaurant && transport === baseTransport && activities === baseActivities) {
+            continue;
+          }
+          if (
+            hotelQuality(hotel) < baseHotelQuality ||
+            restaurantQuality(restaurant) < baseRestaurantQuality ||
+            activityQuality(activities) < baseActivityQuality ||
+            transportQuality(transport) < baseTransportQuality
+          ) {
+            continue;
+          }
+          premiumCandidates.push(evaluateCandidate(hotel, restaurant, activities, transport));
         }
       }
     }
   }
 
-  const validPremium = premiumCandidates.filter(c => {
-    if (c.extraNeeded <= comfortMax || c.extraNeeded > premiumMax) return false;
-    if (comfortablePlanCand) {
-      if (c.recommendedBudget <= comfortablePlanCand.recommendedBudget) return false;
-      if (isIdenticalPlan(c, comfortablePlanCand)) return false;
-      if (c.overallQuality <= comfortablePlanCand.overallQuality + 0.0001) return false;
-      if (c.totalQualityGain <= comfortablePlanCand.totalQualityGain + 0.0001) return false;
+  const validPremiumCandidates = premiumCandidates.filter((candidate) => {
+    if (candidate.extraNeeded <= comfortMax || candidate.extraNeeded > premiumMax) return false;
+    if (comfortablePlanCandidate) {
+      if (candidate.recommendedBudget <= comfortablePlanCandidate.recommendedBudget) return false;
+      if (isIdenticalPlan(candidate, comfortablePlanCandidate)) return false;
+      if (candidate.overallQuality <= comfortablePlanCandidate.overallQuality + 0.0001) return false;
+      if (candidate.totalQualityGain <= comfortablePlanCandidate.totalQualityGain + 0.0001) return false;
     }
-    if (slightPlanCand && isIdenticalPlan(c, slightPlanCand)) return false;
+    if (slightPlanCandidate && isIdenticalPlan(candidate, slightPlanCandidate)) return false;
     return true;
   });
 
-  if (validPremium.length > 0) {
-    validPremium.sort((a, b) => {
-      if (Math.abs(b.overallQuality - a.overallQuality) > 0.0001) return b.overallQuality - a.overallQuality;
-      if (Math.abs(b.balanceScore - a.balanceScore) > 0.0001) return b.balanceScore - a.balanceScore;
-      if (Math.abs(b.totalQualityGain - a.totalQualityGain) > 0.0001) return b.totalQualityGain - a.totalQualityGain;
-      return a.recommendedBudget - b.recommendedBudget;
+  if (validPremiumCandidates.length > 0) {
+    validPremiumCandidates.sort((left, right) => {
+      if (Math.abs(right.overallQuality - left.overallQuality) > 0.0001) {
+        return right.overallQuality - left.overallQuality;
+      }
+      if (Math.abs(right.balanceScore - left.balanceScore) > 0.0001) {
+        return right.balanceScore - left.balanceScore;
+      }
+      if (Math.abs(right.totalQualityGain - left.totalQualityGain) > 0.0001) {
+        return right.totalQualityGain - left.totalQualityGain;
+      }
+      return left.recommendedBudget - right.recommendedBudget;
     });
-    
-    premiumPlanCand = validPremium[0];
-    upgrades.push({ plan: premiumPlanCand, name: "Premium Upgrade", tagline: "The ultimate high-end experience" });
+
+    upgrades.push({
+      plan: validPremiumCandidates[0],
+      name: "Premium Upgrade",
+      tagline: "The ultimate high-end experience",
+    });
   }
 
   return upgrades;

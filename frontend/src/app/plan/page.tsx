@@ -1,37 +1,29 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { usePlanStore } from "@/store/usePlanStore";
-
-import PlanForm from "./components/PlanForm";
-import TierSelector from "./components/TierSelector";
-import TripCustomizer from "./components/TripCustomizer";
-import SwapModal from "./components/SwapModal";
+import React from "react";
+import { PlannerExperience } from "@/components/planner/PlannerExperience";
+import { usePlannerInitialization } from "@/hooks/usePlannerInitialization";
 
 export default function PlanPage() {
-  const { view } = usePlanStore();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = usePlannerInitialization(false);
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-sky-600 border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        {view === "FORM" && <PlanForm />}
-        {view === "TIERS" && <TierSelector />}
-        {view === "CUSTOMIZE" && <TripCustomizer />}
-      </main>
-      <SwapModal />
-    </div>
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#e0f2fe,transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] px-4 pb-16 pt-10 dark:bg-[radial-gradient(circle_at_top,#082f49,transparent_24%),linear-gradient(180deg,#020617_0%,#0f172a_100%)] sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
+        <PlannerExperience
+          eyebrow="Signature trip planning"
+          title="Design a trip that already feels organized before you leave"
+          description="Set the basics, compare curated packages, then fine-tune your stay, dining, activities, and budget from one consistent workspace."
+        />
+      </div>
+    </main>
   );
 }

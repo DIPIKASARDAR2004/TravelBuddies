@@ -1,160 +1,133 @@
 "use client";
+
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { Card } from "@/components/ui/Card";
+import toast from "react-hot-toast";
+import { FiCompass, FiShield, FiStar } from "react-icons/fi";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { AccountTypeTabs } from "@/components/auth/AccountTypeTabs";
+import { PasswordField } from "@/components/auth/PasswordField";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { StatusBanner } from "@/components/ui/StatusBanner";
 import { apiClient } from "@/lib/services/apiClient";
-import toast from "react-hot-toast";
+
+type LoginTab = "personal" | "business";
+
+const LOGIN_TABS: ReadonlyArray<{ value: LoginTab; label: string }> = [
+  { value: "personal", label: "Personal" },
+  { value: "business", label: "MyBiz" },
+];
 
 export default function LoginPage() {
-  const [tab, setTab] = useState("personal");
+  const router = useRouter();
+  const [tab, setTab] = useState<LoginTab>("personal");
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const isFormValid = formData.email.includes("@") && formData.password.length >= 6;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!isFormValid) return;
-    
+
     setLoading(true);
     try {
-      const data = await apiClient("/api/login", {
+      await apiClient<{ message?: string }>("/api/login", {
         method: "POST",
         body: JSON.stringify(formData),
       });
-      
+
       toast.success("Login successful!");
-      window.location.href = "/safety"; // Redirect to authenticated area
-    } catch (error: any) {
-      // apiClient handles toast.error automatically
+      router.push("/safety");
+      router.refresh();
+    } catch (error: unknown) {
+      console.error("Login failed:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((current) => ({ ...current, [event.target.name]: event.target.value }));
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 pt-20 px-4 sm:px-6 lg:px-8">
-      <Card className="max-w-md w-full p-8 space-y-8 border-slate-100 dark:border-slate-700">
-        <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white">
-            Welcome Back
-          </h2>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Login to continue to JourneyPilot
+    <AuthShell
+      eyebrow="Welcome back"
+      title="Pick up your planning flow without losing context"
+      description="Log in to recover saved planning progress, move into safer travel tools, and keep your trip decisions in one place."
+      accent="sky"
+      aside={
+        <div className="grid gap-3 md:grid-cols-3">
+          {[
+            { icon: FiCompass, title: "Planner sync" },
+            { icon: FiShield, title: "Safety tools" },
+            { icon: FiStar, title: "Protected checkout" },
+          ].map((item) => (
+            <div key={item.title} className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
+              <item.icon className="h-5 w-5" />
+              <p className="mt-3 text-sm font-semibold">{item.title}</p>
+            </div>
+          ))}
+        </div>
+      }
+    >
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-3xl font-black tracking-tight text-slate-950 dark:text-white">Log in</h2>
+          <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+            Use your account to continue trip planning, review map previews, and access safety tools.
           </p>
         </div>
 
-        {/* Account type tabs */}
-        <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
-          <button
-            type="button"
-            onClick={() => setTab("personal")}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
-              tab === "personal"
-                ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            Personal
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab("business")}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
-              tab === "business"
-                ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            MyBiz
-          </button>
-        </div>
+        <AccountTypeTabs value={tab} onChange={setTab} options={LOGIN_TABS} />
 
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <Input
-              label="Email address"
-              name="email"
-              type="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-            />
-            
-            <div className="relative">
-              <Input
-                label="Password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                required
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-10 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
-          </div>
+        <StatusBanner title={tab === "business" ? "Business mode" : "Personal mode"}>
+          {tab === "business"
+            ? "Use your JourneyPilot business account to manage travel planning for customers or teams."
+            : "Use your personal account to manage your own trips and safety workflows."}
+        </StatusBanner>
 
-          <Button
-            type="submit"
-            fullWidth
-            disabled={!isFormValid || loading}
-          >
-            {loading ? "Logging in..." : "CONTINUE"}
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          <Input
+            label="Email address"
+            name="email"
+            type="email"
+            required
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="you@example.com"
+          />
+
+          <PasswordField
+            label="Password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="••••••••"
+            visible={showPassword}
+            onToggleVisibility={() => setShowPassword((current) => !current)}
+          />
+
+          <Button type="submit" fullWidth disabled={!isFormValid || loading} className="py-3.5">
+            {loading ? "Logging in..." : "Continue to account"}
           </Button>
         </form>
 
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-300 dark:border-slate-600"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white dark:bg-slate-800 text-slate-500">
-                Or continue with
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <Button variant="outline" fullWidth type="button">
-              G
-            </Button>
-            <Button variant="outline" fullWidth type="button">
-              @
-            </Button>
-          </div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+          By continuing, you agree to the product terms, privacy policy, and secure payment conditions used in JourneyPilot.
         </div>
 
-        <p className="mt-4 text-xs text-slate-500 dark:text-slate-400 text-center">
-          By proceeding, you agree to our{" "}
-          <a href="#" className="text-blue-600 hover:text-blue-400">Privacy Policy</a>,{" "}
-          <a href="#" className="text-blue-600 hover:text-blue-400">User Agreement</a> and{" "}
-          <a href="#" className="text-blue-600 hover:text-blue-400">T&Cs</a>.
-        </p>
-
-        <p className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400">
+        <p className="text-center text-sm text-slate-600 dark:text-slate-400">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
-            Sign up
+          <Link href="/signup" className="font-semibold text-sky-600 hover:text-sky-500">
+            Create one
           </Link>
         </p>
-      </Card>
-    </div>
+      </div>
+    </AuthShell>
   );
 }

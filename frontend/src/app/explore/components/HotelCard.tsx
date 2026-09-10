@@ -1,4 +1,5 @@
 import React from "react";
+import { FiArrowRight, FiMapPin, FiShield, FiStar } from "react-icons/fi";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
@@ -15,41 +16,46 @@ interface HotelCardProps {
 
 export default function HotelCard({ hotel }: HotelCardProps) {
   return (
-    <Card hoverable className="flex flex-col border border-slate-100 dark:border-slate-800">
+    <Card hoverable className="group flex flex-col rounded-[1.75rem] border border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-950/70">
       <div className="relative h-64 overflow-hidden">
-        <div className="absolute inset-0 bg-slate-900/20 group-hover:bg-transparent transition-all duration-300 z-10"></div>
+        <div className="absolute inset-0 z-10 bg-gradient-to-t from-slate-950/55 via-slate-950/10 to-transparent" />
         <img
           src={hotel.image}
           alt={hotel.name}
-          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out"
+          className="h-full w-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
         />
-        <div className="absolute top-4 right-4 z-20 bg-white dark:bg-slate-800/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-sm font-semibold flex items-center gap-1 shadow-sm text-slate-800 dark:text-white">
-          <svg className="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-          </svg>
+        <div className="absolute left-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-slate-900 shadow-sm backdrop-blur dark:bg-slate-900/90 dark:text-white">
+          <FiStar className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
           {hotel.rating}
+        </div>
+        <div className="absolute bottom-4 left-4 z-20 inline-flex items-center gap-1 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold text-white backdrop-blur">
+          <FiShield className="h-3.5 w-3.5" />
+          Curated stay
         </div>
       </div>
 
-      <div className="p-5 flex flex-col flex-grow">
-        <div className="flex items-start justify-between mb-2">
-          <h3 className="font-bold text-lg text-slate-900 dark:text-white line-clamp-1">{hotel.name}</h3>
-        </div>
-        <div className="flex items-center text-slate-500 dark:text-slate-400 text-sm mb-4 gap-1">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          {hotel.location}
-        </div>
-        
-        <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Starts from</span>
-            <span className="font-bold text-slate-900 dark:text-white">{hotel.price} <span className="text-sm font-normal text-slate-500 dark:text-slate-400">/night</span></span>
+      <div className="flex flex-1 flex-col p-5">
+        <div className="mb-4">
+          <h3 className="text-xl font-black tracking-tight text-slate-950 dark:text-white">{hotel.name}</h3>
+          <div className="mt-2 flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+            <FiMapPin className="h-4 w-4" />
+            {hotel.location}
           </div>
-          <Button size="sm">
-            View Details
+        </div>
+
+        <div className="mb-5 rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">Starting rate</p>
+          <p className="mt-2 text-2xl font-black text-slate-950 dark:text-white">
+            {hotel.price}
+            <span className="ml-1 text-sm font-medium text-slate-500 dark:text-slate-400">/ night</span>
+          </p>
+        </div>
+
+        <div className="mt-auto flex items-center justify-between gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+          <p className="text-sm text-slate-500 dark:text-slate-400">Good fit for premium itinerary shortlists.</p>
+          <Button size="sm" className="shrink-0">
+            View stay
+            <FiArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </div>

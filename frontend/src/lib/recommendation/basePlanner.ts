@@ -1,83 +1,85 @@
-export interface PlanParams {
-  qualifiedHotels: any[];
-  qualifiedRestaurants: any[];
-  qualifiedActivities: any[];
-  qualifiedTransport: any[];
-  tripSpendingLimit: number;
-  minH: any;
-  minR: any;
-  minA: any;
-  minT: any;
-  minHotelCost: number;
-  minFoodCost: number;
-  minActCost: number;
-  minTransCost: number;
-  calcAccommodation: (h: any) => number;
-  calcFood: (r: any) => number;
-  calcActivity: (a: any) => number;
-  calcTransport: (t: any) => number;
-  getNextCheaper: (items: any[], currentItem: any) => any;
-  getNextBetter: (items: any[], currentItem: any, type: string) => any;
-  isIdentical: (p1: any, p2: any) => boolean;
-  days: number;
+import {
+  activityQuality,
+  baseHotelQuality as hotelQuality,
+  getSubsets,
+  restaurantQuality,
+  sumActivityRating,
+  transportQuality,
+} from "./scoringUtils";
+import { NamedPlan, PlanParams, RecommendationActivity, RecommendationPlanCandidate } from "./types";
+
+interface BVScores {
+  balance: number;
+  overall: number;
+  util: number;
 }
 
-import {
-  baseHotelQuality as hotelQuality,
-  restaurantQuality,
-  transportQuality,
-  activityQuality,
-  sumActivityRating,
-  getSubsets
-} from './scoringUtils';
+function bvScores(plan: RecommendationPlanCandidate, tripSpendingLimit: number): BVScores {
+  const hotelScore = hotelQuality(plan.hRating, plan.hComfortLevel);
+  const restaurantScore = restaurantQuality(plan.rRating);
+  const activityScore = activityQuality(plan.a);
+  const transportScore = transportQuality(plan.tComfortLevel);
 
-// ─── Best Value Scoring ────────────────────────────────────────────────────────
-//
-// rankBy (higher is better):
-//   1. balanceScore    = min of all four category scores (weak category drags down)
-//   2. overallQuality  = arithmetic mean of four category scores
-//   3. budgetUtil      = tripCost / tripSpendingLimit (prefers plans that use budget)
-//   4. hotel rating    (stable tie-break)
-//   5. tripCost ASC    (deterministic final tie-break)
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface BVScores { balance: number; overall: number; util: number }
-
-function bvScores(p: any, tripSpendingLimit: number): BVScores {
-  const hQ = hotelQuality(p.hRating, p.hComfortLevel);
-  const rQ = restaurantQuality(p.rRating);
-  const aQ = activityQuality(p.a);
-  const tQ = transportQuality(p.tComfortLevel);
   return {
-    balance: Math.min(hQ, rQ, aQ, tQ),
-    overall: (hQ + rQ + aQ + tQ) / 4,
-    util:    tripSpendingLimit > 0 ? p.tripCost / tripSpendingLimit : 0,
+    balance: Math.min(hotelScore, restaurantScore, activityScore, transportScore),
+    overall: (hotelScore + restaurantScore + activityScore + transportScore) / 4,
+    util: tripSpendingLimit > 0 ? plan.tripCost / tripSpendingLimit : 0,
   };
 }
 
-/** Returns true when candidate should replace current as Best Value winner. */
-function isBetterBestValue(candidate: any, current: any, tsl: number): boolean {
-  const cs = bvScores(candidate, tsl);
-  const cu = bvScores(current, tsl);
-  if (Math.abs(cs.balance - cu.balance) > 0.0001) return cs.balance > cu.balance;
-  if (Math.abs(cs.overall - cu.overall) > 0.0001) return cs.overall > cu.overall;
-  if (Math.abs(cs.util   - cu.util)    > 0.0010) return cs.util    > cu.util;
-  if (candidate.hRating !== current.hRating)      return candidate.hRating > current.hRating;
+function isBetterBestValue(
+  candidate: RecommendationPlanCandidate,
+  current: RecommendationPlanCandidate,
+  tripSpendingLimit: number,
+) {
+  const candidateScores = bvScores(candidate, tripSpendingLimit);
+  const currentScores = bvScores(current, tripSpendingLimit);
+
+  if (Math.abs(candidateScores.balance - currentScores.balance) > 0.0001) {
+    return candidateScores.balance > currentScores.balance;
+  }
+  if (Math.abs(candidateScores.overall - currentScores.overall) > 0.0001) {
+    return candidateScores.overall > currentScores.overall;
+  }
+  if (Math.abs(candidateScores.util - currentScores.util) > 0.001) {
+    return candidateScores.util > currentScores.util;
+  }
+  if (candidate.hRating !== current.hRating) {
+    return candidate.hRating > current.hRating;
+  }
+
   return candidate.tripCost < current.tripCost;
 }
 
-// ─── Better Stay Eligibility ───────────────────────────────────────────────────
-//
-// The candidate hotel must have a strictly higher composite hotelQuality score
-// than the Best Value hotel. Using the composite (not just rating) so that
-// same-rating/higher-comfort hotels (e.g. Alpine Heights vs Backpacker's Haven)
-// are correctly identified as a genuine stay improvement.
-// ─────────────────────────────────────────────────────────────────────────────
+function isBetterHotel(candidate: RecommendationPlanCandidate, bestValuePlan: RecommendationPlanCandidate) {
+  const candidateHotelQuality = hotelQuality(candidate.hRating, candidate.hComfortLevel);
+  const bestValueHotelQuality = hotelQuality(bestValuePlan.hRating, bestValuePlan.hComfortLevel);
+  return candidateHotelQuality > bestValueHotelQuality;
+}
 
-function isBetterHotel(candidate: any, bvPlan: any): boolean {
-  const cHQ = hotelQuality(candidate.hRating, candidate.hComfortLevel);
-  const bHQ = hotelQuality(bvPlan.hRating,    bvPlan.hComfortLevel);
-  return cHQ > bHQ;
+function sortActivitiesByName(activities: RecommendationActivity[]) {
+  return [...activities].sort((left, right) => left.activity_name.localeCompare(right.activity_name));
+}
+
+function isPlanIdentical(left: RecommendationPlanCandidate | null, right: RecommendationPlanCandidate | null) {
+  if (!left || !right) return false;
+  if (left.h.hotel_name !== right.h.hotel_name) return false;
+  if (left.r.restaurant_name !== right.r.restaurant_name) return false;
+  if (left.t.transport_mode !== right.t.transport_mode) return false;
+  if (left.a.length !== right.a.length) return false;
+
+  const leftActivities = sortActivitiesByName(left.a);
+  const rightActivities = sortActivitiesByName(right.a);
+  return leftActivities.every((activity, index) => activity.activity_name === rightActivities[index].activity_name);
+}
+
+function formatDiagnosticPlan(plan: RecommendationPlanCandidate, params: PlanParams) {
+  const scores = bvScores(plan, params.tripSpendingLimit);
+  const hotelScore = hotelQuality(plan.hRating, plan.hComfortLevel);
+
+  return `hotel=${plan.h.hotel_name} (${plan.hRating}★ C${plan.hComfortLevel} hQ=${hotelScore.toFixed(3)}) | ${plan.a.length} acts ` +
+    `| balance=${scores.balance.toFixed(3)} overall=${scores.overall.toFixed(3)} util=${(scores.util * 100).toFixed(1)}%` +
+    ` | ₹${plan.tripCost} (H:₹${params.calcAccommodation(plan.h)} R:₹${params.calcFood(plan.r)} A:₹${params.calcActivity(plan.a)} T:₹${params.calcTransport(plan.t)})`;
 }
 
 export function buildBasePlans(params: PlanParams) {
@@ -85,38 +87,51 @@ export function buildBasePlans(params: PlanParams) {
   let combinationsEvaluated = 0;
 
   const {
-    qualifiedHotels, qualifiedRestaurants, qualifiedActivities, qualifiedTransport,
-    tripSpendingLimit, calcAccommodation, calcFood, calcActivity, calcTransport, days
+    qualifiedHotels,
+    qualifiedRestaurants,
+    qualifiedActivities,
+    qualifiedTransport,
+    tripSpendingLimit,
+    calcAccommodation,
+    calcFood,
+    calcActivity,
+    calcTransport,
+    days,
   } = params;
 
-  const maxActs    = days * 2;
-  const targetActs = Math.max(1, days);
+  const maxActivities = days * 2;
+  const targetActivities = Math.max(1, days);
+  const allActivitySubsets = getSubsets(qualifiedActivities, maxActivities);
+  const allValidPlans: RecommendationPlanCandidate[] = [];
 
-  const allActivitySubsets = getSubsets(qualifiedActivities, maxActs);
+  for (const hotel of qualifiedHotels) {
+    const hotelCost = calcAccommodation(hotel);
+    if (hotelCost > tripSpendingLimit) continue;
 
-  // ── 2. Backtracking search — prune branches exceeding spending limit ──────────
-  const allValidPlans: any[] = [];
+    for (const restaurant of qualifiedRestaurants) {
+      const restaurantCost = calcFood(restaurant);
+      if (hotelCost + restaurantCost > tripSpendingLimit) continue;
 
-  for (const h of qualifiedHotels) {
-    const cH = calcAccommodation(h);
-    if (cH > tripSpendingLimit) continue;
-    for (const r of qualifiedRestaurants) {
-      const cR = calcFood(r);
-      if (cH + cR > tripSpendingLimit) continue;
-      for (const t of qualifiedTransport) {
-        const cT = calcTransport(t);
-        if (cH + cR + cT > tripSpendingLimit) continue;
-        for (const acts of allActivitySubsets) {
-          combinationsEvaluated++;
-          const cA       = calcActivity(acts);
-          const tripCost = cH + cR + cT + cA;
+      for (const transport of qualifiedTransport) {
+        const transportCost = calcTransport(transport);
+        if (hotelCost + restaurantCost + transportCost > tripSpendingLimit) continue;
+
+        for (const activities of allActivitySubsets) {
+          combinationsEvaluated += 1;
+          const activityCost = calcActivity(activities);
+          const tripCost = hotelCost + restaurantCost + transportCost + activityCost;
+
           if (tripCost <= tripSpendingLimit) {
             allValidPlans.push({
-              h, r, t, a: acts, tripCost,
-              hRating:       h.rating        ?? 3.5,
-              hComfortLevel: h.comfort_level  ?? 2,
-              rRating:       r.rating        ?? 3.5,
-              tComfortLevel: t.comfort_level  ?? 1,
+              h: hotel,
+              r: restaurant,
+              a: activities,
+              t: transport,
+              tripCost,
+              hRating: hotel.rating ?? 3.5,
+              hComfortLevel: hotel.comfort_level ?? 2,
+              rRating: restaurant.rating ?? 3.5,
+              tComfortLevel: transport.comfort_level ?? 1,
             });
           }
         }
@@ -124,108 +139,103 @@ export function buildBasePlans(params: PlanParams) {
     }
   }
 
-  // ── 3. Exact-plan identity check (all four categories + sorted activity set) ──
-  function isPlanIdentical(p1: any, p2: any): boolean {
-    if (!p1 || !p2)                                         return false;
-    if (p1.h.hotel_name      !== p2.h.hotel_name)           return false;
-    if (p1.r.restaurant_name !== p2.r.restaurant_name)      return false;
-    if (p1.t.transport_mode  !== p2.t.transport_mode)       return false;
-    if (p1.a.length          !== p2.a.length)               return false;
-    const a1 = [...p1.a].sort((x, y) => x.activity_name.localeCompare(y.activity_name));
-    const a2 = [...p2.a].sort((x, y) => x.activity_name.localeCompare(y.activity_name));
-    return a1.every((act, i) => act.activity_name === a2[i].activity_name);
-  }
+  const plans: NamedPlan<RecommendationPlanCandidate>[] = [];
+  let bestValuePlan: RecommendationPlanCandidate | null = null;
 
-  // ── 4. Plan Selection ─────────────────────────────────────────────────────────
-  const plans: { plan: any; name: string; tagline: string }[] = [];
-
-  // ── Best Value ────────────────────────────────────────────────────────────────
-  // Target ~days activities; fall back to fewer if none fit.
-  let bestValuePlan: any = null;
-  for (let t = targetActs; t >= 1; t--) {
-    const candidates = allValidPlans.filter(p => p.a.length === t);
+  for (let activityCount = targetActivities; activityCount >= 1; activityCount -= 1) {
+    const candidates = allValidPlans.filter((plan) => plan.a.length === activityCount);
     if (candidates.length === 0) continue;
-    for (const p of candidates) {
-      if (!bestValuePlan || isBetterBestValue(p, bestValuePlan, tripSpendingLimit)) {
-        bestValuePlan = p;
+
+    for (const candidate of candidates) {
+      if (!bestValuePlan || isBetterBestValue(candidate, bestValuePlan, tripSpendingLimit)) {
+        bestValuePlan = candidate;
       }
     }
     break;
   }
-  if (bestValuePlan) plans.push({ plan: bestValuePlan, name: 'Best Value', tagline: 'The Perfect Balance' });
 
-  // ── Better Stay ───────────────────────────────────────────────────────────────
-  // Candidate hotel must have strictly higher hotelQuality() than BV hotel.
-  // Sort remaining categories by best hotel → best support (restaurant, activities,
-  // transport) → higher budget utilisation → lower cost.
-  let betterStayPlan: any = null;
-  for (let t = targetActs; t >= 1; t--) {
-    const candidates = allValidPlans.filter(p => p.a.length === t);
+  if (bestValuePlan) {
+    plans.push({ plan: bestValuePlan, name: "Best Value", tagline: "The Perfect Balance" });
+  }
+
+  let betterStayPlan: RecommendationPlanCandidate | null = null;
+
+  for (let activityCount = targetActivities; activityCount >= 1; activityCount -= 1) {
+    const candidates = allValidPlans.filter((plan) => plan.a.length === activityCount);
     if (candidates.length === 0) continue;
 
-    candidates.sort((a, b) => {
-      const hQA = hotelQuality(a.hRating, a.hComfortLevel);
-      const hQB = hotelQuality(b.hRating, b.hComfortLevel);
-      if (Math.abs(hQB - hQA) > 0.0001) return hQB - hQA;
-      // Same hotel quality: prefer better support categories
-      const supA = restaurantQuality(a.rRating) + activityQuality(a.a) + transportQuality(a.tComfortLevel);
-      const supB = restaurantQuality(b.rRating) + activityQuality(b.a) + transportQuality(b.tComfortLevel);
-      if (Math.abs(supB - supA) > 0.001) return supB - supA;
-      const utilA = a.tripCost / tripSpendingLimit;
-      const utilB = b.tripCost / tripSpendingLimit;
-      if (Math.abs(utilB - utilA) > 0.001) return utilB - utilA;
-      return a.tripCost - b.tripCost;
+    candidates.sort((left, right) => {
+      const leftHotelScore = hotelQuality(left.hRating, left.hComfortLevel);
+      const rightHotelScore = hotelQuality(right.hRating, right.hComfortLevel);
+      if (Math.abs(rightHotelScore - leftHotelScore) > 0.0001) return rightHotelScore - leftHotelScore;
+
+      const leftSupportScore =
+        restaurantQuality(left.rRating) + activityQuality(left.a) + transportQuality(left.tComfortLevel);
+      const rightSupportScore =
+        restaurantQuality(right.rRating) + activityQuality(right.a) + transportQuality(right.tComfortLevel);
+      if (Math.abs(rightSupportScore - leftSupportScore) > 0.001) return rightSupportScore - leftSupportScore;
+
+      const leftUtil = left.tripCost / tripSpendingLimit;
+      const rightUtil = right.tripCost / tripSpendingLimit;
+      if (Math.abs(rightUtil - leftUtil) > 0.001) return rightUtil - leftUtil;
+
+      return left.tripCost - right.tripCost;
     });
 
-    for (const p of candidates) {
-      if (bestValuePlan && !isBetterHotel(p, bestValuePlan)) continue;
-      if (!isPlanIdentical(p, bestValuePlan)) {
-        betterStayPlan = p;
+    for (const candidate of candidates) {
+      if (bestValuePlan && !isBetterHotel(candidate, bestValuePlan)) continue;
+      if (!isPlanIdentical(candidate, bestValuePlan)) {
+        betterStayPlan = candidate;
         break;
       }
     }
+
     if (betterStayPlan) break;
   }
-  if (betterStayPlan) plans.push({ plan: betterStayPlan, name: 'Better Stay', tagline: 'Comfort First' });
 
-  // ── More Experiences ──────────────────────────────────────────────────────────
-  // 1. Greatest distinct activity count (up to days*2)
-  // 2. Higher summed activity rating
-  // 3. Higher combined H+R+T quality
-  // 4. Lower trip cost
-  let moreExpPlan: any = null;
-  const meCandidates = [...allValidPlans].sort((a, b) => {
-    if (b.a.length !== a.a.length) return b.a.length - a.a.length;
-    const bSum = sumActivityRating(b.a), aSum = sumActivityRating(a.a);
-    if (Math.abs(bSum - aSum) > 0.01) return bSum - aSum;
-    const bQ = hotelQuality(b.hRating, b.hComfortLevel) + restaurantQuality(b.rRating) + transportQuality(b.tComfortLevel);
-    const aQ = hotelQuality(a.hRating, a.hComfortLevel) + restaurantQuality(a.rRating) + transportQuality(a.tComfortLevel);
-    if (Math.abs(bQ - aQ) > 0.001) return bQ - aQ;
-    return a.tripCost - b.tripCost;
+  if (betterStayPlan) {
+    plans.push({ plan: betterStayPlan, name: "Better Stay", tagline: "Comfort First" });
+  }
+
+  let moreExperiencesPlan: RecommendationPlanCandidate | null = null;
+  const experienceCandidates = [...allValidPlans].sort((left, right) => {
+    if (right.a.length !== left.a.length) return right.a.length - left.a.length;
+
+    const rightActivitySum = sumActivityRating(right.a);
+    const leftActivitySum = sumActivityRating(left.a);
+    if (Math.abs(rightActivitySum - leftActivitySum) > 0.01) return rightActivitySum - leftActivitySum;
+
+    const rightQuality =
+      hotelQuality(right.hRating, right.hComfortLevel) +
+      restaurantQuality(right.rRating) +
+      transportQuality(right.tComfortLevel);
+    const leftQuality =
+      hotelQuality(left.hRating, left.hComfortLevel) +
+      restaurantQuality(left.rRating) +
+      transportQuality(left.tComfortLevel);
+    if (Math.abs(rightQuality - leftQuality) > 0.001) return rightQuality - leftQuality;
+
+    return left.tripCost - right.tripCost;
   });
-  for (const p of meCandidates) {
-    if (bestValuePlan  && isPlanIdentical(p, bestValuePlan))  continue;
-    if (betterStayPlan && isPlanIdentical(p, betterStayPlan)) continue;
-    moreExpPlan = p;
+
+  for (const candidate of experienceCandidates) {
+    if (bestValuePlan && isPlanIdentical(candidate, bestValuePlan)) continue;
+    if (betterStayPlan && isPlanIdentical(candidate, betterStayPlan)) continue;
+    moreExperiencesPlan = candidate;
     break;
   }
-  if (moreExpPlan) plans.push({ plan: moreExpPlan, name: 'More Experiences', tagline: 'Explorer Mode' });
 
-  // ── Diagnostics ───────────────────────────────────────────────────────────────
-  const ms = Date.now() - startTime;
-  const fmt = (p: any) => {
-    const s = bvScores(p, tripSpendingLimit);
-    const hQ = hotelQuality(p.hRating, p.hComfortLevel);
-    return `hotel=${p.h.hotel_name} (${p.hRating}★ C${p.hComfortLevel} hQ=${hQ.toFixed(3)}) | ${p.a.length} acts ` +
-           `| balance=${s.balance.toFixed(3)} overall=${s.overall.toFixed(3)} util=${(s.util*100).toFixed(1)}%` +
-           ` | ₹${p.tripCost} (H:₹${calcAccommodation(p.h)} R:₹${calcFood(p.r)} A:₹${calcActivity(p.a)} T:₹${calcTransport(p.t)})`;
-  };
-  console.log(`\n[Base Planner] ${combinationsEvaluated} combinations | ${ms}ms | spending limit ₹${tripSpendingLimit}`);
-  if (bestValuePlan)  console.log(`[Base Planner] Best Value:       ${fmt(bestValuePlan)}`);
-  else                console.log(`[Base Planner] Best Value:       NONE`);
-  if (betterStayPlan) console.log(`[Base Planner] Better Stay:      ${fmt(betterStayPlan)}`);
-  else                console.log(`[Base Planner] Better Stay:      OMITTED — no hotel with higher hotelQuality fits within ₹${tripSpendingLimit}`);
-  if (moreExpPlan)    console.log(`[Base Planner] More Experiences: ${fmt(moreExpPlan)}`);
+  if (moreExperiencesPlan) {
+    plans.push({ plan: moreExperiencesPlan, name: "More Experiences", tagline: "Explorer Mode" });
+  }
+
+  const elapsedMs = Date.now() - startTime;
+  console.log(`\n[Base Planner] ${combinationsEvaluated} combinations | ${elapsedMs}ms | spending limit ₹${tripSpendingLimit}`);
+  if (bestValuePlan) console.log(`[Base Planner] Best Value:       ${formatDiagnosticPlan(bestValuePlan, params)}`);
+  else console.log("[Base Planner] Best Value:       NONE");
+  if (betterStayPlan) console.log(`[Base Planner] Better Stay:      ${formatDiagnosticPlan(betterStayPlan, params)}`);
+  else console.log(`[Base Planner] Better Stay:      OMITTED — no hotel with higher hotelQuality fits within ₹${tripSpendingLimit}`);
+  if (moreExperiencesPlan) console.log(`[Base Planner] More Experiences: ${formatDiagnosticPlan(moreExperiencesPlan, params)}`);
 
   return { plans, bestValuePlan };
 }

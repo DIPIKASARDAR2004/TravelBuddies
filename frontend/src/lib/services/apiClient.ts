@@ -1,14 +1,13 @@
 import toast from 'react-hot-toast';
-import { ApiResponse } from '@/types';
 
 /**
  * A wrapper around native fetch that handles JSON serialization,
  * default headers, error throwing, and standard toast notifications.
  */
-export async function apiClient<T = any>(
+export async function apiClient<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
-): Promise<ApiResponse<T>> {
+): Promise<T> {
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,
@@ -29,9 +28,12 @@ export async function apiClient<T = any>(
     }
 
     return data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API Client Error:', error);
-    if (error.name === 'TypeError' || error.message.includes('fetch')) {
+    if (
+      error instanceof TypeError ||
+      (error instanceof Error && error.message.toLowerCase().includes('fetch'))
+    ) {
       toast.error('Network error. Please check your connection.');
     }
     throw error;

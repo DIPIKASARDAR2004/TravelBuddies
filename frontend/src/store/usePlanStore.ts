@@ -1,17 +1,20 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { TripDetails, ApiResponse } from '@/types';
-
-type ViewState = "FORM" | "TIERS" | "CUSTOMIZE";
-type SwapItemType = 'hotel' | 'restaurant' | 'activity' | 'transport' | null;
-type ModalMode = 'swap' | 'add';
+import {
+  PlannerApiResponse,
+  PlannerItemType,
+  PlannerModalMode,
+  PlannerPackage,
+  PlannerView,
+  TripDetails,
+} from '@/types';
 
 interface PlanStore {
-  view: ViewState;
-  setView: (view: ViewState) => void;
+  view: PlannerView;
+  setView: (view: PlannerView) => void;
   
-  apiResponse: ApiResponse | null;
-  setApiResponse: (response: ApiResponse | null) => void;
+  apiResponse: PlannerApiResponse | null;
+  setApiResponse: (response: PlannerApiResponse | null) => void;
   
   loading: boolean;
   setLoading: (loading: boolean) => void;
@@ -19,17 +22,17 @@ interface PlanStore {
   tripDetails: TripDetails;
   setTripDetails: (details: Partial<TripDetails>) => void;
   
-  customizedPlan: any;
-  setCustomizedPlan: (plan: any) => void;
+  customizedPlan: PlannerPackage | null;
+  setCustomizedPlan: (plan: PlannerPackage | null) => void;
   
   swapModalOpen: boolean;
   setSwapModalOpen: (open: boolean) => void;
   
-  itemToSwap: SwapItemType;
-  setItemToSwap: (item: SwapItemType) => void;
+  itemToSwap: PlannerItemType | null;
+  setItemToSwap: (item: PlannerItemType | null) => void;
   
-  modalMode: ModalMode;
-  setModalMode: (mode: ModalMode) => void;
+  modalMode: PlannerModalMode;
+  setModalMode: (mode: PlannerModalMode) => void;
   
   modalError: string;
   setModalError: (error: string) => void;
@@ -49,7 +52,7 @@ export const usePlanStore = create<PlanStore>()(
       loading: false,
       setLoading: (loading) => set({ loading }),
       
-      tripDetails: { budget: 0, travellers: 0, days: 0, destination: "" },
+      tripDetails: { budget: 0, travellers: 0, days: 0, destination: "", isSafetyTrip: false },
       setTripDetails: (details) => set((state) => ({ 
         tripDetails: { ...state.tripDetails, ...details } 
       })),

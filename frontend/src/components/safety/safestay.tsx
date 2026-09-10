@@ -3,8 +3,11 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { FiEdit2, FiHome, FiTrash2 } from "react-icons/fi";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import type { SafeStay, SafeStayStatus } from '@/lib/services/safeStays';
+import { Input } from "@/components/ui/Input";
+import { StatusBanner } from "@/components/ui/StatusBanner";
+import { SafetyPanel } from "@/components/safety/SafetyPanel";
+import { getErrorMessage } from "@/lib/client/safetyClient";
+import type { SafeStay, SafeStayStatus } from "@/lib/services/safeStays";
 
 type StayForm = {
   stay_name: string;
@@ -23,16 +26,6 @@ const emptyForm: StayForm = {
 };
 
 const reminderTitle = "Safe Stay check-in";
-const reminderText = "Take a moment to review your room and bathroom for basic safety, confirm exits and locks, and keep important belongings secure.";
-
-async function getErrorMessage(response: Response, fallback: string) {
-  try {
-    const body = (await response.json()) as { error?: string };
-    return body.error || fallback;
-  } catch {
-    return fallback;
-  }
-}
 
 function toInputDateTime(value: string) {
   return new Date(value).toISOString().slice(0, 16);
@@ -49,6 +42,7 @@ export default function SafeStay() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [reminderStay, setReminderStay] = useState<SafeStay | null>(null);
@@ -72,7 +66,9 @@ export default function SafeStay() {
     }
 
     void loadStays();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   const updateField = <K extends keyof StayForm>(field: K, value: StayForm[K]) => {
@@ -89,9 +85,7 @@ export default function SafeStay() {
     try {
       if (window.sessionStorage.getItem(storageKey) === "1") return;
       window.sessionStorage.setItem(storageKey, "1");
-    } catch {
-      // The in-app reminder still works when session storage is unavailable.
-    }
+    } catch {}
 
     setReminderStay(stay);
 
@@ -103,19 +97,30 @@ export default function SafeStay() {
         permission = await window.Notification.requestPermission();
       }
       if (permission === "granted") {
-        new window.Notification(reminderTitle, { body: reminderText });
+        new window.Notification(reminderTitle, {
+          body: "Take a moment to review locks, exits, valuables, and the room before settling in.",
+        });
       }
-    } catch {
-      // Notification permission is optional; the in-app reminder remains visible.
-    }
+    } catch {}
   };
 
   const clearCheckInReminder = (stayId: string) => {
     try {
       window.sessionStorage.removeItem(`safe-stay-reminder-shown:${stayId}`);
-    } catch {
-      // Session storage is optional and should not affect Safe Stay updates.
-    }
+    } catch {}
+  };
+
+  const startEditing = (stay: SafeStay) => {
+    setEditingId(stay.id);
+    setForm({
+      stay_name: stay.stay_name,
+      address: stay.address ?? "",
+      check_in: toInputDateTime(stay.check_in),
+      check_out: toInputDateTime(stay.check_out),
+      status: stay.status,
+    });
+    setError(null);
+    setSuccess(null);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -142,12 +147,16 @@ export default function SafeStay() {
 
       const body = (await response.json()) as { stay: SafeStay };
       const existingStay = editingId ? stays.find((stay) => stay.id === editingId) : undefined;
-      const isExplicitCheckIn = body.stay.status === "active" && (!editingId || existingStay?.status !== "active");
-      setStays((current) => editingId
-        ? current.map((stay) => stay.id === body.stay.id ? body.stay : stay)
-        : [body.stay, ...current]);
+      const isExplicitCheckIn =
+        body.stay.status === "active" && (!editingId || existingStay?.status !== "active");
+
+      setStays((current) =>
+        editingId
+          ? current.map((stay) => (stay.id === body.stay.id ? body.stay : stay))
+          : [body.stay, ...current],
+      );
       resetForm();
-      setSuccess(editingId ? "Safe Stay updated." : "Safe Stay started.");
+      setSuccess(editingId ? "Safe stay updated." : "Safe stay started.");
       if (body.stay.status === "completed") {
         clearCheckInReminder(body.stay.id);
       }
@@ -162,8 +171,8 @@ export default function SafeStay() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Delete this Safe Stay record?")) return;
     setDeletingId(id);
+    setPendingDeleteId(null);
     setError(null);
     setSuccess(null);
 
@@ -174,7 +183,7 @@ export default function SafeStay() {
       }
       setStays((current) => current.filter((stay) => stay.id !== id));
       if (editingId === id) resetForm();
-      setSuccess("Safe Stay deleted.");
+      setSuccess("Safe stay deleted.");
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : "Unable to delete Safe Stay.");
     } finally {
@@ -183,105 +192,173 @@ export default function SafeStay() {
   };
 
   return (
-    <Card className="p-6 bg-white dark:bg-slate-900 border border-emerald-100 dark:border-emerald-900/40">
-      <div className="flex items-start gap-3 mb-6">
-        <div className="p-3 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
-          <FiHome className="text-2xl" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Safe Stay</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Record your current stay and explicitly mark it active or completed. No location or notifications are collected.
-          </p>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2 mb-6">
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          Stay or property name
-          <input required maxLength={160} value={form.stay_name} onChange={(event) => updateField("stay_name", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white" />
-        </label>
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          Address (optional)
-          <input maxLength={300} value={form.address} onChange={(event) => updateField("address", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white" />
-        </label>
+    <SafetyPanel
+      icon={FiHome}
+      title="Safe stay"
+      description="Record your stay, mark it active or completed, and keep a calmer room-safety reminder inside the app."
+      accent="emerald"
+    >
+      <form onSubmit={handleSubmit} className="mb-6 grid gap-4 md:grid-cols-2">
+        <Input
+          label="Stay or property name"
+          required
+          maxLength={160}
+          value={form.stay_name}
+          onChange={(event) => updateField("stay_name", event.target.value)}
+          placeholder="The Grand Residency"
+        />
+        <Input
+          label="Address"
+          maxLength={300}
+          value={form.address}
+          onChange={(event) => updateField("address", event.target.value)}
+          placeholder="Optional address details"
+        />
         <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
           Check-in
-          <input required type="datetime-local" value={form.check_in} onChange={(event) => updateField("check_in", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white" />
+          <input
+            required
+            type="datetime-local"
+            value={form.check_in}
+            onChange={(event) => updateField("check_in", event.target.value)}
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:ring-2 focus:ring-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+          />
         </label>
         <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
           Check-out
-          <input required type="datetime-local" value={form.check_out} onChange={(event) => updateField("check_out", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white" />
+          <input
+            required
+            type="datetime-local"
+            value={form.check_out}
+            onChange={(event) => updateField("check_out", event.target.value)}
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:ring-2 focus:ring-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+          />
         </label>
         <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
           Status
-          <select value={form.status} onChange={(event) => updateField("status", event.target.value as SafeStayStatus)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+          <select
+            value={form.status}
+            onChange={(event) => updateField("status", event.target.value as SafeStayStatus)}
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:ring-2 focus:ring-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+          >
             <option value="active">Active</option>
             <option value="completed">Completed</option>
           </select>
         </label>
         <div className="flex flex-wrap items-end gap-3">
-          <Button type="submit" disabled={saving}>{saving ? "Saving..." : editingId ? "Update Stay" : "Start Safe Stay"}</Button>
-          {editingId && <Button type="button" variant="outline" onClick={resetForm} disabled={saving}>Cancel</Button>}
+          <Button type="submit" disabled={saving}>
+            {saving ? "Saving..." : editingId ? "Update stay" : "Start safe stay"}
+          </Button>
+          {editingId ? (
+            <Button type="button" variant="outline" onClick={resetForm} disabled={saving}>
+              Cancel
+            </Button>
+          ) : null}
         </div>
       </form>
 
-      {error && <p role="alert" className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">{error}</p>}
-      {success && <p role="status" className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-300">{success}</p>}
-
-      {reminderStay && (
-        <div role="status" className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h3 className="font-semibold">{reminderTitle}</h3>
-              <p className="mt-1 text-sm">Take a calm moment to review this stay before settling in.</p>
-              <ul className="mt-3 list-disc space-y-1 pl-5 text-sm">
-                <li>Check that doors and windows can be secured.</li>
-                <li>Locate the emergency exit or evacuation route.</li>
-                <li>Confirm basic safety equipment, such as smoke alarms, is present where appropriate.</li>
-                <li>Keep valuables and important belongings secure.</li>
-                <li>Carefully inspect the room and bathroom for anything unusual or unsafe.</li>
-                <li>Contact local staff or emergency services if you encounter a genuine safety concern.</li>
-              </ul>
-              {typeof window !== "undefined" && typeof window.Notification !== "undefined" && window.Notification.permission === "denied" && (
-                <p className="mt-3 text-xs">Browser notifications are disabled, so this reminder is available here instead.</p>
-              )}
-            </div>
-            <button type="button" onClick={() => setReminderStay(null)} className="text-sm font-semibold text-emerald-800 hover:underline dark:text-emerald-200">Dismiss</button>
-          </div>
+      {error ? (
+        <div className="mb-4">
+          <StatusBanner tone="danger">{error}</StatusBanner>
         </div>
-      )}
+      ) : null}
+      {success ? (
+        <div className="mb-4">
+          <StatusBanner tone="success">{success}</StatusBanner>
+        </div>
+      ) : null}
+
+      {reminderStay ? (
+        <div className="mb-6">
+          <StatusBanner tone="success" title={reminderTitle}>
+            Review locks, windows, exits, smoke alarms where applicable, and keep valuables secure before settling in.
+          </StatusBanner>
+          <button
+            type="button"
+            onClick={() => setReminderStay(null)}
+            className="mt-2 text-sm font-semibold text-emerald-700 hover:underline dark:text-emerald-300"
+          >
+            Dismiss reminder
+          </button>
+        </div>
+      ) : null}
 
       {loading ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">Loading Safe Stays...</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Loading safe stays...</p>
       ) : stays.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-slate-300 px-4 py-5 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">No Safe Stay records yet.</p>
+        <StatusBanner title="No safe stay records">
+          Start one when you check in so your current property and timing are easy to review.
+        </StatusBanner>
       ) : (
         <div className="space-y-3">
           {stays.map((stay) => (
-            <div key={stay.id} className="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-semibold text-slate-900 dark:text-white">{stay.stay_name}</p>
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${stay.status === "active" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}>
-                    {stay.status}
-                  </span>
+            <div
+              key={stay.id}
+              className="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-900/60"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-semibold text-slate-900 dark:text-white">{stay.stay_name}</p>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                        stay.status === "active"
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300"
+                          : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                      }`}
+                    >
+                      {stay.status}
+                    </span>
+                  </div>
+                  {stay.address ? (
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{stay.address}</p>
+                  ) : null}
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {new Date(stay.check_in).toLocaleString()} to {new Date(stay.check_out).toLocaleString()}
+                  </p>
                 </div>
-                {stay.address && <p className="text-sm text-slate-500 dark:text-slate-400">{stay.address}</p>}
-                <p className="text-sm text-slate-500 dark:text-slate-400">{new Date(stay.check_in).toLocaleString()} to {new Date(stay.check_out).toLocaleString()}</p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => startEditing(stay)}
+                    disabled={saving || deletingId !== null}
+                  >
+                    <FiEdit2 className="mr-2" />
+                    Edit
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={pendingDeleteId === stay.id ? "danger" : "ghost"}
+                    size="sm"
+                    onClick={() =>
+                      pendingDeleteId === stay.id
+                        ? void handleDelete(stay.id)
+                        : setPendingDeleteId(stay.id)
+                    }
+                    disabled={saving || deletingId !== null}
+                  >
+                    <FiTrash2 className="mr-2" />
+                    {deletingId === stay.id
+                      ? "Deleting..."
+                      : pendingDeleteId === stay.id
+                        ? "Confirm delete"
+                        : "Delete"}
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => { setEditingId(stay.id); setForm({ stay_name: stay.stay_name, address: stay.address ?? "", check_in: toInputDateTime(stay.check_in), check_out: toInputDateTime(stay.check_out), status: stay.status }); setError(null); setSuccess(null); }} disabled={saving || deletingId !== null} aria-label={`Edit ${stay.stay_name}`}>
-                  <FiEdit2 className="mr-2" /> Edit
-                </Button>
-                <Button type="button" variant="ghost" size="sm" onClick={() => void handleDelete(stay.id)} disabled={saving || deletingId !== null} aria-label={`Delete ${stay.stay_name}`}>
-                  <FiTrash2 className="mr-2" /> {deletingId === stay.id ? "Deleting..." : "Delete"}
-                </Button>
-              </div>
+              {pendingDeleteId === stay.id ? (
+                <div className="mt-3">
+                  <StatusBanner tone="warning">
+                    Delete this safe stay record? This only removes the saved stay entry.
+                  </StatusBanner>
+                </div>
+              ) : null}
             </div>
           ))}
         </div>
       )}
-    </Card>
+    </SafetyPanel>
   );
 }

@@ -14,14 +14,37 @@ interface CustomizerCardProps {
   colorClass: string;
 }
 
+const toneClasses: Record<string, { border: string; pill: string }> = {
+  sky: {
+    border: "border-sky-500/60",
+    pill: "bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300",
+  },
+  amber: {
+    border: "border-amber-500/60",
+    pill: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
+  },
+  emerald: {
+    border: "border-emerald-500/60",
+    pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
+  },
+  violet: {
+    border: "border-violet-500/60",
+    pill: "bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300",
+  },
+};
+
 export const CustomizerCard: React.FC<CustomizerCardProps> = ({ 
   type, title, cost, itemName, itemDetails, onSwap, onAdd, icon: Icon, colorClass 
 }) => {
+  const tone = toneClasses[colorClass] ?? toneClasses.sky;
+
   return (
-    <div className={`glass-panel premium-shadow rounded-3xl p-6 flex flex-col justify-between hover-lift group border-t-4`} style={{ borderColor: `var(--${colorClass}-500, #3b82f6)` }}>
+    <div
+      className={`group flex flex-col justify-between rounded-[1.75rem] border bg-white/92 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.42)] backdrop-blur transition duration-300 hover:-translate-y-1 hover:shadow-[0_30px_80px_-44px_rgba(15,23,42,0.55)] dark:bg-slate-950/80 ${tone.border}`}
+    >
       <div>
         <div className="flex justify-between items-start mb-4">
-          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-${colorClass}-100 dark:bg-${colorClass}-900/30 text-${colorClass}-700 dark:text-${colorClass}-400`}>
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${tone.pill}`}>
             <Icon className="w-3.5 h-3.5" /> {title}
           </span>
           <div className="text-right">

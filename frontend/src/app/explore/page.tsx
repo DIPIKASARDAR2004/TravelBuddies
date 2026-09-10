@@ -1,103 +1,124 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import Link from "next/link";
+import { FiArrowRight, FiCompass, FiShield, FiStar } from "react-icons/fi";
 import HotelSearchForm from "./components/HotelSearchForm";
 import HotelCard from "./components/HotelCard";
 import { hotels } from "@/data/mockHotels";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { StatusBanner } from "@/components/ui/StatusBanner";
+import { Button } from "@/components/ui/Button";
 
 export default function ExplorePage() {
+  const [query, setQuery] = useState("");
+  const [guests, setGuests] = useState("2");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const normalized = searchTerm.trim().toLowerCase();
+  const filteredHotels = !normalized
+    ? hotels
+    : hotels.filter((hotel) =>
+        `${hotel.name} ${hotel.location}`.toLowerCase().includes(normalized),
+      );
+
   return (
-    <main className="min-h-screen font-sans">
-      {/* Hero Section */}
-      <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center">
-        {/* Background Image with Overlay */}
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#e0f2fe,transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] dark:bg-[radial-gradient(circle_at_top,#082f49,transparent_24%),linear-gradient(180deg,#020617_0%,#111827_100%)]">
+      <section className="relative overflow-hidden px-4 pb-20 pt-24 sm:px-6 lg:px-8">
         <div className="absolute inset-0 z-0 overflow-hidden">
           <img
             src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?q=80&w=2000&auto=format&fit=crop"
-            alt="Luxury Hotel"
-            className="w-full h-full object-cover"
+            alt="Luxury hotel exterior"
+            className="h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]"></div>
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.35)_0%,rgba(2,6,23,0.72)_100%)]" />
         </div>
 
-        {/* Hero Content */}
-        <div className="relative z-10 w-full max-w-6xl px-6 flex flex-col items-center mt-[-4rem]">
-          <h1 className="text-4xl md:text-6xl font-extrabold text-white text-center tracking-tight mb-4 drop-shadow-lg">
-            Discover Exceptional Stays
-          </h1>
-          <p className="text-lg md:text-xl text-white/90 text-center mb-10 max-w-2xl drop-shadow-md">
-            From lavish palaces to modern luxury retreats, book your perfect getaway with JourneyPilot.
-          </p>
-
-          <HotelSearchForm />
-        </div>
-      </section>
-
-      {/* Featured Hotels Grid */}
-      <section className="max-w-6xl mx-auto px-6 py-20">
-        <div className="flex flex-col items-center mb-12 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-tight mb-4">
-            Exclusive Handpicked Stays
-          </h2>
-          <div className="h-1 w-24 bg-blue-600 rounded-full mb-6"></div>
-          <p className="text-slate-600 dark:text-slate-400 max-w-2xl">
-            Experience world-class hospitality in India's most prestigious properties, curated exclusively for our members.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {hotels.map((hotel) => (
-            <HotelCard key={hotel.id} hotel={hotel} />
-          ))}
-        </div>
-      </section>
-
-      {/* Footer Section */}
-      <footer className="bg-slate-900 text-slate-300 py-16 mt-12 border-t border-slate-800">
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-          <div>
-            <h4 className="text-white font-bold text-lg mb-4">JourneyPilot Luxury Stays</h4>
-            <p className="text-sm leading-relaxed text-slate-400">
-              Elevate your travel experience with our handpicked collection of luxury hotels, resorts, and heritage properties. Enjoy seamless booking, exclusive perks, and 24/7 concierge support.
+        <div className="relative z-10 mx-auto max-w-6xl">
+          <div className="max-w-3xl">
+            <div className="mb-5 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.22em] text-white backdrop-blur">
+              Curated stay discovery
+            </div>
+            <h1 className="text-4xl font-black tracking-tight text-white md:text-6xl">
+              Explore stays that are easier to turn into a full trip plan
+            </h1>
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-100 md:text-base">
+              Browse premium inventory, narrow the shortlist quickly, then jump directly into planning and safer booking flows when something fits.
             </p>
           </div>
 
-          <div>
-            <h4 className="text-white font-bold text-lg mb-4">Why Book With Us?</h4>
-            <ul className="text-sm space-y-3 text-slate-400">
-              <li className="flex gap-2"><span className="text-blue-500">✓</span> Lowest Price Guarantee</li>
-              <li className="flex gap-2"><span className="text-blue-500">✓</span> Free Cancellations</li>
-              <li className="flex gap-2"><span className="text-blue-500">✓</span> Verified Guest Reviews</li>
-              <li className="flex gap-2"><span className="text-blue-500">✓</span> Complimentary Upgrades</li>
-            </ul>
-          </div>
+          <HotelSearchForm
+            query={query}
+            guests={guests}
+            onQueryChange={setQuery}
+            onGuestsChange={setGuests}
+            onSearch={() => setSearchTerm(query)}
+          />
 
-          <div>
-            <h4 className="text-white font-bold text-lg mb-4">Top Destinations</h4>
-            <ul className="text-sm space-y-3 text-slate-400">
-              <li className="hover:text-blue-400 cursor-pointer transition-colors">Hotels in Udaipur</li>
-              <li className="hover:text-blue-400 cursor-pointer transition-colors">Resorts in Goa</li>
-              <li className="hover:text-blue-400 cursor-pointer transition-colors">Villas in Kerala</li>
-              <li className="hover:text-blue-400 cursor-pointer transition-colors">Palaces in Jaipur</li>
-            </ul>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href={`/plan${query.trim() ? `?destination=${encodeURIComponent(query.trim())}&travellers=${encodeURIComponent(guests)}` : ""}`}
+              className="inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-950 transition-colors hover:bg-slate-100"
+            >
+              Start planning this trip
+              <FiArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+            <Link
+              href="/safety"
+              className="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-5 py-3 text-sm font-bold text-white backdrop-blur transition-colors hover:bg-white/20"
+            >
+              Open safety mode
+            </Link>
           </div>
+        </div>
+      </section>
 
-          <div>
-            <h4 className="text-white font-bold text-lg mb-4">Safe & Secure Payments</h4>
-            <p className="text-sm leading-relaxed text-slate-400 mb-4">
-              We accept all major credit cards, UPI, and digital wallets. Your transactions are secured with industry-leading encryption.
-            </p>
-            <div className="flex gap-3 opacity-60 grayscale">
-              <div className="w-10 h-6 bg-slate-700 rounded"></div>
-              <div className="w-10 h-6 bg-slate-700 rounded"></div>
-              <div className="w-10 h-6 bg-slate-700 rounded"></div>
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+          <div className="space-y-8">
+            <SectionHeader
+              eyebrow="Handpicked inventory"
+              title={searchTerm ? `Results for "${searchTerm}"` : "Exceptional stays worth shortlisting"}
+              description="This browse view is lighter-weight than the planner, but now it uses the same product language and smoother handoff into the main travel flow."
+            />
+
+            {filteredHotels.length === 0 ? (
+              <StatusBanner tone="warning" title="No matching stays">
+                Try another destination keyword or go directly to the planner for package-based recommendations.
+              </StatusBanner>
+            ) : null}
+
+            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {filteredHotels.map((hotel) => (
+                <HotelCard key={hotel.id} hotel={hotel} />
+              ))}
             </div>
           </div>
+
+          <aside className="space-y-4">
+            <div className="rounded-[1.75rem] border border-slate-200 bg-white/85 p-6 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-800 dark:bg-slate-950/75">
+              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-400">Why this page changed</p>
+              <div className="mt-5 space-y-4">
+                {[
+                  { icon: FiCompass, title: "Better route into planning", body: "Search results now hand off cleanly into the planner instead of acting like a dead-end gallery." },
+                  { icon: FiShield, title: "Safer travel context", body: "Users can jump into safety mode without losing the trip-discovery thread." },
+                  { icon: FiStar, title: "Consistent visual system", body: "Cards, headings, and banners now align with the rest of the redesign." },
+                ].map((item) => (
+                  <div key={item.title} className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
+                    <item.icon className="h-5 w-5 text-sky-500" />
+                    <p className="mt-3 text-sm font-bold text-slate-950 dark:text-white">{item.title}</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">{item.body}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Button fullWidth size="lg" className="py-4" onClick={() => setSearchTerm(query)}>
+              Refresh results
+            </Button>
+          </aside>
         </div>
-        <div className="max-w-6xl mx-auto px-6 mt-12 pt-8 border-t border-slate-800 text-center text-sm text-slate-500">
-          © 2026 JourneyPilot. All rights reserved.
-        </div>
-      </footer>
+      </section>
     </main>
   );
 }

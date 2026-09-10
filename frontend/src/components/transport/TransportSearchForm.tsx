@@ -1,123 +1,193 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { FiArrowRight, FiCalendar, FiMapPin, FiShield, FiUsers } from "react-icons/fi";
+import { Button } from "@/components/ui/Button";
+import { StatusBanner } from "@/components/ui/StatusBanner";
 
 interface TransportSearchFormProps {
   title: string;
   logoSrc: string;
+  transportLabel: string;
 }
 
-export default function TransportSearchForm({ title, logoSrc }: TransportSearchFormProps) {
+const SPECIAL_FARES = ["Regular", "Student", "Senior Citizen", "Doctor & Nurses", "Army"] as const;
+
+export default function TransportSearchForm({
+  title,
+  logoSrc,
+  transportLabel,
+}: TransportSearchFormProps) {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [date, setDate] = useState("");
   const [travelClass, setTravelClass] = useState("All");
+  const [fare, setFare] = useState<(typeof SPECIAL_FARES)[number]>("Regular");
+  const [showFlexi, setShowFlexi] = useState(false);
+  const [searchSummary, setSearchSummary] = useState<string | null>(null);
 
   const swap = () => {
-    const a = from;
     setFrom(to);
-    setTo(a);
+    setTo(from);
   };
 
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    alert(`Searching…\nFrom: ${from}\nTo: ${to}\nDate: ${date}\nClass: ${travelClass}`);
+  const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSearchSummary(
+      `Previewing ${transportLabel.toLowerCase()} search from ${from || "your origin"} to ${to || "your destination"} on ${date || "your chosen date"} in ${travelClass} class with ${fare} fare${showFlexi ? " and flexi protection" : ""}.`,
+    );
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4">
-      <div className="flex items-center gap-4 mb-6 mt-8">
-        <div className="p-2 bg-white dark:bg-slate-800 rounded-full shadow-md border border-slate-200 dark:border-slate-700">
-          <img src={logoSrc} className="w-10 h-10 object-contain rounded-full" alt="logo" />
+    <div className="w-full max-w-6xl">
+      <div className="mb-6 flex items-center gap-4">
+        <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <img src={logoSrc} className="h-11 w-11 rounded-xl object-contain" alt={`${transportLabel} icon`} />
         </div>
-        <h2 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">{title}</h2>
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-400">Transport planner</p>
+          <h2 className="text-3xl font-black tracking-tight text-slate-950 dark:text-white">{title}</h2>
+        </div>
       </div>
 
-      <form className="glass-panel premium-shadow rounded-2xl p-6 md:p-8 space-y-6" onSubmit={handleSearch}>
-        <div className="flex flex-col md:flex-row items-end gap-4">
-          <div className="w-full md:flex-1 space-y-2">
-            <label className="text-sm font-semibold text-slate-600 dark:text-slate-300">From</label>
-            <input
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-              type="text"
-              placeholder="Kolkata"
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
-            />
-          </div>
+      <form
+        className="rounded-[2rem] border border-slate-200 bg-white/85 p-6 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-800 dark:bg-slate-950/75 md:p-8"
+        onSubmit={handleSearch}
+      >
+        <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr_180px_160px]">
+          <label className="space-y-2">
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">From</span>
+            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
+              <FiMapPin className="h-4 w-4 text-slate-400" />
+              <input
+                className="w-full bg-transparent text-slate-900 outline-none dark:text-white"
+                type="text"
+                placeholder="Kolkata"
+                value={from}
+                onChange={(event) => setFrom(event.target.value)}
+              />
+            </div>
+          </label>
 
-          <div className="flex justify-center -mb-2 md:mb-2">
+          <div className="flex items-end justify-center">
             <button
               type="button"
-              className="p-3 bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800/60 rounded-full transition-colors shadow-sm"
-              aria-label="Swap From and To"
+              className="rounded-full bg-sky-100 p-3 text-sky-600 transition-colors hover:bg-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:hover:bg-sky-950/60"
+              aria-label="Swap from and to"
               onClick={swap}
-              title="Swap"
+              title="Swap route"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+              <FiArrowRight className="h-5 w-5" />
             </button>
           </div>
 
-          <div className="w-full md:flex-1 space-y-2">
-            <label className="text-sm font-semibold text-slate-600 dark:text-slate-300">To</label>
-            <input
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-              type="text"
-              placeholder="Mumbai/Delhi"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-            />
-          </div>
+          <label className="space-y-2">
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">To</span>
+            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
+              <FiMapPin className="h-4 w-4 text-slate-400" />
+              <input
+                className="w-full bg-transparent text-slate-900 outline-none dark:text-white"
+                type="text"
+                placeholder="Mumbai / Delhi"
+                value={to}
+                onChange={(event) => setTo(event.target.value)}
+              />
+            </div>
+          </label>
 
-          <div className="w-full md:w-48 space-y-2">
-            <label className="text-sm font-semibold text-slate-600 dark:text-slate-300">Date</label>
-            <input
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </div>
+          <label className="space-y-2">
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Date</span>
+            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
+              <FiCalendar className="h-4 w-4 text-slate-400" />
+              <input
+                className="w-full bg-transparent text-slate-900 outline-none dark:text-white"
+                type="date"
+                value={date}
+                onChange={(event) => setDate(event.target.value)}
+              />
+            </div>
+          </label>
 
-          <div className="w-full md:w-40 space-y-2">
-            <label className="text-sm font-semibold text-slate-600 dark:text-slate-300">Class</label>
+          <label className="space-y-2">
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Class</span>
             <select
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition-all focus:ring-2 focus:ring-sky-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
               value={travelClass}
-              onChange={(e) => setTravelClass(e.target.value)}
+              onChange={(event) => setTravelClass(event.target.value)}
             >
               <option>All</option>
               <option>AC</option>
               <option>Non-AC</option>
               <option>Sleeper</option>
             </select>
+          </label>
+        </div>
+
+        <div className="mt-6 grid gap-6 border-t border-slate-200 pt-6 dark:border-slate-800 md:grid-cols-[1fr_auto] md:items-end">
+          <div className="space-y-4">
+            <div>
+              <p className="mb-3 text-sm font-bold text-slate-800 dark:text-slate-200">Special fares</p>
+              <div className="flex flex-wrap gap-2">
+                {SPECIAL_FARES.map((option) => (
+                  <label
+                    key={option}
+                    className={`cursor-pointer rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                      fare === option
+                        ? "border-sky-300 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:text-sky-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-sky-800 dark:hover:text-sky-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="fare"
+                      value={option}
+                      checked={fare === option}
+                      onChange={() => setFare(option)}
+                      className="sr-only"
+                    />
+                    {option}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <label className="flex items-start gap-3 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm dark:border-sky-900/40 dark:bg-sky-950/20">
+              <input
+                type="checkbox"
+                checked={showFlexi}
+                onChange={(event) => setShowFlexi(event.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+              />
+              <span className="text-slate-700 dark:text-slate-200">
+                Add flexible protection for easier cancellation and date changes.
+              </span>
+            </label>
+          </div>
+
+          <div className="flex flex-col gap-3 md:min-w-[220px]">
+            <Button className="w-full py-4 text-base" type="submit">
+              Search routes
+            </Button>
+            <div className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+              <FiUsers className="h-3.5 w-3.5" />
+              Preview-only UI for now
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 pt-4 border-t border-slate-200 dark:border-slate-700/50">
-          <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Special Fares:</p>
-          <div className="flex flex-wrap gap-2">
-            {['Regular', 'Student', 'Senior Citizen', 'Doctor & Nurses', 'Army'].map(fare => (
-              <label key={fare} className="flex items-center gap-2 px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 cursor-pointer transition-colors bg-white dark:bg-slate-800">
-                <input type="radio" name="fare" className="text-blue-600 focus:ring-blue-500" />
-                {fare}
-              </label>
-            ))}
+        {searchSummary ? (
+          <div className="mt-6">
+            <StatusBanner title="Search summary">{searchSummary}</StatusBanner>
           </div>
-        </div>
-
-        <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-xl">
-          <input type="checkbox" value="che" className="mt-1 w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-slate-300" />
-          <div>
-            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-              Add FlexiFly: 100% refund on cancellation or Zero date change charges
-            </p>
-            <a href="https://www.bing.com/search?q=train+policy" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">View Details</a>
+        ) : (
+          <div className="mt-6">
+            <StatusBanner tone="warning" title="Current limitation">
+              Route search is still a UI preview here. This redesign replaces the old alert flow and leaves a clean seam for real transport data integration next.
+            </StatusBanner>
           </div>
-        </div>
+        )}
 
-        <div className="pt-4 flex justify-center">
-          <button className="w-full md:w-auto px-12 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all hover-lift text-lg" type="submit">
-            Search Routes
-          </button>
+        <div className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+          <FiShield className="h-3.5 w-3.5 text-sky-500" />
+          Safer booking guidance and validation-ready transport form.
         </div>
       </form>
     </div>

@@ -1,32 +1,33 @@
 "use client";
 
-import { FaArrowRight } from 'react-icons/fa';
-import Link from 'next/link';
+import Link from "next/link";
+import { FaArrowRight } from "react-icons/fa";
 
 export default function EscrowBanner() {
   return (
-    <div className="w-full bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 rounded-t-[3rem] shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] py-10 px-8 mt-16 relative overflow-hidden">
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-        <div>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 dark:text-white tracking-tight">
-            Your Payment. <span className="text-blue-600 dark:text-blue-500">Protected.</span>
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 mt-2">
-            Experience the future of secure travel bookings with our upcoming smart escrow system.
-          </p>
+    <section className="mx-auto mt-16 w-full max-w-6xl px-6 pb-16">
+      <div className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white/90 px-8 py-10 shadow-[0_28px_90px_-48px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-800 dark:bg-slate-950/80 md:px-10">
+        <div className="absolute -right-14 top-1/2 h-52 w-52 -translate-y-1/2 rounded-full bg-sky-100 blur-3xl dark:bg-sky-950/30" />
+        <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-400">Protected checkout</p>
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 dark:text-white md:text-4xl">
+              Your payment stays protected until the trip starts to become real.
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+              The escrow layer is now presented as part of a cleaner product promise instead of a detached footer block.
+            </p>
+          </div>
+
+          <Link
+            href="/policies"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 transition-colors hover:text-sky-600 dark:text-slate-200 dark:hover:text-sky-400"
+          >
+            Learn how protected checkout works
+            <FaArrowRight className="text-xs" />
+          </Link>
         </div>
-        
-        <Link 
-          href="/policies" 
-          className="flex items-center gap-2 text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 font-medium transition-colors"
-        >
-          Learn how our escrow system works
-          <FaArrowRight className="text-sm" />
-        </Link>
       </div>
-      
-      {/* Decorative background circle */}
-      <div className="absolute top-1/2 -translate-y-1/2 -right-20 w-64 h-64 bg-blue-50 dark:bg-blue-900/20 rounded-full blur-3xl -z-0"></div>
-    </div>
+    </section>
   );
 }

@@ -1,45 +1,67 @@
 import React from "react";
+import { FiMapPin, FiSearch, FiUsers } from "react-icons/fi";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
-export default function HotelSearchForm() {
+interface HotelSearchFormProps {
+  query: string;
+  guests: string;
+  onQueryChange: (value: string) => void;
+  onGuestsChange: (value: string) => void;
+  onSearch: () => void;
+}
+
+export default function HotelSearchForm({
+  query,
+  guests,
+  onQueryChange,
+  onGuestsChange,
+  onSearch,
+}: HotelSearchFormProps) {
   return (
-    <Card className="p-4 md:p-6 rounded-3xl mt-8">
-      <form className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="col-span-1 md:col-span-2">
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 ml-1">Destination or Hotel Name</label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <input 
-              type="text" 
-              placeholder="Where are you going?" 
-              className="w-full pl-11 px-4 py-3.5 rounded-xl border-none bg-white/50 dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500/50 transition-all backdrop-blur-sm"
+    <Card className="mt-8 rounded-[2rem] border border-white/25 p-4 md:p-6">
+      <div className="grid gap-4 md:grid-cols-[1.5fr_0.9fr_auto]">
+        <label className="flex items-center gap-3 rounded-[1.5rem] border border-slate-200 bg-white/75 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/70">
+          <FiSearch className="h-5 w-5 text-slate-400" />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Destination or property</span>
+            <input
+              type="text"
+              placeholder="Udaipur, palace stay, lakefront..."
+              value={query}
+              onChange={(event) => onQueryChange(event.target.value)}
+              className="bg-transparent pt-1 text-sm text-slate-800 outline-none placeholder:text-slate-400 dark:text-white"
             />
           </div>
-        </div>
-        
-        <div className="col-span-1 border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-700 pt-4 md:pt-0 md:pl-4 flex flex-col justify-end">
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 ml-1">Guests & Rooms</label>
-          <button type="button" className="w-full text-left px-4 py-3.5 rounded-xl bg-white/50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-colors flex items-center justify-between backdrop-blur-sm">
-            <span className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-              2 Adults, 1 Room
-            </span>
-          </button>
-        </div>
+        </label>
 
-        <div className="col-span-1 flex items-end">
-          <Button fullWidth size="lg" className="py-3.5 text-base shadow-blue-200 dark:shadow-blue-900/40 hover:-translate-y-0.5">
-            Search Hotels
+        <label className="flex items-center gap-3 rounded-[1.5rem] border border-slate-200 bg-white/75 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/70">
+          <FiUsers className="h-5 w-5 text-slate-400" />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Guests</span>
+            <input
+              type="number"
+              min="1"
+              value={guests}
+              onChange={(event) => onGuestsChange(event.target.value)}
+              className="bg-transparent pt-1 text-sm text-slate-800 outline-none dark:text-white"
+            />
+          </div>
+        </label>
+
+        <div className="flex items-end">
+          <Button fullWidth size="lg" className="w-full py-3.5 text-base md:min-w-[180px]" onClick={onSearch}>
+            Search stays
           </Button>
         </div>
-      </form>
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 dark:bg-slate-900">
+          <FiMapPin className="h-3.5 w-3.5" />
+          Filter curated mock inventory instantly
+        </span>
+      </div>
     </Card>
   );
 }

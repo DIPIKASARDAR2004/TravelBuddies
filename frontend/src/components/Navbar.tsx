@@ -2,16 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { FaMoon, FaSun, FaChevronDown, FaBars, FaTimes, FaUserCircle, FaSignOutAlt } from 'react-icons/fa';
+import { User } from '@supabase/supabase-js';
 import { supabaseBrowser as supabase } from '@/lib/supabaseBrowserClient';
-import { NAV_ITEMS, NavItem } from '@/constants/navigation';
+import { NAV_ITEMS } from '@/constants/navigation';
 
 export default function Navbar() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
@@ -25,7 +27,7 @@ export default function Navbar() {
     };
     checkUser();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
@@ -38,7 +40,9 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    window.location.reload();
+    setIsMobileMenuOpen(false);
+    router.refresh();
+    router.push('/');
   };
 
   const toggleTheme = () => {

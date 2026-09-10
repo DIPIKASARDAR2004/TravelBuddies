@@ -3,8 +3,11 @@
 import { useEffect, useState } from "react";
 import { FiEdit2, FiTrash2, FiUsers } from "react-icons/fi";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import type { TrustedContact, TrustedContactInput } from '@/lib/services/trustedContacts';
+import { Input } from "@/components/ui/Input";
+import { StatusBanner } from "@/components/ui/StatusBanner";
+import { SafetyPanel } from "@/components/safety/SafetyPanel";
+import { getErrorMessage } from "@/lib/client/safetyClient";
+import type { TrustedContact, TrustedContactInput } from "@/lib/services/trustedContacts";
 
 const emptyForm: TrustedContactInput = {
   name: "",
@@ -13,15 +16,6 @@ const emptyForm: TrustedContactInput = {
   relationship: "",
 };
 
-async function getErrorMessage(response: Response, fallback: string) {
-  try {
-    const body = (await response.json()) as { error?: string };
-    return body.error || fallback;
-  } catch {
-    return fallback;
-  }
-}
-
 export default function TrustedContacts() {
   const [contacts, setContacts] = useState<TrustedContact[]>([]);
   const [form, setForm] = useState<TrustedContactInput>(emptyForm);
@@ -29,6 +23,7 @@ export default function TrustedContacts() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -42,17 +37,13 @@ export default function TrustedContacts() {
           throw new Error(await getErrorMessage(response, "Unable to load trusted contacts."));
         }
         const body = (await response.json()) as { contacts: TrustedContact[] };
-        if (active) {
-          setContacts(body.contacts);
-        }
+        if (active) setContacts(body.contacts);
       } catch (loadError) {
         if (active) {
           setError(loadError instanceof Error ? loadError.message : "Unable to load trusted contacts.");
         }
       } finally {
-        if (active) {
-          setLoading(false);
-        }
+        if (active) setLoading(false);
       }
     }
 
@@ -71,6 +62,18 @@ export default function TrustedContacts() {
     setEditingId(null);
   };
 
+  const startEditing = (contact: TrustedContact) => {
+    setEditingId(contact.id);
+    setForm({
+      name: contact.name,
+      phone: contact.phone ?? "",
+      email: contact.email ?? "",
+      relationship: contact.relationship ?? "",
+    });
+    setError(null);
+    setMessage(null);
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
@@ -78,23 +81,25 @@ export default function TrustedContacts() {
     setMessage(null);
 
     try {
-      const response = await fetch(editingId ? `/api/trusted-contacts/${editingId}` : "/api/trusted-contacts", {
-        method: editingId ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const response = await fetch(
+        editingId ? `/api/trusted-contacts/${editingId}` : "/api/trusted-contacts",
+        {
+          method: editingId ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        },
+      );
 
       if (!response.ok) {
         throw new Error(await getErrorMessage(response, "Unable to save trusted contact."));
       }
 
       const body = (await response.json()) as { contact: TrustedContact };
-      setContacts((current) => {
-        if (!editingId) {
-          return [body.contact, ...current];
-        }
-        return current.map((contact) => (contact.id === body.contact.id ? body.contact : contact));
-      });
+      setContacts((current) =>
+        editingId
+          ? current.map((contact) => (contact.id === body.contact.id ? body.contact : contact))
+          : [body.contact, ...current],
+      );
       resetForm();
       setMessage(editingId ? "Trusted contact updated." : "Trusted contact added.");
     } catch (saveError) {
@@ -106,6 +111,7 @@ export default function TrustedContacts() {
 
   const handleRemove = async (id: string) => {
     setRemovingId(id);
+    setPendingDeleteId(null);
     setError(null);
     setMessage(null);
 
@@ -116,9 +122,7 @@ export default function TrustedContacts() {
       }
 
       setContacts((current) => current.filter((contact) => contact.id !== id));
-      if (editingId === id) {
-        resetForm();
-      }
+      if (editingId === id) resetForm();
       setMessage("Trusted contact removed.");
     } catch (removeError) {
       setError(removeError instanceof Error ? removeError.message : "Unable to remove trusted contact.");
@@ -128,75 +132,129 @@ export default function TrustedContacts() {
   };
 
   return (
-    <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-      <div className="flex items-start gap-3 mb-6">
-        <div className="p-3 rounded-xl bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400">
-          <FiUsers className="text-2xl" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Trusted Contacts</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Add people you may want to contact during your trip.
-          </p>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2 mb-6">
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          Name <span className="text-rose-500">*</span>
-          <input required maxLength={120} value={form.name} onChange={(event) => updateField("name", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-900 focus:ring-2 focus:ring-rose-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white" />
-        </label>
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          Relationship
-          <input maxLength={80} value={form.relationship} onChange={(event) => updateField("relationship", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-900 focus:ring-2 focus:ring-rose-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white" />
-        </label>
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          Phone
-          <input type="tel" maxLength={32} value={form.phone} onChange={(event) => updateField("phone", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-900 focus:ring-2 focus:ring-rose-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white" />
-        </label>
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          Email
-          <input type="email" maxLength={320} value={form.email} onChange={(event) => updateField("email", event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-900 focus:ring-2 focus:ring-rose-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white" />
-        </label>
+    <SafetyPanel
+      icon={FiUsers}
+      title="Trusted contacts"
+      description="Keep key people ready for your trip. Add, edit, or remove contacts without leaving the safety workspace."
+      accent="rose"
+    >
+      <form onSubmit={handleSubmit} className="mb-6 grid gap-4 md:grid-cols-2">
+        <Input
+          label="Name"
+          required
+          maxLength={120}
+          value={form.name}
+          onChange={(event) => updateField("name", event.target.value)}
+          placeholder="Priya Sharma"
+        />
+        <Input
+          label="Relationship"
+          maxLength={80}
+          value={form.relationship}
+          onChange={(event) => updateField("relationship", event.target.value)}
+          placeholder="Sibling, friend, coworker..."
+        />
+        <Input
+          label="Phone"
+          type="tel"
+          maxLength={32}
+          value={form.phone}
+          onChange={(event) => updateField("phone", event.target.value)}
+          placeholder="+91 ..."
+        />
+        <Input
+          label="Email"
+          type="email"
+          maxLength={320}
+          value={form.email}
+          onChange={(event) => updateField("email", event.target.value)}
+          placeholder="name@example.com"
+        />
         <div className="md:col-span-2 flex flex-wrap gap-3">
           <Button type="submit" disabled={saving}>
-            {saving ? "Saving..." : editingId ? "Update Contact" : "Add Contact"}
+            {saving ? "Saving..." : editingId ? "Update contact" : "Add contact"}
           </Button>
-          {editingId && <Button type="button" variant="outline" onClick={resetForm} disabled={saving}>Cancel</Button>}
+          {editingId ? (
+            <Button type="button" variant="outline" onClick={resetForm} disabled={saving}>
+              Cancel
+            </Button>
+          ) : null}
         </div>
       </form>
 
-      {error && <p role="alert" className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">{error}</p>}
-      {message && <p role="status" className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-300">{message}</p>}
+      {error ? (
+        <div className="mb-4">
+          <StatusBanner tone="danger">{error}</StatusBanner>
+        </div>
+      ) : null}
+      {message ? (
+        <div className="mb-4">
+          <StatusBanner tone="success">{message}</StatusBanner>
+        </div>
+      ) : null}
 
       {loading ? (
         <p className="text-sm text-slate-500 dark:text-slate-400">Loading trusted contacts...</p>
       ) : contacts.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-slate-300 px-4 py-5 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
-          No trusted contacts added yet.
-        </p>
+        <StatusBanner title="No contacts yet">
+          Add at least one trusted contact so important details are easy to reach while traveling.
+        </StatusBanner>
       ) : (
         <div className="space-y-3">
           {contacts.map((contact) => (
-            <div key={contact.id} className="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="font-semibold text-slate-900 dark:text-white">{contact.name}</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {[contact.relationship, contact.phone, contact.email].filter(Boolean).join(" · ")}
-                </p>
+            <div
+              key={contact.id}
+              className="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-900/60"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="font-semibold text-slate-900 dark:text-white">{contact.name}</p>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    {[contact.relationship, contact.phone, contact.email].filter(Boolean).join(" • ")}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => startEditing(contact)}
+                    disabled={saving || removingId !== null}
+                  >
+                    <FiEdit2 className="mr-2" />
+                    Edit
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={pendingDeleteId === contact.id ? "danger" : "ghost"}
+                    size="sm"
+                    onClick={() =>
+                      pendingDeleteId === contact.id
+                        ? void handleRemove(contact.id)
+                        : setPendingDeleteId(contact.id)
+                    }
+                    disabled={saving || removingId !== null}
+                  >
+                    <FiTrash2 className="mr-2" />
+                    {removingId === contact.id
+                      ? "Removing..."
+                      : pendingDeleteId === contact.id
+                        ? "Confirm remove"
+                        : "Remove"}
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => { setEditingId(contact.id); setForm({ name: contact.name, phone: contact.phone ?? "", email: contact.email ?? "", relationship: contact.relationship ?? "" }); setError(null); setMessage(null); }} disabled={saving || removingId !== null} aria-label={`Edit ${contact.name}`}>
-                  <FiEdit2 className="mr-2" /> Edit
-                </Button>
-                <Button type="button" variant="ghost" size="sm" onClick={() => void handleRemove(contact.id)} disabled={saving || removingId !== null} aria-label={`Remove ${contact.name}`}>
-                  <FiTrash2 className="mr-2" /> {removingId === contact.id ? "Removing..." : "Remove"}
-                </Button>
-              </div>
+              {pendingDeleteId === contact.id ? (
+                <div className="mt-3">
+                  <StatusBanner tone="warning">
+                    Remove this contact from your safety list? This only deletes the saved record.
+                  </StatusBanner>
+                </div>
+              ) : null}
             </div>
           ))}
         </div>
       )}
-    </Card>
+    </SafetyPanel>
   );
 }

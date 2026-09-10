@@ -1,15 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { usePlanStore } from "@/store/usePlanStore";
-import { motion } from "framer-motion";
+import React from "react";
 import { FiShield, FiInfo, FiAlertTriangle } from "react-icons/fi";
-
-// Planner Components
-import PlanForm from "../plan/components/PlanForm";
-import TierSelector from "../plan/components/TierSelector";
-import TripCustomizer from "../plan/components/TripCustomizer";
-import SwapModal from "../plan/components/SwapModal";
+import { PlannerExperience } from "@/components/planner/PlannerExperience";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { StatusBanner } from "@/components/ui/StatusBanner";
+import { usePlannerInitialization } from "@/hooks/usePlannerInitialization";
 import TrustedContacts from "@/components/safety/trustedcontacts";
 import SOSButton from "@/components/safety/sosbutton";
 import LocationTracking from "@/components/safety/locationtracker";
@@ -17,103 +13,69 @@ import NearbySafetyServices from "@/components/safety/nearbyservices";
 import SafeStay from "@/components/safety/safestay";
 
 export default function WomenSafetyPage() {
-  const { view, resetStore } = usePlanStore();
-  const [mounted, setMounted] = useState(false);
-
-  // Reset the store when mounting this page so it doesn't carry over standard trips
-  // BUT don't reset if we are just returning from the map for an active safety trip
-  useEffect(() => {
-    if (usePlanStore.getState().tripDetails.isSafetyTrip !== true) {
-      resetStore();
-    }
-    setMounted(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const mounted = usePlannerInitialization(true);
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-rose-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-rose-600 border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
-      {/* Section 1: Women Safety Introduction */}
-      <section className="bg-gradient-to-r from-rose-500 to-pink-600 dark:from-rose-900 dark:to-pink-950 text-white py-12 px-6 rounded-b-[40px] shadow-sm mb-12">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 flex items-center justify-center gap-3">
-            <FiShield className="text-4xl md:text-5xl" />
-            Women Safety Planner
-          </h1>
-          <p className="text-rose-100 max-w-2xl mx-auto text-sm md:text-base leading-relaxed bg-black/10 p-3 rounded-lg backdrop-blur-sm">
-            <FiInfo className="inline mb-1 mr-1" />
-            Plan your trip with confidence. All hotels recommended here are strictly verified as women-friendly. 
-            Journey Pilot provides this information to help you make informed decisions, but it does not guarantee absolute safety.
-          </p>
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#ffe4e6,transparent_26%),linear-gradient(180deg,#fff7f8_0%,#fff 100%)] pb-20 dark:bg-[radial-gradient(circle_at_top,#4c0519,transparent_24%),linear-gradient(180deg,#020617_0%,#111827_100%)]">
+      <section className="px-4 pb-8 pt-10 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl space-y-6">
+          <div className="rounded-[2rem] bg-[linear-gradient(135deg,#be123c_0%,#e11d48_55%,#fb7185_100%)] px-6 py-10 text-white shadow-[0_30px_80px_-45px_rgba(190,24,93,0.85)] md:px-10">
+            <div className="max-w-3xl">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.22em] text-rose-50">
+                <FiShield />
+                Women safety mode
+              </div>
+              <h1 className="text-4xl font-black tracking-tight md:text-5xl">Plan with stronger guardrails from the first decision</h1>
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-rose-50/90 md:text-base">
+                Verified women-friendly stays, safer budgeting, and emergency support tools stay in one workflow so you can plan confidently without context switching.
+              </p>
+            </div>
+          </div>
+
+          <StatusBanner tone="warning" title="Safety note">
+            <span className="inline-flex items-center gap-2">
+              <FiInfo />
+              JourneyPilot helps surface safer options and planning tools, but it does not guarantee absolute safety. Always rely on trusted transport, local authorities, and personal judgment.
+            </span>
+          </StatusBanner>
+
+          <PlannerExperience
+            mode="safety"
+            eyebrow="Safer trip planning"
+            title="Build a trip with verified stays and a clearer safety budget"
+            description="Use the same planner workflow, but keep the recommendations filtered for women-friendly stays and the cost breakdown aligned with safer travel decisions."
+            accentClassName="from-rose-500/20 via-pink-500/10 to-transparent"
+          />
         </div>
       </section>
 
-      {/* Section 2: Women-Friendly Trip Planner */}
-      <div className="max-w-6xl mx-auto px-4 mb-16">
-        {view === "FORM" && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            {/* Pass womenOnly={true} to force the backend to filter hotels */}
-            <PlanForm womenOnly={true} />
-          </motion.div>
-        )}
-        
-        {view === "TIERS" && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <TierSelector />
-          </motion.div>
-        )}
-        
-        {view === "CUSTOMIZE" && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <TripCustomizer />
-          </motion.div>
-        )}
-      </div>
-
-      {/* Section 3: Safety Actions */}
-      <div className="max-w-4xl mx-auto px-4 space-y-8 pt-12 border-t border-slate-200 dark:border-slate-800">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-slate-800 dark:text-white flex items-center justify-center gap-2">
-            <FiShield className="text-rose-500" />
-            Safety Actions & Help
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 mt-2">Essential safety tools and contacts available at any time.</p>
-        </div>
-
+      <section className="mx-auto max-w-4xl space-y-8 px-4 pt-8 sm:px-6 lg:px-8">
+        <SectionHeader
+          eyebrow="Always available"
+          title="Safety actions and trip support"
+          description="Keep emergency communication, stay reminders, live location sharing, and nearby services within easy reach."
+        />
         <TrustedContacts />
-
         <SOSButton />
         <LocationTracking />
-
         <SafeStay />
-
         <NearbySafetyServices />
 
-        {/* Late Return Notice */}
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-5 flex gap-4 items-start">
-          <FiAlertTriangle className="text-amber-500 text-xl flex-shrink-0 mt-0.5" />
-          <div>
-            <h3 className="font-semibold text-amber-800 dark:text-amber-400">Late Return Notice</h3>
-            <p className="text-sm text-amber-700/80 dark:text-amber-400/80 mt-1">
-              Consider arranging trusted transport in advance if you plan to return to your hotel late.
-            </p>
-          </div>
-        </div>
-
-        {/* Disclaimer */}
-        <p className="text-xs text-center text-slate-400 dark:text-slate-500 mt-8 px-4">
-          <strong>Disclaimer:</strong> Journey Pilot does not guarantee that any hotel, area, or route is completely safe. Always exercise caution, rely on official authorities, and use your personal judgment while traveling.
-        </p>
-      </div>
-
-      <SwapModal />
+        <StatusBanner tone="warning" title="Late return planning">
+          <span className="inline-flex items-center gap-2">
+            <FiAlertTriangle />
+            Arrange trusted transport in advance whenever your itinerary suggests a late hotel return.
+          </span>
+        </StatusBanner>
+      </section>
     </main>
   );
 }

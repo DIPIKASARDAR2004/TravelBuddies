@@ -1,232 +1,302 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { usePlanStore } from "@/store/usePlanStore";
-import { formatINR } from "@/lib/utils";
-import { CustomizerCard } from "@/components/ui/CustomizerCard";
-import { FiArrowLeft, FiHome, FiCoffee, FiMap, FiTruck, FiPlus, FiTrash2, FiShield } from "react-icons/fi";
 import toast from "react-hot-toast";
+import {
+  FiArrowLeft,
+  FiCoffee,
+  FiHome,
+  FiMap,
+  FiMapPin,
+  FiPlus,
+  FiShield,
+  FiTrash2,
+  FiTruck,
+} from "react-icons/fi";
+import { usePlanStore } from "@/store/usePlanStore";
+import { PlannerItemType } from "@/types";
+import {
+  removeExtraItem,
+  updateEmergencyReserve,
+  updatePlanBudget,
+} from "@/lib/planner/planUtils";
+import { formatINR } from "@/lib/utils";
+import { apiClient } from "@/lib/services/apiClient";
+import { CustomizerCard } from "@/components/ui/CustomizerCard";
+import { Button } from "@/components/ui/Button";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { StatusBanner } from "@/components/ui/StatusBanner";
+
+interface CreateOrderResponse {
+  success: boolean;
+  booking_id?: string;
+  error?: string;
+}
+
+const cardConfigs: Array<{
+  type: PlannerItemType;
+  title: string;
+  icon: React.ElementType;
+  tone: "sky" | "amber" | "emerald" | "violet";
+  costKey: "accommodationCost" | "foodCost" | "activityCost" | "transportCost";
+}> = [
+  { type: "hotel", title: "Accommodation", icon: FiHome, tone: "sky", costKey: "accommodationCost" },
+  { type: "restaurant", title: "Dining", icon: FiCoffee, tone: "amber", costKey: "foodCost" },
+  { type: "activity", title: "Activities", icon: FiMap, tone: "emerald", costKey: "activityCost" },
+  { type: "transport", title: "Transport", icon: FiTruck, tone: "violet", costKey: "transportCost" },
+];
 
 export default function TripCustomizer() {
-  const { customizedPlan, tripDetails, setView, setItemToSwap, setModalMode, setModalError, setSwapModalOpen, setCustomizedPlan, setTripDetails } = usePlanStore();
+  const {
+    customizedPlan,
+    tripDetails,
+    setView,
+    setItemToSwap,
+    setModalMode,
+    setModalError,
+    setSwapModalOpen,
+    setCustomizedPlan,
+    setTripDetails,
+  } = usePlanStore();
   const router = useRouter();
   const [isBooking, setIsBooking] = useState(false);
 
   if (!customizedPlan) return null;
 
-  const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newBudget = Number(e.target.value);
-    setTripDetails({ budget: newBudget });
-    
-    const updatedPlan = { ...customizedPlan };
-    updatedPlan.remainingBudget = newBudget - updatedPlan.emergencyReserve - updatedPlan.tripCost;
-    setCustomizedPlan(updatedPlan);
-  };
-
-  const handleReserveChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newReserve = Number(e.target.value);
-    const updatedPlan = { ...customizedPlan };
-    updatedPlan.emergencyReserve = newReserve;
-    updatedPlan.remainingBudget = tripDetails.budget - newReserve - updatedPlan.tripCost;
-    setCustomizedPlan(updatedPlan);
-  };
-
-  const handleDeleteCustomItem = (idx: number) => {
-    const updatedPlan = { ...customizedPlan };
-    const item = updatedPlan.extraItems[idx];
-    updatedPlan.tripCost -= item.price;
-    updatedPlan.extraItems.splice(idx, 1);
-    
-    updatedPlan.totalAllocated = Math.round((updatedPlan.tripCost + updatedPlan.emergencyReserve) * 100) / 100;
-    updatedPlan.remainingBudget = Math.round((tripDetails.budget - updatedPlan.totalAllocated) * 100) / 100;
-    setCustomizedPlan(updatedPlan);
-    toast.success(`Removed ${item.name}`);
-  };
-
-  const openSwapModal = (type: 'hotel' | 'restaurant' | 'activity' | 'transport', mode: 'swap' | 'add' = 'swap') => {
+  const openSwapModal = (type: PlannerItemType, mode: "swap" | "add" = "swap") => {
     setItemToSwap(type);
     setModalMode(mode);
     setModalError("");
     setSwapModalOpen(true);
   };
 
+  const handleBudgetChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newBudget = Number(event.target.value);
+    setTripDetails({ budget: newBudget });
+    setCustomizedPlan(updatePlanBudget(customizedPlan, newBudget));
+  };
 
+  const handleReserveChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newReserve = Number(event.target.value);
+    setCustomizedPlan(updateEmergencyReserve(customizedPlan, newReserve, tripDetails.budget));
+  };
+
+  const handleDeleteCustomItem = (idx: number) => {
+    const item = customizedPlan.extraItems?.[idx];
+    if (!item) return;
+    setCustomizedPlan(removeExtraItem(customizedPlan, idx, tripDetails.budget));
+    toast.success(`Removed ${item.name}`);
+  };
+
+  const handleBooking = async () => {
+    if (!customizedPlan.selectedHotel) {
+      toast.error("Select a hotel before continuing to checkout.");
+      return;
+    }
+
+    setIsBooking(true);
+
+    try {
+      const response = await apiClient<CreateOrderResponse>("/api/payments/create-order", {
+        method: "POST",
+        body: JSON.stringify({
+          hotel: customizedPlan.selectedHotel,
+          destination: tripDetails.destination,
+          travellers: tripDetails.travellers,
+          days: tripDetails.days,
+        }),
+      });
+
+      const data = response as CreateOrderResponse;
+      if (data.success && data.booking_id) {
+        router.push(`/plan/checkout/${data.booking_id}`);
+        return;
+      }
+
+      toast.error(data.error || "Failed to create the booking.");
+    } catch (error) {
+      console.error("Error creating booking:", error);
+    } finally {
+      setIsBooking(false);
+    }
+  };
 
   return (
-    <div className="animate-in fade-in zoom-in-95 duration-500 max-w-6xl mx-auto px-4 pb-24">
-      
-      <button 
+    <div className="space-y-8">
+      <button
         onClick={() => setView("TIERS")}
-        className="mb-8 flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
       >
-        <FiArrowLeft /> Back to Packages
+        <FiArrowLeft />
+        Back to packages
       </button>
 
-      {/* Real-Time Dashboard */}
-      <div className="bg-slate-900 dark:bg-black rounded-[2rem] p-8 md:p-10 shadow-2xl shadow-slate-900/20 mb-12 relative overflow-hidden">
-        {/* Decorative blobs */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3"></div>
-        
-        <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-slate-700/50">
-          <div className="pt-4 md:pt-0">
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">Total Budget</p>
-            <div className="flex items-center justify-center gap-1 bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 w-max mx-auto">
-              <span className="text-2xl font-black text-white">₹</span>
-              <input 
-                type="number" 
-                value={tripDetails.budget} 
-                onChange={handleBudgetChange}
-                className="text-3xl font-black bg-transparent text-white outline-none w-32 text-center"
-              />
+      <div className="relative overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#0f172a_0%,#1e293b_48%,#1d4ed8_100%)] p-8 text-white shadow-[0_30px_90px_-45px_rgba(15,23,42,0.9)]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(125,211,252,0.3),transparent_22%),radial-gradient(circle_at_bottom_left,rgba(56,189,248,0.18),transparent_24%)]" />
+        <div className="relative space-y-8">
+          <SectionHeader
+            eyebrow="Live budget control"
+            title="Customize the plan without losing budget clarity"
+            description="Every swap, add-on, and reserve update is recalculated immediately so you can make trade-offs with confidence."
+          />
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-100">Total budget</p>
+              <div className="mt-3 flex items-center gap-2 rounded-2xl border border-white/10 bg-slate-950/20 px-4 py-3">
+                <span className="text-2xl font-black">Rs</span>
+                <input
+                  type="number"
+                  value={tripDetails.budget}
+                  onChange={handleBudgetChange}
+                  className="w-full bg-transparent text-3xl font-black outline-none"
+                />
+              </div>
             </div>
-          </div>
-          <div className="pt-8 md:pt-0">
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">Estimated Trip Cost</p>
-            <p className="text-4xl font-black text-white">{formatINR(customizedPlan.tripCost)}</p>
-            <p className="text-slate-500 font-medium text-xs mt-2">Includes {customizedPlan.extraItems?.length || 0} custom items</p>
-          </div>
-          <div className="pt-8 md:pt-0">
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">Leftover Funds</p>
-            <p className={`text-5xl font-black ${customizedPlan.remainingBudget >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              {formatINR(customizedPlan.remainingBudget)}
-            </p>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-100">Trip cost</p>
+              <p className="mt-4 text-4xl font-black">{formatINR(customizedPlan.tripCost)}</p>
+              <p className="mt-2 text-sm text-slate-200">
+                Includes {(customizedPlan.extraItems ?? []).length} add-on
+                {(customizedPlan.extraItems ?? []).length === 1 ? "" : "s"}.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-100">Remaining budget</p>
+              <p
+                className={`mt-4 text-4xl font-black ${
+                  customizedPlan.remainingBudget >= 0 ? "text-emerald-300" : "text-rose-300"
+                }`}
+              >
+                {formatINR(customizedPlan.remainingBudget)}
+              </p>
+              <p className="mt-2 text-sm text-slate-200">
+                Spendable after reserve: {formatINR(customizedPlan.remainingSpendableBudget ?? 0)}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-8 tracking-tight">Fine-Tune Your Experience</h3>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-        
-        <CustomizerCard 
-          type="hotel" title="Accommodation" cost={customizedPlan.accommodationCost}
-          itemName={customizedPlan.selectedHotel?.name}
-          itemDetails={`Price per night: ${formatINR(customizedPlan.selectedHotel?.price)}`}
-          onSwap={() => openSwapModal('hotel')} onAdd={() => openSwapModal('hotel', 'add')}
-          icon={FiHome} colorClass="blue"
-        />
+      {customizedPlan.remainingBudget < 0 ? (
+        <StatusBanner tone="danger" title="Budget exceeded">
+          Reduce extras, choose a cheaper option, or raise the total budget before checkout.
+        </StatusBanner>
+      ) : null}
 
-        <CustomizerCard 
-          type="restaurant" title="Food & Dining" cost={customizedPlan.foodCost}
-          itemName={customizedPlan.selectedRestaurant?.restaurant_name}
-          itemDetails={`Avg meal cost: ${formatINR(customizedPlan.selectedRestaurant?.cost_per_meal)}`}
-          onSwap={() => openSwapModal('restaurant')} onAdd={() => openSwapModal('restaurant', 'add')}
-          icon={FiCoffee} colorClass="orange"
-        />
+      <SectionHeader
+        eyebrow="Plan controls"
+        title="Adjust each part of the trip"
+        description="Swap individual selections or add parallel options while keeping the whole package budget-aware."
+      />
 
-        <CustomizerCard 
-          type="activity" title="Activities" cost={customizedPlan.activityCost}
-          itemName={customizedPlan.selectedActivity?.activity_name}
-          itemDetails={`Cost per person: ${formatINR(customizedPlan.selectedActivity?.cost_per_person)}`}
-          onSwap={() => openSwapModal('activity')} onAdd={() => openSwapModal('activity', 'add')}
-          icon={FiMap} colorClass="emerald"
-        />
+      <div className="grid gap-6 lg:grid-cols-2">
+        {cardConfigs.map((config) => (
+          <CustomizerCard
+            key={config.type}
+            type={config.type}
+            title={config.title}
+            cost={customizedPlan[config.costKey]}
+            itemName={
+              config.type === "hotel"
+                ? customizedPlan.selectedHotel?.name
+                : config.type === "restaurant"
+                  ? customizedPlan.selectedRestaurant?.restaurant_name
+                  : config.type === "activity"
+                    ? customizedPlan.selectedActivity?.activity_name
+                    : customizedPlan.selectedTransport?.transport_mode
+            }
+            itemDetails={
+              config.type === "hotel"
+                ? `Price per night: ${formatINR(customizedPlan.selectedHotel?.price)}`
+                : config.type === "restaurant"
+                  ? `Average meal cost: ${formatINR(customizedPlan.selectedRestaurant?.cost_per_meal)}`
+                  : config.type === "activity"
+                    ? `Cost per person: ${formatINR(customizedPlan.selectedActivity?.cost_per_person)}`
+                    : `Cost per person: ${formatINR(customizedPlan.selectedTransport?.cost_per_person)}`
+            }
+            onSwap={() => openSwapModal(config.type)}
+            onAdd={() => openSwapModal(config.type, "add")}
+            icon={config.icon}
+            colorClass={config.tone}
+          />
+        ))}
 
-        <CustomizerCard 
-          type="transport" title="Transport" cost={customizedPlan.transportCost}
-          itemName={customizedPlan.selectedTransport?.transport_mode}
-          itemDetails={`Cost per person: ${formatINR(customizedPlan.selectedTransport?.cost_per_person)}`}
-          onSwap={() => openSwapModal('transport')} onAdd={() => openSwapModal('transport', 'add')}
-          icon={FiTruck} colorClass="purple"
-        />
+        <div className="lg:col-span-2 rounded-[2rem] border border-amber-200 bg-amber-50/80 p-6 dark:border-amber-900/40 dark:bg-amber-950/20">
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="rounded-2xl bg-amber-100 p-3 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                <FiShield className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-700 dark:text-amber-300">
+                  Emergency reserve
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-700 dark:text-slate-200">
+                  Keep a dedicated safety buffer for unexpected transport, stay, or support costs.
+                </p>
+              </div>
+            </div>
 
-        {/* Custom Items */}
-        {customizedPlan.extraItems && customizedPlan.extraItems.length > 0 && (
-          <div className="lg:col-span-2 glass-panel p-8 rounded-3xl border-2 border-dashed border-blue-200 dark:border-blue-800/50">
-            <h4 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-              <FiPlus className="text-blue-500" /> Custom Add-ons
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {customizedPlan.extraItems.map((item: any, idx: number) => (
-                <div key={idx} className="flex justify-between items-center bg-white/50 dark:bg-slate-800/50 p-4 rounded-2xl shadow-sm hover-lift">
+            <div className="flex items-center gap-2 rounded-2xl border border-amber-200 bg-white px-4 py-3 dark:border-amber-900/40 dark:bg-slate-950">
+              <span className="text-lg font-bold text-slate-400">Rs</span>
+              <input
+                type="number"
+                value={customizedPlan.emergencyReserve}
+                onChange={handleReserveChange}
+                className="w-28 bg-transparent text-2xl font-black text-slate-950 outline-none dark:text-white"
+              />
+            </div>
+          </div>
+        </div>
+
+        {(customizedPlan.extraItems ?? []).length > 0 ? (
+          <div className="lg:col-span-2 rounded-[2rem] border border-dashed border-slate-300 bg-white/80 p-6 dark:border-slate-700 dark:bg-slate-950/60">
+            <div className="mb-5 flex items-center gap-2">
+              <FiPlus className="text-sky-500" />
+              <h4 className="text-lg font-bold text-slate-950 dark:text-white">Custom add-ons</h4>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {customizedPlan.extraItems?.map((item, idx) => (
+                <div
+                  key={`${item.type}-${item.name}-${idx}`}
+                  className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/80"
+                >
                   <div className="flex items-center gap-4">
-                    <button 
+                    <button
                       onClick={() => handleDeleteCustomItem(idx)}
-                      className="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 p-2 rounded-full transition-colors"
+                      className="rounded-full bg-rose-50 p-2 text-rose-500 transition-colors hover:bg-rose-100 hover:text-rose-600 dark:bg-rose-950/30 dark:hover:bg-rose-950/50"
                     >
-                      <FiTrash2 className="w-4 h-4" />
+                      <FiTrash2 className="h-4 w-4" />
                     </button>
                     <div>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-0.5">{item.type}</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200">{item.name}</span>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">{item.type}</p>
+                      <p className="font-semibold text-slate-900 dark:text-slate-100">{item.name}</p>
                     </div>
                   </div>
-                  <span className="font-black text-slate-900 dark:text-white">{formatINR(item.price)}</span>
+                  <p className="font-black text-slate-950 dark:text-white">{formatINR(item.price)}</p>
                 </div>
               ))}
             </div>
           </div>
-        )}
-
-        {/* Emergency Buffer */}
-        <div className="lg:col-span-2 glass-panel p-8 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 ring-1 ring-amber-500/30 bg-amber-50/30 dark:bg-amber-900/10">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-2xl">
-              <FiShield className="w-6 h-6" />
-            </div>
-            <div>
-              <span className="text-sm font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400 block mb-1">Safety & Emergency Buffer</span>
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Reserved funds for unexpected costs (editable)</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 px-4 py-3 rounded-2xl shadow-inner border border-slate-200 dark:border-slate-800">
-            <span className="text-slate-400 font-bold text-xl">₹</span>
-            <input 
-              type="number"
-              value={customizedPlan.emergencyReserve}
-              onChange={handleReserveChange}
-              className="w-28 bg-transparent outline-none font-black text-2xl text-slate-900 dark:text-white text-center"
-            />
-          </div>
-        </div>
-
+        ) : null}
       </div>
 
-      {/* Action Footer */}
-      <div className="text-center space-y-6 flex flex-col items-center max-w-sm mx-auto">
-        <button 
-          onClick={async () => {
-            setIsBooking(true);
-            try {
-              const res = await fetch('/api/payments/create-order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  hotel: customizedPlan.selectedHotel,
-                  destination: tripDetails.destination,
-                  travellers: tripDetails.travellers,
-                  days: tripDetails.days
-                })
-              });
-              const data = await res.json();
-              if (data.success) {
-                router.push(`/plan/checkout/${data.booking_id}`);
-              } else {
-                alert(data.error || 'Failed to create booking');
-              }
-            } catch (err) {
-              alert('Error creating booking');
-            } finally {
-               setIsBooking(false);
-            }
-          }}
-          disabled={isBooking || !customizedPlan.selectedHotel}
-          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xl py-5 px-8 rounded-2xl shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 transition-all hover-lift disabled:opacity-50 disabled:hover:transform-none flex items-center justify-center gap-3"
+      <div className="mx-auto flex max-w-md flex-col gap-4">
+        <Button
+          onClick={handleBooking}
+          disabled={isBooking || !customizedPlan.selectedHotel || customizedPlan.remainingBudget < 0}
+          className="w-full py-5 text-lg"
         >
-          {isBooking ? (
-            <span className="animate-pulse">Securing Booking...</span>
-          ) : (
-            <>Secure Booking</>
-          )}
-        </button>
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Secured by Razorpay • Test Mode</p>
-        
-        <button 
-          onClick={() => router.push("/map")}
-          className="w-full py-4 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-colors"
-        >
-          Preview on Map
-        </button>
+          {isBooking ? "Securing booking..." : "Continue to protected checkout"}
+        </Button>
+
+        <Button variant="ghost" onClick={() => router.push("/map")} className="w-full py-4 text-base">
+          <FiMapPin className="mr-2 h-4 w-4" />
+          Preview itinerary on the map
+        </Button>
       </div>
     </div>
   );

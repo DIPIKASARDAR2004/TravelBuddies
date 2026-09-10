@@ -53,58 +53,10 @@ body {
   overflow-x: hidden;
 }
 
-/* 💎 Premium Utilities */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.dark .glass-panel {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.premium-shadow {
-  box-shadow: 0 10px 40px -10px rgba(37, 99, 235, 0.15);
-}
-
-.dark .premium-shadow {
-  box-shadow: 0 10px 40px -10px rgba(59, 130, 246, 0.1);
-}
-
-.hover-lift {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-}
-
-.hover-lift:hover {
-  transform: translateY(-4px);
-}
-
 /* 🧭 Hide Scrollbar */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .hide-scrollbar {
   scrollbar-width: none;
-}
-
-/* 🌄 Hero Section (Used in Home Page) */
-.hero-section {
-  position: relative;
-  height: 100vh;
-  background: 
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(15, 23, 42, 0.8)),
-    url("/bgpic.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  color: #fff;
-  padding: 2rem;
 }

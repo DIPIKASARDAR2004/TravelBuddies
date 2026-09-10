@@ -1,89 +1,56 @@
- "use client";
+"use client";
 
-import TransportSearchForm from "@/components/transport/TransportSearchForm";
-import TransportFooter from "@/components/transport/TransportFooter";
+import { TransportLanding } from "@/components/transport/TransportLanding";
+
+const BUS_OFFERS = [
+  {
+    image: "/b2.png",
+    title: "Scania Metrolink",
+    description: "A comfortable premium coach option for longer intercity travel with smoother cabin comfort.",
+  },
+  {
+    image: "/b3.png",
+    title: "Tata Marcopolo and Globus",
+    description: "Popular fleet picks when you want broader route coverage without overcomplicating selection.",
+  },
+  {
+    image: "/b5.png",
+    title: "BharatBenz 2441",
+    description: "A practical higher-capacity option for busy routes and group-oriented travel demand.",
+  },
+  {
+    image: "/b7.png",
+    title: "Airavat Club Class",
+    description: "A recognizable premium-state service style for travelers prioritizing reliability and comfort.",
+  },
+];
+
+const BUS_SECTIONS = [
+  {
+    title: "Why this flow matters",
+    body: "Bus planning should not feel like a disconnected microsite. This redesign keeps search, trip planning, and safer travel guidance closer together.",
+  },
+  {
+    title: "What improved here",
+    body: "The old alert-based interaction has been replaced with an actual booking-form summary state, clearer inputs, and reusable components shared with the rest of the frontend.",
+  },
+  {
+    title: "What comes next",
+    body: "The current form is ready for real route APIs. The component seams are cleaner now, so transport search can be implemented without rewriting the page shell again.",
+  },
+];
 
 export default function Bus() {
   return (
-    <main className="page">
-      <TransportSearchForm title="Book Bus Tickets" logoSrc="/blo.png" />
-
-      {/*this is train part for photos*/}
-      <div className="offer-container">
-        <div className="offer-card">
-          <img src="b1.png" alt="h" className="offer-img" />
-          <div className="offer-content">
-            <p className="offer-type">Special offer</p>
-            <h4 className="offer-title">Mercedes-Benz Multi-Axle Coaches</h4>
-            <p className="offer-desc">Book your trip long weekend trip now.</p>
-          </div>
-        </div>
-
-        <div className="offer-card">
-          <img src="/b2.png" alt="flight" className="offer-img" />
-          <div className="offer-content">
-            <p className="offer-type">Special offer</p>
-            <h4 className="offer-title">Scania Metrolink</h4>
-            <p className="offer-desc">Book your trip long weekend trip now.</p>
-          </div>
-        </div>
-
-        <div className="offer-card">
-          <img src="/b3.png" alt="holiday" className="offer-img" />
-          <div className="offer-content">
-            <p className="offer-type">Special offer</p>
-            <h4 className="offer-title">Tata Marcopolo & Tata Globus</h4>
-            <p className="offer-desc">Book your trip long weekend trip now.</p>
-          </div>
-        </div>
-        
-        <div className="offer-card">
-          <img src="/b4.png" alt="holiday" className="offer-img" />
-          <div className="offer-content">
-            <p className="offer-type">Special offer</p>
-            <h4 className="offer-title">Eicher Skyline Pro</h4>
-            <p className="offer-desc">Book your trip long weekend trip now.</p>
-          </div>
-        </div>
-        
-        <div className="offer-card">
-          <img src="/b5.png" alt="holiday" className="offer-img" />
-          <div className="offer-content">
-            <p className="offer-type">Special offer</p>
-            <h4 className="offer-title">BharatBenz 2441</h4>
-            <p className="offer-desc">Book your trip long weekend trip now.</p>
-          </div>
-        </div>
-        
-        <div className="offer-card">
-          <img src="/b6.png" alt="holiday" className="offer-img" />
-          <div className="offer-content">
-            <p className="offer-type">Special offer</p>
-            <h4 className="offer-title">Hyundai Universe</h4>
-            <p className="offer-desc">Book your trip long weekend trip now.</p>
-          </div>
-        </div>
-        
-        <div className="offer-card">
-          <img src="/b7.png" alt="holiday" className="offer-img" />
-          <div className="offer-content">
-            <p className="offer-type">Special offer</p>
-            <h4 className="offer-title">KSRTC Airavat Club Class (Volvo)</h4>
-            <p className="offer-desc">Book your trip long weekend trip now.</p>
-          </div>
-        </div>
-        
-        <div className="offer-card">
-          <img src="/b8.png" alt="holiday" className="offer-img" />
-          <div className="offer-content">
-            <p className="offer-type">Special offer</p>
-            <h4 className="offer-title">Orange Sleeper & VRL Volvo Coaches</h4>
-            <p className="offer-desc">Book your trip long weekend trip now.</p>
-          </div>
-        </div>
-      </div>
-      
-      <TransportFooter />
-    </main>
+    <TransportLanding
+      title="Find bus routes with a cleaner, calmer booking experience"
+      subtitle="Use a more structured search flow, browse highlighted coach options, and move into the main trip planner whenever you are ready to build the full itinerary."
+      logoSrc="/blo.png"
+      transportLabel="Bus"
+      accent="amber"
+      offers={BUS_OFFERS}
+      footerTitle="Why JourneyPilot is moving transport pages toward the same product system"
+      footerSections={BUS_SECTIONS}
+    />
   );
 }

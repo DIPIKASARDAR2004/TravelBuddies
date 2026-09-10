@@ -10,14 +10,62 @@ import {
   formatOption,
   formatUpgrade,
   getBudgetItem,
-  getNextCheaper,
-  getNextBetter,
-  isIdentical
 } from '@/lib/recommendation/planService';
+import {
+  PlanParams,
+  RecommendationActivity,
+  RecommendationHotel,
+  RecommendationRestaurant,
+  RecommendationTransport,
+} from '@/lib/recommendation/types';
+import {
+  ActivityAlternative,
+  HotelAlternative,
+  PlannerApiResponse,
+  RestaurantAlternative,
+  TransportAlternative,
+} from '@/types';
+
+interface PlanRequestBody {
+  destination?: string;
+  totalBudget?: number | string;
+  travellers?: number | string;
+  days?: number | string;
+  womenOnly?: boolean;
+}
+
+const normalizeHotelAlternative = (hotel: RecommendationHotel): HotelAlternative => ({
+  hotel_name: hotel.hotel_name,
+  price_per_night: hotel.price_per_night,
+  rating: hotel.rating ?? undefined,
+  is_women_friendly: hotel.is_women_friendly ?? undefined,
+  latitude: hotel.latitude,
+  longitude: hotel.longitude,
+});
+
+const normalizeRestaurantAlternative = (restaurant: RecommendationRestaurant): RestaurantAlternative => ({
+  restaurant_name: restaurant.restaurant_name,
+  cost_per_meal: restaurant.cost_per_meal,
+  rating: restaurant.rating ?? undefined,
+});
+
+const normalizeActivityAlternative = (activity: RecommendationActivity): ActivityAlternative => ({
+  activity_name: activity.activity_name,
+  cost_per_person: activity.cost_per_person,
+  rating: activity.rating ?? undefined,
+  latitude: activity.latitude,
+  longitude: activity.longitude,
+});
+
+const normalizeTransportAlternative = (transport: RecommendationTransport): TransportAlternative => ({
+  transport_mode: transport.transport_mode,
+  cost_per_person: transport.cost_per_person,
+  comfort_level: transport.comfort_level ?? undefined,
+});
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as PlanRequestBody;
     const { destination, totalBudget, travellers, days, womenOnly } = body;
 
     if (!destination || !totalBudget || !travellers || !days) {
@@ -61,13 +109,17 @@ export async function POST(request: Request) {
       .order('cost_per_person', { ascending: true });
 
     // Apply minimum quality filters (rating >= 3.5)
-    let qualifiedHotels = (allHotels || []).filter(h => h.rating >= 3.5);
+    let qualifiedHotels: RecommendationHotel[] = ((allHotels || []) as RecommendationHotel[]).filter(
+      (hotel) => (hotel.rating || 0) >= 3.5,
+    );
     if (womenOnly) {
-      qualifiedHotels = qualifiedHotels.filter(h => h.is_women_friendly === true);
+      qualifiedHotels = qualifiedHotels.filter((hotel) => hotel.is_women_friendly === true);
     }
-    const qualifiedRestaurants = (allRestaurants || []).filter(r => r.rating >= 3.5);
-    const qualifiedActivities = allActivities || [];
-    const qualifiedTransport = allTransport || [];
+    const qualifiedRestaurants: RecommendationRestaurant[] = ((allRestaurants || []) as RecommendationRestaurant[]).filter(
+      (restaurant) => (restaurant.rating || 0) >= 3.5,
+    );
+    const qualifiedActivities: RecommendationActivity[] = (allActivities || []) as RecommendationActivity[];
+    const qualifiedTransport: RecommendationTransport[] = (allTransport || []) as RecommendationTransport[];
 
     if (!qualifiedHotels.length || !qualifiedRestaurants.length || !qualifiedActivities.length || !qualifiedTransport.length) {
       return NextResponse.json({
@@ -77,14 +129,14 @@ export async function POST(request: Request) {
 
 
     // Base minimums
-    const minH = getBudgetItem(qualifiedHotels);
-    const minR = getBudgetItem(qualifiedRestaurants);
-    const minA = getBudgetItem(qualifiedActivities);
-    const minT = getBudgetItem(qualifiedTransport);
+    const minH = getBudgetItem(qualifiedHotels) as RecommendationHotel;
+    const minR = getBudgetItem(qualifiedRestaurants) as RecommendationRestaurant;
+    const minA = getBudgetItem(qualifiedActivities) as RecommendationActivity;
+    const minT = getBudgetItem(qualifiedTransport) as RecommendationTransport;
 
     const minHotelCost = calcAccommodation(minH, numTravellers, numDays);
     const minFoodCost = calcFood(minR, numTravellers, numDays);
-    const minActCost = calcActivity(minA, numTravellers);
+    const minActCost = calcActivity([minA], numTravellers);
     const minTransCost = calcTransport(minT, numTravellers);
 
     // If absolute minimum exceeds limit, trip is not possible within budget.
@@ -92,36 +144,29 @@ export async function POST(request: Request) {
       return NextResponse.json({
         destination, totalBudget: budget, tripSpendingLimit,
         travellers: numTravellers, days: numDays, isTripPossible: false, withinBudget: [], upgrades: [],
-        alternatives: { hotel: allHotels || [], restaurant: allRestaurants || [], activity: allActivities || [], transport: allTransport || [] }
+        alternatives: {
+          hotel: ((allHotels || []) as RecommendationHotel[]).map(normalizeHotelAlternative),
+          restaurant: ((allRestaurants || []) as RecommendationRestaurant[]).map(normalizeRestaurantAlternative),
+          activity: ((allActivities || []) as RecommendationActivity[]).map(normalizeActivityAlternative),
+          transport: ((allTransport || []) as RecommendationTransport[]).map(normalizeTransportAlternative),
+        }
       }, { status: 200 });
     }
 
     // Wrap calculators for the planner algorithms to abstract away the numTravellers and numDays
-    const wrapCalcAcc = (h: any) => calcAccommodation(h, numTravellers, numDays);
-    const wrapCalcFood = (r: any) => calcFood(r, numTravellers, numDays);
-    const wrapCalcAct = (a: any) => calcActivity(a, numTravellers);
-    const wrapCalcTrans = (t: any) => calcTransport(t, numTravellers);
-    
-    const wrapGetNextBetter = (items: any[], currentItem: any, type: string) => 
-        getNextBetter(items, currentItem, type, numTravellers, numDays);
-
-    const params = {
+    const params: PlanParams = {
       qualifiedHotels, qualifiedRestaurants, qualifiedActivities, qualifiedTransport,
-      tripSpendingLimit, minH, minR, minA, minT,
-      minHotelCost, minFoodCost, minActCost, minTransCost,
-      calcAccommodation: wrapCalcAcc, 
-      calcFood: wrapCalcFood, 
-      calcActivity: wrapCalcAct, 
-      calcTransport: wrapCalcTrans,
-      getNextCheaper, 
-      getNextBetter: wrapGetNextBetter, 
-      isIdentical, 
+      tripSpendingLimit,
+      calcAccommodation: (hotel) => calcAccommodation(hotel, numTravellers, numDays),
+      calcFood: (restaurant) => calcFood(restaurant, numTravellers, numDays),
+      calcActivity: (activities) => calcActivity(activities, numTravellers),
+      calcTransport: (transport) => calcTransport(transport, numTravellers),
       days: numDays
     };
 
     // Build Priority-Based Plans and Upgrades
-    const withinBudget: any[] = [];
-    const upgrades: any[] = [];
+    const withinBudget: PlannerApiResponse["withinBudget"] = [];
+    const upgrades: PlannerApiResponse["upgrades"] = [];
 
     const { plans: basePlans, bestValuePlan } = buildBasePlans(params);
     
@@ -137,7 +182,7 @@ export async function POST(request: Request) {
 
     const isTripPossible = withinBudget.length > 0;
 
-    const responseData = {
+    const responseData: PlannerApiResponse = {
       destination,
       totalBudget: budget,
       tripSpendingLimit,
@@ -147,10 +192,14 @@ export async function POST(request: Request) {
       withinBudget,
       upgrades,
       alternatives: {
-        hotel: womenOnly ? (allHotels || []).filter(h => h.is_women_friendly === true) : (allHotels || []),
-        restaurant: allRestaurants || [],
-        activity: allActivities || [],
-        transport: allTransport || []
+        hotel: womenOnly
+          ? ((allHotels || []) as RecommendationHotel[])
+              .filter((hotel) => hotel.is_women_friendly === true)
+              .map(normalizeHotelAlternative)
+          : ((allHotels || []) as RecommendationHotel[]).map(normalizeHotelAlternative),
+        restaurant: ((allRestaurants || []) as RecommendationRestaurant[]).map(normalizeRestaurantAlternative),
+        activity: ((allActivities || []) as RecommendationActivity[]).map(normalizeActivityAlternative),
+        transport: ((allTransport || []) as RecommendationTransport[]).map(normalizeTransportAlternative)
       }
     };
 

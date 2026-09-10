@@ -1,40 +1,87 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
+
+interface SpeechRecognitionAlternativeLike {
+  transcript: string;
+}
+
+interface SpeechRecognitionResultLike {
+  isFinal: boolean;
+  0: SpeechRecognitionAlternativeLike;
+}
+
+interface SpeechRecognitionEventLike {
+  resultIndex: number;
+  results: ArrayLike<SpeechRecognitionResultLike>;
+}
+
+interface SpeechRecognitionErrorEventLike {
+  error: string;
+}
+
+interface SpeechRecognitionLike {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognitionLike;
+}
+
+interface SpeechRecognitionWindow extends Window {
+  SpeechRecognition?: SpeechRecognitionConstructor;
+  webkitSpeechRecognition?: SpeechRecognitionConstructor;
+}
 
 export function useSpeechRecognition(sourceLangCode: string, onResult: (text: string) => void) {
   const [isListening, setIsListening] = useState(false);
-  const [error, setError] = useState('');
-  const recognitionRef = useRef<any>(null);
+  const [error, setError] = useState("");
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      const recognition = recognitionRef.current;
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      
-      recognition.onresult = (event: any) => {
-        let finalTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          }
-        }
-        if (finalTranscript) {
-          onResult(finalTranscript);
-        }
-      };
+    const speechWindow = window as SpeechRecognitionWindow;
+    const SpeechRecognitionClass =
+      speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
 
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        setError(`Voice recognition error: ${event.error}. Please ensure your microphone is enabled.`);
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
+    if (!SpeechRecognitionClass) {
+      return;
     }
+
+    const recognition = new SpeechRecognitionClass();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.onresult = (event) => {
+      let finalTranscript = "";
+      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+        if (event.results[index].isFinal) {
+          finalTranscript += event.results[index][0].transcript;
+        }
+      }
+
+      if (finalTranscript) {
+        onResult(finalTranscript);
+      }
+    };
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      setError(`Voice recognition error: ${event.error}. Please ensure your microphone is enabled.`);
+      setIsListening(false);
+    };
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      recognition.stop();
+      recognitionRef.current = null;
+    };
   }, [onResult]);
 
   const toggleListening = useCallback(() => {
@@ -47,12 +94,13 @@ export function useSpeechRecognition(sourceLangCode: string, onResult: (text: st
     if (isListening) {
       recognition.stop();
       setIsListening(false);
-    } else {
-      recognition.lang = sourceLangCode;
-      recognition.start();
-      setIsListening(true);
-      setError('');
+      return;
     }
+
+    recognition.lang = sourceLangCode;
+    recognition.start();
+    setIsListening(true);
+    setError("");
   }, [isListening, sourceLangCode]);
 
   return { isListening, toggleListening, error, setError };

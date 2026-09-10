@@ -1,90 +1,56 @@
-/* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import TransportSearchForm from "@/components/transport/TransportSearchForm";
-import TransportFooter from "@/components/transport/TransportFooter";
+import { TransportLanding } from "@/components/transport/TransportLanding";
+
+const TRAIN_OFFERS = [
+  {
+    image: "/t1.png",
+    title: "Goa Express",
+    description: "A familiar long-route option for leisure travelers who want a clear trip starting point.",
+  },
+  {
+    image: "/t2.jpg",
+    title: "Mumbai Rajdhani Express",
+    description: "A strong premium benchmark for users comparing comfort and city-to-city travel time.",
+  },
+  {
+    image: "/t5.jpg",
+    title: "Kolkata Rajdhani",
+    description: "A useful rail example for eastbound planning and route-oriented itinerary thinking.",
+  },
+  {
+    image: "/t7.jpg",
+    title: "Bhopal Shatabdi",
+    description: "A faster day-travel style option when time efficiency matters more than overnight flexibility.",
+  },
+];
+
+const TRAIN_SECTIONS = [
+  {
+    title: "Cleaner route planning",
+    body: "The train page now follows the same information hierarchy as the redesigned planner rather than relying on older isolated layout classes.",
+  },
+  {
+    title: "Better UX seam",
+    body: "Instead of an alert popup, route entry now produces a visible summary state that can later be replaced by real search results without changing the interaction model.",
+  },
+  {
+    title: "Less duplication",
+    body: "Bus and train pages now share the same transport landing components, which reduces maintenance cost and keeps visual updates synchronized.",
+  },
+];
 
 export default function Train() {
   return (
-    <main className="page">
-      <TransportSearchForm title="Book Train Tickets" logoSrc="/d2.png" />
-
-      {/* this is train part for photos */}
-      <div className="offer-container">
-        <div className="offer-card">
-          <img src="/t1.png" alt="holiday" className="offer-img" />
-          <div className="offer-content">
-            <p className="offer-type">Special offer</p>
-            <h4 className="offer-title">Delhi to Goa. The Goa Express (12779/12780)</h4>
-            <p className="offer-desc">Book your trip long weekend trip now.</p>
-          </div>
-        </div>
-
-        <div className="offer-card">
-          <img src="/t2.jpg" alt="flight" className="offer-img" />
-          <div className="offer-content">
-            <p className="offer-type">Special offer</p>
-            <h4 className="offer-title">Delhi and Mumbai. The Mumbai Rajdhani Express (12951/12952)</h4>
-            <p className="offer-desc">Book your trip long weekend trip now.</p>
-          </div>
-        </div>
-
-        <div className="offer-card">
-          <img src="/t3.png" alt="holiday" className="offer-img" />
-          <div className="offer-content">
-            <p className="offer-type">Special offer</p>
-            <h4 className="offer-title">Delhi and Pune. the Jhelum Express (11078)</h4>
-            <p className="offer-desc">Book your trip long weekend trip now.</p>
-          </div>
-        </div>
-
-        <div className="offer-card">
-          <img src="/t4.jpg" alt="holiday" className="offer-img" />
-          <div className="offer-content">
-            <p className="offer-type">Special offer</p>
-            <h4 className="offer-title">Delhi to Hyderabad. Telangana Express (12724)</h4>
-            <p className="offer-desc">Book your trip long weekend trip now.</p>
-          </div>
-        </div>
-
-        <div className="offer-card">
-          <img src="/t5.jpg" alt="holiday" className="offer-img" />
-          <div className="offer-content">
-            <p className="offer-type">Special offer</p>
-            <h4 className="offer-title">Delhi and West Bengal. the Kolkata Rajdhani (12306)</h4>
-            <p className="offer-desc">Book your trip long weekend trip now.</p>
-          </div>
-        </div>
-
-        <div className="offer-card">
-          <img src="/t6.jpg" alt="holiday" className="offer-img" />
-          <div className="offer-content">
-            <p className="offer-type">Special offer</p>
-            <h4 className="offer-title">Delhi and Chennai (formerly Madras). The Tamil Nadu Express (12622)</h4>
-            <p className="offer-desc">Book your trip long weekend trip now.</p>
-          </div>
-        </div>
-
-        <div className="offer-card">
-          <img src="/t7.jpg" alt="holiday" className="offer-img" />
-          <div className="offer-content">
-            <p className="offer-type">Special offer</p>
-            <h4 className="offer-title">Delhi and Madhya Pradesh. The Bhopal Shatabdi (12002)</h4>
-            <p className="offer-desc">Book your trip long weekend trip now.</p>
-          </div>
-        </div>
-
-        <div className="offer-card">
-          <img src="/t8.png" alt="holiday" className="offer-img" />
-          <div className="offer-content">
-            <p className="offer-type">Special offer</p>
-            <h4 className="offer-title">Delhi to Pondicherry is the NDLS PDY SF EXP (22404),</h4>
-            <p className="offer-desc">Book your trip long weekend trip now.</p>
-          </div>
-        </div>
-      </div>
-      
-      <TransportFooter />
-    </main>
+    <TransportLanding
+      title="Explore rail travel in a layout that is easier to use and easier to maintain"
+      subtitle="Search route details with a cleaner form, browse notable train options, and hand off into the broader trip-planning flow without losing momentum."
+      logoSrc="/d2.png"
+      transportLabel="Train"
+      accent="sky"
+      offers={TRAIN_OFFERS}
+      footerTitle="How the transport redesign fits the broader frontend cleanup"
+      footerSections={TRAIN_SECTIONS}
+    />
   );
 }
