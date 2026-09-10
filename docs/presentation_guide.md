@@ -33,8 +33,8 @@ This guide is designed to help your team present **JourneyPilot** smoothly and c
 
 ---
 
-### 3. Live Demo - Part 1: Women Safety Planner (`/lady`)
-**🖱️ What to do:** Open the app and navigate to the `/lady` route.
+### 3. Live Demo - Part 1: Women Safety Planner (`/safety`)
+**🖱️ What to do:** Open the app and navigate to the `/safety` route.
 
 **🗣️ What to say:**
 > "Let's start with one of our core innovations: The Women Safety Planner. 

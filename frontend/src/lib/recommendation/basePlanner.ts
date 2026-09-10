@@ -22,38 +22,14 @@ export interface PlanParams {
   days: number;
 }
 
-// ─── Quality Scorers (all normalised to [0, 1]) ───────────────────────────────
-//
-// comfort_level: 1=basic, 2=standard, 3=premium  (Hotels & Transport)
-// activity rating: curated prototype values — NOT verified customer reviews.
-// ─────────────────────────────────────────────────────────────────────────────
-
-/** Hotel: 60% star rating + 40% comfort tier */
-function hotelQuality(rating: number, comfort: number): number {
-  return 0.60 * (rating / 5) + 0.40 * (comfort / 3);
-}
-
-/** Restaurant: star rating only */
-function restaurantQuality(rating: number): number {
-  return rating / 5;
-}
-
-/** Transport: comfort tier only */
-function transportQuality(comfort: number): number {
-  return comfort / 3;
-}
-
-/** Average activity rating, normalised. Unrated activities contribute 0. */
-function activityQuality(acts: any[]): number {
-  const rated = acts.filter(a => a.rating != null && a.rating > 0);
-  if (rated.length === 0) return 0;
-  return (rated.reduce((s: number, a: any) => s + a.rating, 0) / rated.length) / 5;
-}
-
-/** Sum of raw activity ratings (for More Experiences tie-break). */
-function sumActivityRating(acts: any[]): number {
-  return acts.reduce((s: number, a: any) => s + (a.rating || 0), 0);
-}
+import {
+  baseHotelQuality as hotelQuality,
+  restaurantQuality,
+  transportQuality,
+  activityQuality,
+  sumActivityRating,
+  getSubsets
+} from './scoringUtils';
 
 // ─── Best Value Scoring ────────────────────────────────────────────────────────
 //
@@ -115,22 +91,6 @@ export function buildBasePlans(params: PlanParams) {
 
   const maxActs    = days * 2;
   const targetActs = Math.max(1, days);
-
-  // ── 1. Generate activity subsets (combinations only, no duplicate permutations) ─
-  const getSubsets = (arr: any[], maxSize: number): any[][] => {
-    const results: any[][] = [];
-    const helper = (startIdx: number, current: any[]) => {
-      if (current.length > 0 && current.length <= maxSize) results.push([...current]);
-      if (current.length === maxSize) return;
-      for (let i = startIdx; i < arr.length; i++) {
-        current.push(arr[i]);
-        helper(i + 1, current);
-        current.pop();
-      }
-    };
-    helper(0, []);
-    return results;
-  };
 
   const allActivitySubsets = getSubsets(qualifiedActivities, maxActs);
 

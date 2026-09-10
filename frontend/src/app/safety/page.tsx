@@ -10,11 +10,11 @@ import PlanForm from "../plan/components/PlanForm";
 import TierSelector from "../plan/components/TierSelector";
 import TripCustomizer from "../plan/components/TripCustomizer";
 import SwapModal from "../plan/components/SwapModal";
-import TrustedContacts from "./trustedcontacts";
-import SOSButton from "./sosbutton";
-import LocationTracking from "./locationtracker";
-import NearbySafetyServices from "./nearbyservices";
-import SafeStay from "./safestay";
+import TrustedContacts from "@/components/safety/trustedcontacts";
+import SOSButton from "@/components/safety/sosbutton";
+import LocationTracking from "@/components/safety/locationtracker";
+import NearbySafetyServices from "@/components/safety/nearbyservices";
+import SafeStay from "@/components/safety/safestay";
 
 export default function WomenSafetyPage() {
   const { view, resetStore } = usePlanStore();

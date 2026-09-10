@@ -42,7 +42,7 @@ JourneyPilot is built with a decoupled architecture:
 - `/explore`: Explore Destinations
 - `/plan`: Smart Itinerary & Trip Planner
 - `/hotel`, `/bus`, `/train`: Booking engines for various transportation & stay modes.
-- `/lady`: Women Safety Module (Location Tracker, Safe Stay, SOS Button, Spy Camera Detection)
+- `/safety`: Women Safety Module (Location Tracker, Safe Stay, SOS Button, Spy Camera Detection)
 - `/map`: Offline Maps & Safe Places
 - `/budgets`: Budget Calculator, Bill Splitting & Currency conversion
 - `/holyday`: Holiday packages (Student Offers, Special Trips)
@@ -121,8 +121,8 @@ This section outlines the primary user flows, data logic, and component interact
 4. **Generation**: Itinerary is dynamically generated based on criteria.
 5. **Output**: Suggested itinerary is rendered on the frontend. User can save it to their profile.
 
-### 5.5 Women Safety Module Flow (`/lady`)
-1. **Trigger**: User enters the `/lady` module.
+### 5.5 Women Safety Module Flow (`/safety`)
+1. **Trigger**: User enters the `/safety` module.
 2. **Location Tracking**: App requests Geo-location permissions $\rightarrow$ Leaflet maps render current location.
 3. **SOS Action**: User clicks "SOS".
 4. **Emergency Process**: 

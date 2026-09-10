@@ -4,8 +4,8 @@ This checklist provides a structured way to manually test the core features of t
 
 ## 1. Authentication System (`/login`, `/signup`)
 - [ ] **Account Creation:** Fill out the signup form and ensure an account is successfully created via Supabase.
-- [ ] **Login:** Test login using email and password. Verify it successfully redirects to `/lady` and sets the SSR session cookies correctly.
-- [ ] **Protected Routes:** Visit `/lady` or trigger `/api/trusted-contacts` and verify you no longer receive `401 Unauthorized` errors.
+- [ ] **Login:** Test login using email and password. Verify it successfully redirects to `/safety` and sets the SSR session cookies correctly.
+- [ ] **Protected Routes:** Visit `/safety` or trigger `/api/trusted-contacts` and verify you no longer receive `401 Unauthorized` errors.
 
 ## 2. Transport Booking System (`/train`, `/bus`)
 - [ ] **UI Rendering:** Ensure the search form, offer cards, and footer render correctly in both light and dark mode.
@@ -30,8 +30,9 @@ This checklist provides a structured way to manually test the core features of t
 - [ ] **Action: Dispute (Report Denied Entry):** Click the button and verify the status updates to `DISPUTED` without throwing a 500 error (now that the SQL migration is applied).
 - [ ] **Admin Action:** Test the Hotel Cancellation (100% refund) and No-Show (1 night charge) buttons to ensure backend API handles the actions correctly.
 
-## 5. Women Safety Planner (`/lady`)
+## 5. Women Safety Planner (`/safety`)
 - [ ] **Safe Stays Filter:** Verify that hotels listed have the `is_women_friendly` flag set to true.
+- [ ] **Component Refactor:** Verify that all safety components (SOS, Location, Trusted Contacts) render correctly after their migration to `src/components/safety/`.
 - [ ] **SOS Button:** Click the SOS button and verify the simulated emergency alert triggers correctly.
 - [ ] **Live Tracking:** Verify that the map loads (Leaflet) and plots the user's simulated location.
 

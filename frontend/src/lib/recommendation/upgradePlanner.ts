@@ -1,26 +1,30 @@
 import { PlanParams } from './basePlanner';
 
+import {
+  hotelQuality as baseObjectHotelQuality,
+  restaurantObjectQuality,
+  transportObjectQuality,
+  upgradeActivityQuality,
+  getAverageActivityRating,
+  getSubsets
+} from './scoringUtils';
+
 // ─── Quality Scorers (Must mirror basePlanner) ───────────────────────────────
 
 function hotelQuality(hotel: any): number {
-  return 0.60 * ((hotel.rating || 3.5) / 5) + 0.40 * ((hotel.comfort_level || 2) / 3);
+  return baseObjectHotelQuality(hotel);
 }
 
 function restaurantQuality(restaurant: any): number {
-  return (restaurant.rating || 3.5) / 5;
-}
-
-function getAverageActivityRating(activities: any[]): number {
-  if (!activities?.length) return 0;
-  return activities.reduce((sum, activity) => sum + (activity.rating ?? 0), 0) / activities.length;
+  return restaurantObjectQuality(restaurant);
 }
 
 function activityQuality(activities: any[]): number {
-  return getAverageActivityRating(activities) / 5;
+  return upgradeActivityQuality(activities);
 }
 
 function transportQuality(transport: any): number {
-  return (transport.comfort_level || 1) / 3;
+  return transportObjectQuality(transport);
 }
 
 function calcOverallQuality(h: any, r: any, a: any[], t: any): number {
@@ -72,23 +76,6 @@ function isTransportMeaningfullyImproved(newT: any, oldT: any): boolean {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-const getSubsets = (arr: any[], size: number): any[][] => {
-  const results: any[][] = [];
-  const helper = (startIdx: number, current: any[]) => {
-    if (current.length === size) {
-      results.push([...current]);
-      return;
-    }
-    for (let i = startIdx; i < arr.length; i++) {
-      current.push(arr[i]);
-      helper(i + 1, current);
-      current.pop();
-    }
-  };
-  helper(0, []);
-  return results;
-};
 
 export function buildUpgradePlans(params: PlanParams, bestValuePlan: any, originalTotalBudget: number) {
   const upgrades: { plan: any; name: string; tagline: string }[] = [];
