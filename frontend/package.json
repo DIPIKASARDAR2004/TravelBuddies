@@ -9,11 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@fontsource/outfit": "^5.3.0",
+    "@fontsource/plus-jakarta-sans": "^5.3.0",
     "@google/generative-ai": "^0.24.1",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.116.0",
     "@vis.gl/react-google-maps": "^1.10.0",
-    "framer-motion": "^12.23.22",
+    "framer-motion": "^12.43.0",
+    "lucide-react": "^1.43.0",
     "next": "^15.5.18",
     "razorpay": "^2.9.8",
     "react": "19.1.0",

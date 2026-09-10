@@ -1,10 +1,8 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePlanStore } from "@/store/usePlanStore";
-import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
 import { formatINR } from "@/lib/utils";
-
+import { FiArrowLeft, FiHome, FiCoffee, FiMap, FiTruck, FiPlus, FiTrash2, FiShield } from "react-icons/fi";
 import toast from "react-hot-toast";
 
 export default function TripCustomizer() {
@@ -18,7 +16,6 @@ export default function TripCustomizer() {
     const newBudget = Number(e.target.value);
     setTripDetails({ budget: newBudget });
     
-    // Recalculate remaining budget
     const updatedPlan = { ...customizedPlan };
     updatedPlan.remainingBudget = newBudget - updatedPlan.emergencyReserve - updatedPlan.tripCost;
     setCustomizedPlan(updatedPlan);
@@ -38,7 +35,6 @@ export default function TripCustomizer() {
     updatedPlan.tripCost -= item.price;
     updatedPlan.extraItems.splice(idx, 1);
     
-    // Recalculate
     updatedPlan.totalAllocated = Math.round((updatedPlan.tripCost + updatedPlan.emergencyReserve) * 100) / 100;
     updatedPlan.remainingBudget = Math.round((tripDetails.budget - updatedPlan.totalAllocated) * 100) / 100;
     setCustomizedPlan(updatedPlan);
@@ -52,177 +48,173 @@ export default function TripCustomizer() {
     setSwapModalOpen(true);
   };
 
-  return (
-    <div className="animate-in fade-in zoom-in-95 duration-300">
-      
-      <Button 
-        variant="ghost" 
-        onClick={() => setView("TIERS")}
-        className="mb-8 gap-2 rounded-full"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-        Back to Packages
-      </Button>
+  const CustomizerCard = ({ type, title, cost, itemName, itemDetails, onSwap, onAdd, icon: Icon, colorClass }: any) => (
+    <div className="glass-panel premium-shadow rounded-3xl p-6 flex flex-col justify-between hover-lift group border-t-4" style={{ borderColor: `var(--${colorClass}-500, #3b82f6)` }}>
+      <div>
+        <div className="flex justify-between items-start mb-4">
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-${colorClass}-100 dark:bg-${colorClass}-900/30 text-${colorClass}-700 dark:text-${colorClass}-400`}>
+            <Icon className="w-3.5 h-3.5" /> {title}
+          </span>
+          <div className="text-right">
+            <span className="font-black text-xl text-slate-900 dark:text-white block">{formatINR(cost)}</span>
+            <span className="text-[10px] uppercase font-bold text-slate-400">Total</span>
+          </div>
+        </div>
+        <h4 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1 leading-tight">{itemName || `No ${title} Selected`}</h4>
+        <p className="text-sm font-medium text-slate-500 mb-6">{itemDetails}</p>
+      </div>
+      <div className="flex gap-3">
+        <button 
+          onClick={onSwap} 
+          className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 transition-colors"
+        >
+          Swap Option
+        </button>
+        <button 
+          onClick={onAdd} 
+          className="w-12 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 transition-colors"
+          title="Add another"
+        >
+          <FiPlus className="w-5 h-5" />
+        </button>
+      </div>
+    </div>
+  );
 
-      {/* Real-Time Math Section */}
-      <div className="bg-gradient-to-br from-indigo-900 to-indigo-700 rounded-3xl p-6 text-white shadow-xl mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center divide-y md:divide-y-0 md:divide-x divide-indigo-500/50">
+  return (
+    <div className="animate-in fade-in zoom-in-95 duration-500 max-w-6xl mx-auto px-4 pb-24">
+      
+      <button 
+        onClick={() => setView("TIERS")}
+        className="mb-8 flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors"
+      >
+        <FiArrowLeft /> Back to Packages
+      </button>
+
+      {/* Real-Time Dashboard */}
+      <div className="bg-slate-900 dark:bg-black rounded-[2rem] p-8 md:p-10 shadow-2xl shadow-slate-900/20 mb-12 relative overflow-hidden">
+        {/* Decorative blobs */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3"></div>
+        
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-slate-700/50">
           <div className="pt-4 md:pt-0">
-            <p className="text-indigo-200 text-sm font-medium uppercase tracking-wider mb-1">Total Budget</p>
-            <div className="flex items-center justify-center gap-1">
-              <span className="text-2xl font-bold">₹</span>
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">Total Budget</p>
+            <div className="flex items-center justify-center gap-1 bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 w-max mx-auto">
+              <span className="text-2xl font-black text-white">₹</span>
               <input 
                 type="number" 
                 value={tripDetails.budget} 
                 onChange={handleBudgetChange}
-                className="text-4xl font-bold bg-transparent border-b border-indigo-400/30 focus:border-white focus:outline-none w-32 text-center"
+                className="text-3xl font-black bg-transparent text-white outline-none w-32 text-center"
               />
             </div>
           </div>
-          <div className="pt-4 md:pt-0">
-            <p className="text-indigo-200 text-sm font-medium uppercase tracking-wider mb-1">Trip Cost</p>
-            <p className="text-4xl font-bold text-amber-300">{formatINR(customizedPlan.tripCost)}</p>
-            <p className="text-indigo-300 text-xs mt-1">Includes all base items + {customizedPlan.extraItems?.length || 0} custom items</p>
+          <div className="pt-8 md:pt-0">
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">Estimated Trip Cost</p>
+            <p className="text-4xl font-black text-white">{formatINR(customizedPlan.tripCost)}</p>
+            <p className="text-slate-500 font-medium text-xs mt-2">Includes {customizedPlan.extraItems?.length || 0} custom items</p>
           </div>
-          <div className="pt-4 md:pt-0">
-            <p className="text-indigo-200 text-sm font-medium uppercase tracking-wider mb-1">Remaining Spendable Budget</p>
-            <p className={`text-4xl font-bold ${customizedPlan.remainingBudget >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+          <div className="pt-8 md:pt-0">
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">Leftover Funds</p>
+            <p className={`text-5xl font-black ${customizedPlan.remainingBudget >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
               {formatINR(customizedPlan.remainingBudget)}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Itinerary / Swapping Grid */}
-      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Customize Your Selections</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+      <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-8 tracking-tight">Fine-Tune Your Experience</h3>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
         
-        <Card hoverable className="p-5 flex flex-col justify-between border-white/20 dark:border-gray-700">
-          <div>
-            <div className="flex justify-between items-start mb-2">
-              <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide">Accommodation</span>
-              <span className="font-bold text-gray-900 dark:text-white">{formatINR(customizedPlan.accommodationCost)} <span className="text-xs text-gray-400 font-normal">total</span></span>
-            </div>
-            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{customizedPlan.selectedHotel?.name || "No Hotel Selected"}</h4>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Price per night: {formatINR(customizedPlan.selectedHotel?.price)}</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => openSwapModal('hotel')} className="flex-1">
-              Swap
-            </Button>
-            <Button variant="outline" onClick={() => openSwapModal('hotel', 'add')} className="px-3">
-              +
-            </Button>
-          </div>
-        </Card>
+        <CustomizerCard 
+          type="hotel" title="Accommodation" cost={customizedPlan.accommodationCost}
+          itemName={customizedPlan.selectedHotel?.name}
+          itemDetails={`Price per night: ${formatINR(customizedPlan.selectedHotel?.price)}`}
+          onSwap={() => openSwapModal('hotel')} onAdd={() => openSwapModal('hotel', 'add')}
+          icon={FiHome} colorClass="blue"
+        />
 
-        <Card hoverable className="p-5 flex flex-col justify-between border-white/20 dark:border-gray-700">
-          <div>
-            <div className="flex justify-between items-start mb-2">
-              <span className="bg-orange-100 text-orange-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide">Food & Dining</span>
-              <span className="font-bold text-gray-900 dark:text-white">{formatINR(customizedPlan.foodCost)} <span className="text-xs text-gray-400 font-normal">total</span></span>
-            </div>
-            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{customizedPlan.selectedRestaurant?.restaurant_name || "No Dining Selected"}</h4>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Cost per meal: {formatINR(customizedPlan.selectedRestaurant?.cost_per_meal)}</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => openSwapModal('restaurant')} className="flex-1">
-              Swap
-            </Button>
-            <Button variant="outline" onClick={() => openSwapModal('restaurant', 'add')} className="px-3">
-              +
-            </Button>
-          </div>
-        </Card>
+        <CustomizerCard 
+          type="restaurant" title="Food & Dining" cost={customizedPlan.foodCost}
+          itemName={customizedPlan.selectedRestaurant?.restaurant_name}
+          itemDetails={`Avg meal cost: ${formatINR(customizedPlan.selectedRestaurant?.cost_per_meal)}`}
+          onSwap={() => openSwapModal('restaurant')} onAdd={() => openSwapModal('restaurant', 'add')}
+          icon={FiCoffee} colorClass="orange"
+        />
 
-        <Card hoverable className="p-5 flex flex-col justify-between border-white/20 dark:border-gray-700">
-          <div>
-            <div className="flex justify-between items-start mb-2">
-              <span className="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide">Activities</span>
-              <span className="font-bold text-gray-900 dark:text-white">{formatINR(customizedPlan.activityCost)} <span className="text-xs text-gray-400 font-normal">total</span></span>
-            </div>
-            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{customizedPlan.selectedActivity?.activity_name || "No Activity Selected"}</h4>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Cost per person: {formatINR(customizedPlan.selectedActivity?.cost_per_person)}</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => openSwapModal('activity')} className="flex-1">
-              Swap
-            </Button>
-            <Button variant="outline" onClick={() => openSwapModal('activity', 'add')} className="px-3">
-              +
-            </Button>
-          </div>
-        </Card>
+        <CustomizerCard 
+          type="activity" title="Activities" cost={customizedPlan.activityCost}
+          itemName={customizedPlan.selectedActivity?.activity_name}
+          itemDetails={`Cost per person: ${formatINR(customizedPlan.selectedActivity?.cost_per_person)}`}
+          onSwap={() => openSwapModal('activity')} onAdd={() => openSwapModal('activity', 'add')}
+          icon={FiMap} colorClass="emerald"
+        />
 
-        <Card hoverable className="p-5 flex flex-col justify-between border-white/20 dark:border-gray-700">
-          <div>
-            <div className="flex justify-between items-start mb-2">
-              <span className="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide">Transport</span>
-              <span className="font-bold text-gray-900 dark:text-white">{formatINR(customizedPlan.transportCost)} <span className="text-xs text-gray-400 font-normal">total</span></span>
-            </div>
-            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{customizedPlan.selectedTransport?.transport_mode || "No Transport Selected"}</h4>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Cost per person: {formatINR(customizedPlan.selectedTransport?.cost_per_person)}</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => openSwapModal('transport')} className="flex-1">
-              Swap
-            </Button>
-            <Button variant="outline" onClick={() => openSwapModal('transport', 'add')} className="px-3">
-              +
-            </Button>
-          </div>
-        </Card>
+        <CustomizerCard 
+          type="transport" title="Transport" cost={customizedPlan.transportCost}
+          itemName={customizedPlan.selectedTransport?.transport_mode}
+          itemDetails={`Cost per person: ${formatINR(customizedPlan.selectedTransport?.cost_per_person)}`}
+          onSwap={() => openSwapModal('transport')} onAdd={() => openSwapModal('transport', 'add')}
+          icon={FiTruck} colorClass="purple"
+        />
 
-        {/* Extra Items Card */}
+        {/* Custom Items */}
         {customizedPlan.extraItems && customizedPlan.extraItems.length > 0 && (
-          <Card className="p-5 md:col-span-2 border-dashed border-blue-300 dark:border-blue-800">
-            <h4 className="font-bold text-gray-900 dark:text-white mb-4">Custom Additions</h4>
-            <div className="space-y-3">
+          <div className="lg:col-span-2 glass-panel p-8 rounded-3xl border-2 border-dashed border-blue-200 dark:border-blue-800/50">
+            <h4 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+              <FiPlus className="text-blue-500" /> Custom Add-ons
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {customizedPlan.extraItems.map((item: any, idx: number) => (
-                <div key={idx} className="flex justify-between items-center bg-gray-50 dark:bg-slate-800 p-3 rounded-lg">
-                  <div className="flex items-center">
+                <div key={idx} className="flex justify-between items-center bg-white/50 dark:bg-slate-800/50 p-4 rounded-2xl shadow-sm hover-lift">
+                  <div className="flex items-center gap-4">
                     <button 
                       onClick={() => handleDeleteCustomItem(idx)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-full mr-3 transition-colors"
-                      title="Remove item"
+                      className="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 p-2 rounded-full transition-colors"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      <FiTrash2 className="w-4 h-4" />
                     </button>
                     <div>
-                      <span className="text-xs font-bold uppercase text-gray-500 mr-2">{item.type}</span>
-                      <span className="font-medium dark:text-gray-200">{item.name}</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-0.5">{item.type}</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">{item.name}</span>
                     </div>
                   </div>
-                  <span className="font-bold dark:text-gray-200">{formatINR(item.price)}</span>
+                  <span className="font-black text-slate-900 dark:text-white">{formatINR(item.price)}</span>
                 </div>
               ))}
             </div>
-          </Card>
+          </div>
         )}
 
-        {/* Buffer Card */}
-        <div className="bg-gray-100 dark:bg-slate-800/80 p-5 rounded-2xl border border-gray-200 dark:border-slate-700 md:col-span-2 flex items-center justify-between">
-          <div>
-            <span className="bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide mb-2 inline-block">Emergency Buffer</span>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Reserved funds for unexpected costs (editable)</p>
+        {/* Emergency Buffer */}
+        <div className="lg:col-span-2 glass-panel p-8 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 ring-1 ring-amber-500/30 bg-amber-50/30 dark:bg-amber-900/10">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-2xl">
+              <FiShield className="w-6 h-6" />
+            </div>
+            <div>
+              <span className="text-sm font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400 block mb-1">Safety & Emergency Buffer</span>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Reserved funds for unexpected costs (editable)</p>
+            </div>
           </div>
-          <div className="flex items-center gap-1 bg-white dark:bg-slate-900 px-3 py-1 rounded-lg border border-gray-300 dark:border-gray-600">
-            <span className="text-gray-500 font-bold">₹</span>
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 px-4 py-3 rounded-2xl shadow-inner border border-slate-200 dark:border-slate-800">
+            <span className="text-slate-400 font-bold text-xl">₹</span>
             <input 
               type="number"
               value={customizedPlan.emergencyReserve}
               onChange={handleReserveChange}
-              className="w-24 bg-transparent outline-none font-bold text-xl text-gray-900 dark:text-white"
+              className="w-28 bg-transparent outline-none font-black text-2xl text-slate-900 dark:text-white text-center"
             />
           </div>
         </div>
 
       </div>
 
-      {/* Confirm Button */}
-      <div className="text-center pb-20 space-y-4 flex flex-col items-center">
-        <Button 
-          size="lg"
+      {/* Action Footer */}
+      <div className="text-center space-y-6 flex flex-col items-center max-w-sm mx-auto">
+        <button 
           onClick={async () => {
             setIsBooking(true);
             try {
@@ -245,32 +237,26 @@ export default function TripCustomizer() {
             } catch (err) {
               alert('Error creating booking');
             } finally {
-              setIsBooking(false);
+               setIsBooking(false);
             }
           }}
           disabled={isBooking || !customizedPlan.selectedHotel}
-          className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white text-xl py-4 px-12 rounded-full shadow-lg shadow-blue-200 dark:shadow-blue-900 transition transform hover:scale-105 disabled:opacity-50 flex items-center gap-2"
+          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xl py-5 px-8 rounded-2xl shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 transition-all hover-lift disabled:opacity-50 disabled:hover:transform-none flex items-center justify-center gap-3"
         >
           {isBooking ? (
             <span className="animate-pulse">Securing Booking...</span>
           ) : (
-            <>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-              Proceed to Protected Booking
-            </>
+            <>Secure Booking</>
           )}
-        </Button>
-        <p className="text-xs text-gray-500 font-medium">Secured by Razorpay • Test Mode</p>
+        </button>
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Secured by Razorpay • Test Mode</p>
         
-        <Button 
-          variant="outline" 
-          size="lg" 
+        <button 
           onClick={() => router.push("/map")}
-          className="mt-4 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900 dark:hover:bg-blue-900/30 rounded-full px-8 flex items-center gap-2 transition"
+          className="w-full py-4 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-colors"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
-          View Trip on Map
-        </Button>
+          Preview on Map
+        </button>
       </div>
     </div>
   );
