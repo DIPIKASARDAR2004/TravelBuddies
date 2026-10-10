@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { ApiResponse, ProtectedBooking } from "@/types";
+import { ProtectedBooking } from "@/types";
+import { requestJson } from "@/lib/client/requestJson";
+import {
+  loadRazorpayCheckout,
+  checkoutLoadError,
+} from "@/lib/client/razorpayCheckout";
 
 interface RazorpayPaymentSuccess {
   razorpay_order_id: string;
@@ -14,7 +19,10 @@ interface RazorpayPaymentFailure {
 }
 
 interface RazorpayInstance {
-  on: (event: "payment.failed", handler: (response: RazorpayPaymentFailure) => void) => void;
+  on: (
+    event: "payment.failed",
+    handler: (response: RazorpayPaymentFailure) => void,
+  ) => void;
   open: () => void;
 }
 
@@ -33,6 +41,7 @@ interface RazorpayCheckoutOptions {
   theme: {
     color: string;
   };
+  modal: { ondismiss: () => void };
 }
 
 interface RazorpayWindow extends Window {
@@ -46,52 +55,30 @@ interface RazorpayOptions {
   onError: (error: string) => void;
 }
 
-const RAZORPAY_SCRIPT_URL = "https://checkout.razorpay.com/v1/checkout.js";
-
-export function useRazorpay({ bookingId, booking, onSuccess, onError }: RazorpayOptions) {
+export function useRazorpay({
+  bookingId,
+  booking,
+  onSuccess,
+  onError,
+}: RazorpayOptions) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCheckoutReady, setIsCheckoutReady] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
 
   useEffect(() => {
-    const checkoutWindow = window as RazorpayWindow;
-
-    const handleLoad = () => setIsCheckoutReady(true);
-    const handleError = () => {
-      setIsCheckoutReady(false);
-      onError("Secure checkout could not be loaded. Please refresh and try again.");
-    };
-
-    const existingScript = document.querySelector(`script[src="${RAZORPAY_SCRIPT_URL}"]`);
-
-    if (checkoutWindow.Razorpay) {
-      setIsCheckoutReady(true);
-      return;
-    }
-
-    if (existingScript instanceof HTMLScriptElement) {
-      existingScript.addEventListener("load", handleLoad);
-      existingScript.addEventListener("error", handleError);
-
-      return () => {
-        existingScript.removeEventListener("load", handleLoad);
-        existingScript.removeEventListener("error", handleError);
-      };
-    }
-
-    const script = document.createElement("script");
-    script.src = RAZORPAY_SCRIPT_URL;
-    script.async = true;
-    script.addEventListener("load", handleLoad);
-    script.addEventListener("error", handleError);
-    document.body.appendChild(script);
-
-    return () => {
-      script.removeEventListener("load", handleLoad);
-      script.removeEventListener("error", handleError);
-    };
-  }, [onError]);
+    const controller = new AbortController();
+    void loadRazorpayCheckout(controller.signal)
+      .then(() => {
+        if (!controller.signal.aborted) setIsCheckoutReady(true);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setCheckoutError(checkoutLoadError);
+      });
+    return () => controller.abort();
+  }, []);
 
   const handlePayment = async (checkIn: string, checkOut: string) => {
+    if (isProcessing) return;
     onError("");
 
     if (!booking) {
@@ -100,25 +87,32 @@ export function useRazorpay({ bookingId, booking, onSuccess, onError }: Razorpay
     }
 
     if (!checkIn || !checkOut) {
-      onError("This booking is missing travel dates, so checkout cannot start yet.");
+      onError(
+        "This booking is missing travel dates, so checkout cannot start yet.",
+      );
       return;
     }
 
     if (!booking.razorpay_order_id) {
-      onError("Missing secure payment order. Create a new booking draft and try again.");
+      onError(
+        "Missing secure payment order. Create a new booking draft and try again.",
+      );
       return;
     }
 
     const checkoutWindow = window as RazorpayWindow;
 
     if (!checkoutWindow.Razorpay) {
-      onError("Secure checkout is still loading. Please wait a moment and try again.");
+      onError(
+        "Secure checkout is still loading. Please wait a moment and try again.",
+      );
       return;
     }
 
     setIsProcessing(true);
 
     try {
+      let verifying = false;
       const options: RazorpayCheckoutOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder",
         amount: booking.amount_paise,
@@ -127,8 +121,18 @@ export function useRazorpay({ bookingId, booking, onSuccess, onError }: Razorpay
         description: `Protected Booking: ${booking.hotel_snapshot?.name || "Hotel"}`,
         order_id: booking.razorpay_order_id,
         handler: async (response) => {
+          verifying = true;
           try {
-            const verifyResponse = await fetch("/api/payments/verify", {
+            if (
+              response.razorpay_order_id !== booking.razorpay_order_id ||
+              typeof response.razorpay_payment_id !== "string" ||
+              !response.razorpay_payment_id ||
+              typeof response.razorpay_signature !== "string" ||
+              !response.razorpay_signature
+            ) {
+              throw new Error("Invalid checkout response.");
+            }
+            const verifyData = await requestJson("/api/payments/verify", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -139,16 +143,22 @@ export function useRazorpay({ bookingId, booking, onSuccess, onError }: Razorpay
               }),
             });
 
-            const verifyData = (await verifyResponse.json()) as ApiResponse;
-
-            if (verifyResponse.ok && verifyData.success) {
+            if (
+              verifyData &&
+              typeof verifyData === "object" &&
+              "success" in verifyData &&
+              verifyData.success === true &&
+              "status" in verifyData &&
+              verifyData.status === "PROTECTED"
+            ) {
               onSuccess("Payment successful. Your booking is now protected.");
             } else {
-              onError(verifyData.error || "Payment verification failed.");
+              onError("Payment verification failed.");
             }
           } catch {
             onError("Payment verification request failed.");
           } finally {
+            verifying = false;
             setIsProcessing(false);
           }
         },
@@ -159,11 +169,18 @@ export function useRazorpay({ bookingId, booking, onSuccess, onError }: Razorpay
         theme: {
           color: "#0f766e",
         },
+        modal: {
+          ondismiss: () => {
+            if (!verifying) setIsProcessing(false);
+          },
+        },
       };
 
       const razorpay = new checkoutWindow.Razorpay(options);
       razorpay.on("payment.failed", (response) => {
-        onError(`Payment failed: ${response.error.description || "Unknown Razorpay error."}`);
+        onError(
+          `Payment failed: ${response?.error?.description || "Unknown Razorpay error."}`,
+        );
         setIsProcessing(false);
       });
       razorpay.open();
@@ -173,5 +190,11 @@ export function useRazorpay({ bookingId, booking, onSuccess, onError }: Razorpay
     }
   };
 
-  return { isCheckoutReady, isProcessing, handlePayment, setIsProcessing };
+  return {
+    isCheckoutReady,
+    checkoutError,
+    isProcessing,
+    handlePayment,
+    setIsProcessing,
+  };
 }

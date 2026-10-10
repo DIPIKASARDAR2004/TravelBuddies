@@ -377,6 +377,80 @@ Use this as the main test case for future recommendation-engine work. The exact 
 
 # CURRENT IMPLEMENTATION — OBSERVED CODE
 
+### Maintenance checkpoint — 2026-10-10
+
+The older observations below are historical, not verification of release readiness.
+Inspected Safe Stay routes/controller, planner form/customizer, booking creation,
+checkout and payment verification during maintenance:
+
+- Safe Stay dates now use browser-local inputs and validated response contracts;
+  ownership filtering has isolated API coverage. No hosted policies were tested.
+- Trusted-contact and SOS routes now check saved records, owner/ID boundaries and
+  expected mutation values. Concrete controllers serialize load/save work, bound
+  browser waits, preserve failed drafts and prevent late GPS from creating an SOS
+  after navigation. Contact removal deactivates rather than erases the record;
+  inactive contacts cannot be edited through PATCH. SOS remains record-only:
+  no contact is notified and no help is dispatched. Unknown writes require
+  refresh/review, but this in-memory guard is not durable idempotency or proof
+  of delivery. The existing schema/hosted records were not changed. See
+  [record contracts and recovery limits](docs/assistance.md#trusted-contacts-and-sos-records).
+- Chat now has bounded, checked conversations, a server-only direct Gemini adapter,
+  redacted provider failures and cancel/retry-aware browser state. It retains
+  `gemini-3.6-flash`; the server prompt is guidance, not a guaranteed topic/security
+  filter. No tools, account-record access or emergency dispatch are implemented.
+- Location creation now preserves explicit `sharing: false` instead of forcing it
+  on. Unknown saved outcomes require refresh; turning sharing off needs no new GPS
+  permission and does not delete the record. Nearby lookup checks provider/response
+  contracts and identifies unverified OSM listings rather than promising service
+  availability. The unused speech hook was removed; voice input is not implemented.
+  See [assistance boundaries and privacy](docs/assistance.md). Hosted data was not changed.
+- Draft creation is isolated in `useBookingDraft` and forwards the selected dates.
+  Mocked browser journeys cover the safety/planner/checkout boundary; they do not
+  approve recommendation rankings or the Darjeeling Golden Test.
+- The planner HTTP boundary now validates inputs, loads catalogs with checked
+  records/bounded queries and validates nested responses. Existing composition was
+  moved to `lib/planner/buildResponse.ts`; base/upgrade scoring and formulas were
+  not changed. Invalid prices fail closed rather than becoming recommendations.
+  The low-budget response now applies the same safety-alternative filter as the
+  successful response; normal planning remains independent of that flag.
+- Browser search results are checked before store updates; navigation cancels
+  pending searches. Stored selections are validated and optional storage failure
+  leaves in-memory planning functional. Saved-trip API records have separate
+  owner-scoped contracts and are not connected to the planner UI. See
+  [planning contracts and current limits](docs/planning.md).
+- Customizer actions/budget presentation and map provider/timing/drawing concerns
+  are now separate modules. Invalid coordinates and incomplete route legs leave
+  the affected day untimed; SDK/provider waits are bounded and navigation ignores
+  late results. The map returns to the correct normal/safety planner.
+- Map timing now explicitly labels the existing 9:00 AM/90-minute assumptions.
+  The two-activities-per-day draft cap remains IN REVIEW and unchanged; overflow
+  selections are named and retained in the plan/budget. Route ideas are illustrative
+  and no longer display invented durations. These changes do not approve schedule
+  feasibility, rankings, safe returns or live provider behavior. Local browser
+  tests use a fake SDK and blocked network access, not actual Google routes.
+- Payment routes now authenticate and enforce ownership, price from an unambiguous
+  catalog row, require explicit matching test configuration, check stored-order
+  signatures/captured amounts and confirm guarded state updates. The observed
+  browser-price/missing-owner/empty-secret defects are fixed locally.
+- Orders use owner-bound retry keys; unknown creation outcomes require
+  reconciliation. Refund attempts persist their original amount/key and remain
+  pending until confirmed. RELEASED is a ledger simulation, not a bank payout;
+  DISPUTED is not a provider freeze. The owner-only hotel simulator requires a
+  separate explicit flag and does not establish hotel staff roles.
+- The ownership/grants migration passes local PostgreSQL tests but has not run
+  against hosted data. Legacy owners are not guessed. Provider transactions,
+  capture/webhook recovery, settlement and hosted policies remain unverified.
+  See [payment setup, contracts and limitations](docs/payments.md).
+- Cancellation timing currently interprets date-only check-in as midnight UTC.
+  This is a prototype implementation assumption, not a newly LOCKED product
+  decision; property-local check-in behavior needs approval before release.
+
+Recommendation formulas, LOCKED/IN REVIEW decisions and hosted records were not
+changed. Current commands/limitations live in README; delivery evidence lives in
+the workspace's `Project_Pulse.md`.
+
+### Earlier implementation observations
+
 *Last Inspected: 2026-09-08*  
 *Backend Route: `frontend/src/app/api/plan/route.ts`*
 
@@ -444,8 +518,8 @@ For future Plan Trip recommendation-engine work:
 
 # PROTECTED PAYMENT PROTOTYPE (LOCKED / UPCOMING)
 - **Goal**: Simulate an escrow payment for Hotel bookings using Razorpay Test Mode.
-- **Security**: The final accommodation cost is strictly recalculated on the backend API (ignoring browser inputs) to prevent tampering.
+- **Security target**: The final accommodation cost must be recalculated from trusted catalog records on the backend (ignoring browser prices). The October 10 hardening now implements and locally tests this rule; hosted catalog permissions and provider behavior still require verification.
 - **Database**: Payment lifecycle (Draft -> Protected -> Released/Refunded/Disputed) tracked in the `protected_bookings` Supabase table.
 - **Architecture**: Implemented on an isolated route (`/plan/checkout/[id]`) to prevent interference with the core planner.
-- **Return Policy**: The escrow cancellation rules, tiered refunds (100% / 80% / 50%), and 5% platform commission are defined in [Return Policy](file:///home/master_soojan/Linux_Workspaces/Projects_SW/TravelBuddies/docs/return_policy.md).
+- **Return Policy**: The escrow cancellation rules, tiered refunds (100% / 80% / 50%), and 5% platform commission are defined in [Return Policy](docs/return_policy.md).
 - **Constraint**: MUST NOT alter existing Budget Planner, swap logic, emergency reserves, or recommendations.

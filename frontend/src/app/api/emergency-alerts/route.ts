@@ -1,52 +1,43 @@
 import { NextResponse } from "next/server";
-import { validateEmergencyAlertInput } from '@/lib/services/emergencyAlerts';
-import { withAuth, parseJson, ApiHandlerContext } from '@/lib/services/apiHandler';
+import {
+  ALERT_FIELDS,
+  ALERT_HISTORY_LIMIT,
+  readEmergencyAlert,
+  readEmergencyAlerts,
+  validateEmergencyAlertInput,
+} from "@/lib/services/emergencyAlerts";
+import { withAuth, parseJson } from "@/lib/services/apiHandler";
 
-const alertFields = "id, latitude, longitude, message, status, created_at, resolved_at";
-export const GET = withAuth(async ({ user, supabase }: ApiHandlerContext) => {
-              const { data, error } = await supabase
-          .from("emergency_alerts")
-          .select(alertFields)
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(10);
+export const GET = withAuth(async ({ user, supabase }) => {
+  const { data, error } = await supabase
+    .from("emergency_alerts")
+    .select(ALERT_FIELDS)
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(ALERT_HISTORY_LIMIT);
+  if (error) throw new Error("Emergency alert query failed.");
+  return NextResponse.json(
+    { alerts: readEmergencyAlerts({ alerts: data }) },
+    { headers: { "Cache-Control": "no-store" } },
+  );
+}, "Unable to load SOS records.");
 
-        if (error) {
-          console.error("Emergency alert list failed:", error.message);
-          return NextResponse.json({ error: "Unable to load emergency alerts." }, { status: 500 });
-        }
-
-        return NextResponse.json({ alerts: data ?? [] });
-    });
-export const POST = withAuth(async ({ user, supabase, request }: ApiHandlerContext) => {
-          let body: unknown;
-        try {
-          body = await request.json();
-        } catch {
-          return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400 });
-        }
-
-        const validation = validateEmergencyAlertInput(body);
-        if (!validation.valid) {
-          return NextResponse.json({ error: validation.error }, { status: 400 });
-        }
-
-            const { data, error } = await supabase
-          .from("emergency_alerts")
-          .insert({
-            user_id: user.id,
-            latitude: validation.value.latitude,
-            longitude: validation.value.longitude,
-            message: validation.value.message,
-            status: "pending",
-          })
-          .select(alertFields)
-          .single();
-
-        if (error) {
-          console.error("Emergency alert create failed:", error.message);
-          return NextResponse.json({ error: "Unable to create emergency alert." }, { status: 500 });
-        }
-
-        return NextResponse.json({ alert: data }, { status: 201 });
-    });
+export const POST = withAuth(async ({ user, supabase, request }) => {
+  const validation = validateEmergencyAlertInput(await parseJson(request));
+  if (!validation.valid)
+    return NextResponse.json({ error: validation.error }, { status: 400 });
+  const { data, error } = await supabase
+    .from("emergency_alerts")
+    .insert({ user_id: user.id, ...validation.value, status: "pending" })
+    .select(ALERT_FIELDS)
+    .single();
+  if (error) throw new Error("Emergency alert insert failed.");
+  const alert = readEmergencyAlert(
+    { alert: data },
+    { created: validation.value },
+  );
+  return NextResponse.json(
+    { alert },
+    { status: 201, headers: { "Cache-Control": "no-store" } },
+  );
+}, "Unable to create SOS record.");

@@ -7,14 +7,23 @@ import CheckoutSummary from "../components/CheckoutSummary";
 import { Input } from "@/components/ui/Input";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBanner } from "@/components/ui/StatusBanner";
-import { formatBookingAmount, getBookingStatusMeta, getCheckoutTimeline } from "@/lib/checkout/bookingStatus";
+import {
+  formatBookingAmount,
+  getBookingStatusMeta,
+  getCheckoutTimeline,
+} from "@/lib/checkout/bookingStatus";
 import { useRazorpay } from "@/hooks/useRazorpay";
 import { supabaseBrowser as supabase } from "@/lib/supabaseBrowserClient";
-import { usePlanStore } from "@/store/usePlanStore";
-import { ProtectedBooking, ProtectedBookingActionResponse } from "@/types";
+import { ProtectedBooking } from "@/types";
+import { requestJson } from "@/lib/client/requestJson";
+import {
+  readProtectedBooking,
+  readBookingAction,
+} from "@/lib/checkout/bookingResponses";
 
 const stepToneClasses = {
-  active: "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-950",
+  active:
+    "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-950",
   complete:
     "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-200",
   idle: "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-400",
@@ -22,93 +31,138 @@ const stepToneClasses = {
     "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800/50 dark:bg-rose-950/30 dark:text-rose-200",
 } as const;
 
-export default function CheckoutPage({ params }: { params: Promise<{ id: string }> }) {
+export default function CheckoutPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const unwrappedParams = use(params);
   const bookingId = unwrappedParams.id;
   const router = useRouter();
-  const tripDetails = usePlanStore((state) => state.tripDetails);
 
   const [booking, setBooking] = useState<ProtectedBooking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const checkIn = booking?.check_in_date || tripDetails?.dates?.startDate || "";
-  const checkOut = booking?.check_out_date || tripDetails?.dates?.endDate || "";
+  const checkIn = booking?.check_in_date || "";
+  const checkOut = booking?.check_out_date || "";
 
-  const { isCheckoutReady, isProcessing, handlePayment, setIsProcessing } = useRazorpay({
+  const {
+    isCheckoutReady,
+    checkoutError,
+    isProcessing,
+    handlePayment,
+    setIsProcessing,
+  } = useRazorpay({
     bookingId,
     booking,
     onSuccess: (message) => {
-      setBooking((previous) => (previous ? { ...previous, status: "PROTECTED" } : previous));
+      setBooking((previous) =>
+        previous ? { ...previous, status: "PROTECTED" } : previous,
+      );
       setSuccessMessage(message);
     },
     onError: (nextError) => setError(nextError),
   });
 
   useEffect(() => {
+    const controller = new AbortController();
+    let active = true;
+    const timeout = window.setTimeout(() => controller.abort(), 15000);
     const fetchBooking = async () => {
       setLoading(true);
-
-      const { data, error: fetchError } = await supabase
-        .from("protected_bookings")
-        .select("*")
-        .eq("id", bookingId)
-        .single();
-
-      if (fetchError || !data) {
-        setBooking(null);
-        setError("Booking not found.");
-      } else {
-        setBooking(data as ProtectedBooking);
-        setError("");
+      try {
+        const { data, error: fetchError } = await supabase
+          .from("protected_bookings")
+          .select("*")
+          .eq("id", bookingId)
+          .abortSignal(controller.signal)
+          .single();
+        if (fetchError || !data)
+          throw new Error(
+            controller.signal.aborted
+              ? "Loading this booking timed out."
+              : "Booking not found.",
+          );
+        const parsed = readProtectedBooking(data, bookingId);
+        if (active) {
+          setBooking(parsed);
+          setError("");
+        }
+      } catch (loadError) {
+        if (active) {
+          setBooking(null);
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Unable to load this booking.",
+          );
+        }
+      } finally {
+        window.clearTimeout(timeout);
+        if (active) setLoading(false);
       }
-
-      setLoading(false);
     };
 
     void fetchBooking();
+    return () => {
+      active = false;
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
   }, [bookingId]);
 
-  const executeAction = async (url: string, method: string, body?: Record<string, unknown>) => {
+  const executeAction = async (
+    url: string,
+    method: string,
+    body?: Record<string, unknown>,
+  ) => {
     setIsProcessing(true);
     setError("");
     setSuccessMessage("");
 
     try {
-      const response = await fetch(url, {
-        method,
-        headers: body ? { "Content-Type": "application/json" } : undefined,
-        body: body ? JSON.stringify(body) : undefined,
-      });
+      const data = readBookingAction(
+        await requestJson(url, {
+          method,
+          headers: body ? { "Content-Type": "application/json" } : undefined,
+          body: body ? JSON.stringify(body) : undefined,
+        }),
+      );
+      setBooking((previous) =>
+        previous ? { ...previous, status: data.status } : previous,
+      );
 
-      const data = (await response.json()) as ProtectedBookingActionResponse;
-
-      if (response.ok && data.success) {
-        setBooking((previous) => (previous ? { ...previous, status: data.status || previous.status } : previous));
-
-        let nextMessage = data.message || "Booking updated successfully.";
-        if (typeof data.customer_refund_amount === "number") {
-          nextMessage += ` Refunded ${formatBookingAmount(data.customer_refund_amount, booking?.currency || "INR")}.`;
-        }
-
-        setSuccessMessage(nextMessage);
-      } else {
-        setError(data.error || "Action failed.");
+      let nextMessage = data.message || "Booking updated successfully.";
+      if (typeof data.customer_refund_amount === "number") {
+        nextMessage += ` Refunded ${formatBookingAmount(data.customer_refund_amount, booking?.currency || "INR")}.`;
       }
-    } catch {
-      setError("An error occurred while trying to perform the action.");
+
+      setSuccessMessage(nextMessage);
+    } catch (actionError) {
+      setError(
+        actionError instanceof Error
+          ? actionError.message
+          : "An error occurred while trying to perform the action.",
+      );
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleDemoAction = (action: "release" | "cancel" | "dispute") => {
+  const handleDemoAction = (
+    action: "release" | "cancel" | "dispute" | "refund",
+  ) => {
     void executeAction(`/api/bookings/${bookingId}/${action}`, "POST");
   };
 
   const handleAdminAction = (action: "CANCEL" | "NO_SHOW") => {
-    void executeAction(`/api/hotel-admin/bookings/${bookingId}/cancel`, "POST", { action });
+    void executeAction(
+      `/api/hotel-admin/bookings/${bookingId}/cancel`,
+      "POST",
+      { action },
+    );
   };
 
   if (loading) {
@@ -172,7 +226,9 @@ export default function CheckoutPage({ params }: { params: Promise<{ id: string 
           />
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <div className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold ${statusMeta.badgeClassName}`}>
+            <div
+              className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold ${statusMeta.badgeClassName}`}
+            >
               {statusMeta.label}
             </div>
             <div className="inline-flex items-center rounded-full border border-slate-200 bg-white/85 px-4 py-2 text-sm font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
@@ -185,8 +241,13 @@ export default function CheckoutPage({ params }: { params: Promise<{ id: string 
 
           <div className="mt-6 grid gap-3 md:grid-cols-3">
             {timeline.map((step, index) => (
-              <div key={step.id} className={`rounded-2xl border px-4 py-4 ${stepToneClasses[step.state]}`}>
-                <p className="text-[11px] font-bold uppercase tracking-[0.22em]">Step {index + 1}</p>
+              <div
+                key={step.id}
+                className={`rounded-2xl border px-4 py-4 ${stepToneClasses[step.state]}`}
+              >
+                <p className="text-[11px] font-bold uppercase tracking-[0.22em]">
+                  Step {index + 1}
+                </p>
                 <p className="mt-2 text-lg font-bold">{step.label}</p>
                 <p className="mt-2 text-sm opacity-85">{step.description}</p>
               </div>
@@ -212,8 +273,12 @@ export default function CheckoutPage({ params }: { params: Promise<{ id: string 
           <section className="space-y-6">
             <div className="rounded-[2rem] border border-slate-200/80 bg-white/95 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-950/80 md:p-8">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">Travel dates</p>
-                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 dark:text-white">Locked itinerary window</h2>
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
+                  Travel dates
+                </p>
+                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 dark:text-white">
+                  Locked itinerary window
+                </h2>
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -234,13 +299,22 @@ export default function CheckoutPage({ params }: { params: Promise<{ id: string 
               </div>
 
               <div className="mt-5 space-y-4">
+                {checkoutError && canStartPayment ? (
+                  <StatusBanner
+                    tone="danger"
+                    title="Secure checkout unavailable"
+                  >
+                    {checkoutError}
+                  </StatusBanner>
+                ) : null}
                 <StatusBanner tone={statusMeta.tone} title={statusMeta.label}>
                   {statusMeta.detail}
                 </StatusBanner>
 
                 {dateMissing ? (
                   <StatusBanner tone="warning" title="Missing trip dates">
-                    This booking draft does not include both check-in and check-out yet, so secure checkout cannot begin.
+                    This booking draft does not include both check-in and
+                    check-out yet, so secure checkout cannot begin.
                   </StatusBanner>
                 ) : null}
 
@@ -251,7 +325,13 @@ export default function CheckoutPage({ params }: { params: Promise<{ id: string 
                     disabled={isProcessing || !isCheckoutReady || dateMissing}
                     className="w-full rounded-[1.5rem] bg-slate-950 px-5 py-4 text-base font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
                   >
-                    {isProcessing ? "Processing payment..." : !isCheckoutReady ? "Loading secure checkout..." : "Pay securely in test mode"}
+                    {isProcessing
+                      ? "Processing payment..."
+                      : checkoutError
+                        ? "Secure checkout unavailable"
+                        : !isCheckoutReady
+                          ? "Loading secure checkout..."
+                          : "Pay securely in test mode"}
                   </button>
                 ) : null}
               </div>

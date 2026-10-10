@@ -32,6 +32,7 @@ const formatCurrency = (value: number) =>
 
 const toHotelOption = (hotel: HotelAlternative): HotelOption => ({
   name: hotel.hotel_name,
+  destination: hotel.destination,
   price: hotel.price_per_night,
   rating: hotel.rating,
   is_women_friendly: hotel.is_women_friendly,

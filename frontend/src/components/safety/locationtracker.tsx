@@ -1,108 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { FiMapPin } from "react-icons/fi";
 import { Button } from "@/components/ui/Button";
 import { StatusBanner } from "@/components/ui/StatusBanner";
 import { SafetyPanel } from "@/components/safety/SafetyPanel";
-import {
-  formatDateTime,
-  getErrorMessage,
-  requestCurrentPosition,
-} from "@/lib/client/safetyClient";
-import type { LocationShare } from "@/lib/services/locationShares";
+import { formatDateTime } from "@/lib/client/safetyClient";
+import { useLocationSharing } from "./useLocationSharing";
 
 export default function LocationTracking() {
-  const [locationShare, setLocationShare] = useState<LocationShare | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-
-  useEffect(() => {
-    let active = true;
-
-    async function loadLocationState() {
-      try {
-        const response = await fetch("/api/location-sharing");
-        if (!response.ok) {
-          throw new Error(await getErrorMessage(response, "Unable to load location-sharing state."));
-        }
-        const body = (await response.json()) as { locationShare: LocationShare | null };
-        if (active) setLocationShare(body.locationShare);
-      } catch (loadError) {
-        if (active) {
-          setError(loadError instanceof Error ? loadError.message : "Unable to load location-sharing state.");
-        }
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-
-    void loadLocationState();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const saveLocation = async (sharing: boolean, forceRefresh = false) => {
-    setSubmitting(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      const position = await requestCurrentPosition();
-      const response = await fetch("/api/location-sharing", {
-        method: locationShare && !forceRefresh ? "PATCH" : locationShare ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          sharing,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(await getErrorMessage(response, "Unable to update location-sharing state."));
-      }
-
-      const body = (await response.json()) as { locationShare: LocationShare };
-      setLocationShare(body.locationShare);
-      setSuccess(sharing ? "Location sharing is now on." : "Location updated while sharing remains off.");
-    } catch (updateError) {
-      setError(updateError instanceof Error ? updateError.message : "Unable to update location-sharing state.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const disableSharing = async () => {
-    if (!locationShare) return;
-
-    setSubmitting(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      const response = await fetch("/api/location-sharing", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sharing: false }),
-      });
-
-      if (!response.ok) {
-        throw new Error(await getErrorMessage(response, "Unable to turn off location sharing."));
-      }
-
-      const body = (await response.json()) as { locationShare: LocationShare };
-      setLocationShare(body.locationShare);
-      setSuccess("Location sharing is now off.");
-    } catch (disableError) {
-      setError(disableError instanceof Error ? disableError.message : "Unable to turn off location sharing.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const {
+    locationShare,
+    loading,
+    loaded,
+    submitting,
+    error,
+    success,
+    load,
+    saveLocation,
+    disableSharing,
+  } = useLocationSharing();
 
   return (
     <SafetyPanel
@@ -119,23 +35,39 @@ export default function LocationTracking() {
               : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
           }`}
         >
-          Sharing: {locationShare?.sharing ? "ON" : "OFF"}
+          Sharing: {!loaded ? "UNKNOWN" : locationShare?.sharing ? "ON" : "OFF"}
         </span>
         <Button
           type="button"
           variant={locationShare?.sharing ? "danger" : "primary"}
-          onClick={() => void (locationShare?.sharing ? disableSharing() : saveLocation(true))}
-          disabled={loading || submitting}
+          onClick={() =>
+            void (locationShare?.sharing
+              ? disableSharing()
+              : saveLocation(true))
+          }
+          disabled={loading || submitting || !loaded}
         >
-          {submitting ? "Updating..." : locationShare?.sharing ? "Turn sharing off" : "Turn sharing on"}
+          {submitting
+            ? "Updating..."
+            : locationShare?.sharing
+              ? "Turn sharing off"
+              : "Turn sharing on"}
         </Button>
         <Button
           type="button"
           variant="outline"
-          onClick={() => void saveLocation(locationShare?.sharing ?? false, true)}
-          disabled={loading || submitting}
+          onClick={() => void saveLocation(locationShare?.sharing ?? false)}
+          disabled={loading || submitting || !loaded}
         >
           Update latest location
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => void load()}
+          disabled={loading || submitting}
+        >
+          Refresh saved state
         </Button>
       </div>
 
@@ -144,11 +76,16 @@ export default function LocationTracking() {
           Last updated: {formatDateTime(locationShare.updated_at)}
         </p>
       ) : null}
-      {loading ? <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Loading location-sharing state...</p> : null}
-      {!loading && !locationShare ? (
+      {loading ? (
+        <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
+          Loading location-sharing state...
+        </p>
+      ) : null}
+      {loaded && !loading && !locationShare ? (
         <div className="mt-4">
           <StatusBanner title="Sharing not started">
-            Turn sharing on when you want to save a live safety checkpoint.
+            Save a one-time location with sharing on or off. Turning sharing off
+            does not delete the stored location or notify contacts.
           </StatusBanner>
         </div>
       ) : null}

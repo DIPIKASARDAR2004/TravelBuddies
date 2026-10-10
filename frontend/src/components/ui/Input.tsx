@@ -7,29 +7,56 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, fullWidth = true, className = "", ...props }, ref) => {
+  (
+    {
+      label,
+      error,
+      fullWidth = true,
+      className = "",
+      id,
+      "aria-describedby": describedBy,
+      ...props
+    },
+    ref,
+  ) => {
+    const generatedId = React.useId();
+    const inputId = id ?? generatedId;
+    const errorId = `${inputId}-error`;
     const widthClass = fullWidth ? "w-full" : "";
     const inputClasses = error
       ? "ring-1 ring-rose-300 focus:ring-4 focus:ring-rose-500/20 dark:ring-rose-800 dark:focus:ring-rose-500/30"
       : "focus:ring-4 focus:ring-blue-500/30 dark:focus:ring-blue-600/40";
-    
+
     return (
       <div className={`flex flex-col ${widthClass}`}>
         {label && (
-          <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 ml-1">
+          <label
+            htmlFor={inputId}
+            className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 ml-1"
+          >
             {label}
           </label>
         )}
         <input
           ref={ref}
+          id={inputId}
           aria-invalid={Boolean(error)}
+          aria-describedby={
+            [describedBy, error ? errorId : undefined]
+              .filter(Boolean)
+              .join(" ") || undefined
+          }
           className={`px-4 py-3 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 shadow-sm outline-none transition-all ${inputClasses} ${className}`}
           {...props}
         />
-        {error && <span className="text-red-500 text-xs mt-1.5 ml-1">{error}</span>}
+        {error && (
+          <span id={errorId} className="text-red-500 text-xs mt-1.5 ml-1">
+            {error}
+          </span>
+        )}
       </div>
     );
-  }
+  },
 );
 
 Input.displayName = "Input";

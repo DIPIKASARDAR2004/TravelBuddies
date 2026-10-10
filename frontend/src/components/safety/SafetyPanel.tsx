@@ -35,9 +35,11 @@ export function SafetyPanel({
   children,
 }: SafetyPanelProps) {
   const theme = accentClasses[accent];
+  const headingId = React.useId();
 
   return (
     <section
+      aria-labelledby={headingId}
       className={`rounded-[1.75rem] border bg-white/90 p-6 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:bg-slate-950/75 ${theme.border}`}
     >
       <div className="mb-6 flex items-start gap-4">
@@ -45,8 +47,15 @@ export function SafetyPanel({
           <Icon className="text-2xl" />
         </div>
         <div>
-          <h2 className="text-xl font-black tracking-tight text-slate-950 dark:text-white">{title}</h2>
-          <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">{description}</p>
+          <h2
+            id={headingId}
+            className="text-xl font-black tracking-tight text-slate-950 dark:text-white"
+          >
+            {title}
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
+            {description}
+          </p>
         </div>
       </div>
       {children}

@@ -5,24 +5,31 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBanner } from "@/components/ui/StatusBanner";
 import { EnrichedItineraryDay } from "@/types";
 
-export default function DayWiseItinerary({ itinerary }: { itinerary: EnrichedItineraryDay[] }) {
+export default function DayWiseItinerary({
+  itinerary,
+}: {
+  itinerary: EnrichedItineraryDay[];
+}) {
   const [expandedDays, setExpandedDays] = useState<Record<number, boolean>>({});
 
   const toggleDay = (dayNum: number) => {
-    setExpandedDays((prev) => ({ ...prev, [dayNum]: !prev[dayNum] }));
+    setExpandedDays((prev) => ({ ...prev, [dayNum]: prev[dayNum] === false }));
   };
 
   if (!itinerary || itinerary.length === 0) {
     return (
       <div className="mt-12">
         <StatusBanner title="Itinerary preview unavailable">
-          Add a hotel and at least one mappable activity to generate the day-wise route preview.
+          Add a hotel and at least one mappable activity to generate the
+          day-wise route preview.
         </StatusBanner>
       </div>
     );
   }
 
-  const lateReturnDays = itinerary.filter((day) => (day.hotelReturnTime ?? 0) > 23 * 60).length;
+  const lateReturnDays = itinerary.filter(
+    (day) => (day.hotelReturnTime ?? 0) > 23 * 60,
+  ).length;
 
   return (
     <div className="mt-12 space-y-8">
@@ -38,9 +45,17 @@ export default function DayWiseItinerary({ itinerary }: { itinerary: EnrichedIti
         }
       />
 
+      <StatusBanner title="Draft timing assumptions">
+        This preview starts each day at 9:00 AM and assumes 90 minutes per
+        activity when no duration is recorded. Opening hours, admission, traffic
+        and schedule feasibility are not confirmed. Unavailable routes do not
+        imply zero travel time.
+      </StatusBanner>
+
       {lateReturnDays > 0 ? (
         <StatusBanner tone="warning" title="Late-return guidance">
-          {lateReturnDays} day{lateReturnDays === 1 ? "" : "s"} currently end after 11:00 PM. Consider locking in transport before you travel.
+          {lateReturnDays} day{lateReturnDays === 1 ? "" : "s"} currently end
+          after 11:00 PM. Consider locking in transport before you travel.
         </StatusBanner>
       ) : null}
 

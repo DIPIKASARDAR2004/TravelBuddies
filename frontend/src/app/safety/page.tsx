@@ -33,9 +33,12 @@ export default function WomenSafetyPage() {
                 <FiShield />
                 Women safety mode
               </div>
-              <h1 className="text-4xl font-black tracking-tight md:text-5xl">Plan with stronger guardrails from the first decision</h1>
+              <h1 className="text-4xl font-black tracking-tight md:text-5xl">
+                Plan with stronger guardrails from the first decision
+              </h1>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-rose-50/90 md:text-base">
-                Verified women-friendly stays, safer budgeting, and emergency support tools stay in one workflow so you can plan confidently without context switching.
+                Explore stays marked women-friendly in the prototype catalog,
+                review your budget, and keep trip-support tools in one place.
               </p>
             </div>
           </div>
@@ -43,14 +46,17 @@ export default function WomenSafetyPage() {
           <StatusBanner tone="warning" title="Safety note">
             <span className="inline-flex items-center gap-2">
               <FiInfo />
-              JourneyPilot helps surface safer options and planning tools, but it does not guarantee absolute safety. Always rely on trusted transport, local authorities, and personal judgment.
+              Catalog flags are not independent safety verification. These
+              prototype tools do not guarantee safety or dispatch emergency
+              help. Rely on trusted transport, local authorities, and personal
+              judgment.
             </span>
           </StatusBanner>
 
           <PlannerExperience
             mode="safety"
             eyebrow="Safer trip planning"
-            title="Build a trip with verified stays and a clearer safety budget"
+            title="Build a trip with filtered stays and a clearer budget"
             description="Use the same planner workflow, but keep the recommendations filtered for women-friendly stays and the cost breakdown aligned with safer travel decisions."
             accentClassName="from-rose-500/20 via-pink-500/10 to-transparent"
           />
@@ -59,9 +65,9 @@ export default function WomenSafetyPage() {
 
       <section className="mx-auto max-w-4xl space-y-8 px-4 pt-8 sm:px-6 lg:px-8">
         <SectionHeader
-          eyebrow="Always available"
+          eyebrow="Trip support tools"
           title="Safety actions and trip support"
-          description="Keep emergency communication, stay reminders, live location sharing, and nearby services within easy reach."
+          description="Keep saved alerts, stay reminders, your latest location-sharing choice, and nearby-service searches within easy reach."
         />
         <TrustedContacts />
         <SOSButton />
@@ -72,7 +78,8 @@ export default function WomenSafetyPage() {
         <StatusBanner tone="warning" title="Late return planning">
           <span className="inline-flex items-center gap-2">
             <FiAlertTriangle />
-            Arrange trusted transport in advance whenever your itinerary suggests a late hotel return.
+            Arrange trusted transport in advance whenever your itinerary
+            suggests a late hotel return.
           </span>
         </StatusBanner>
       </section>

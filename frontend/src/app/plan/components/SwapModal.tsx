@@ -1,5 +1,4 @@
-import React from "react";
-import { Button } from "@/components/ui/Button";
+import React, { useEffect, useRef } from "react";
 import { formatINR } from "@/lib/utils";
 import { applyAlternativeSelection } from "@/lib/planner/planUtils";
 import { usePlanStore } from "@/store/usePlanStore";
@@ -18,7 +17,21 @@ export default function SwapModal() {
     tripDetails,
   } = usePlanStore();
 
-  if (!swapModalOpen || !itemToSwap || !apiResponse || !customizedPlan) return null;
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!swapModalOpen || !dialog) return;
+    const opener = document.activeElement;
+    dialog.showModal();
+    return () => {
+      dialog.close();
+      // React may remove the dialog before passive cleanup/native restoration.
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+    };
+  }, [swapModalOpen]);
+
+  if (!swapModalOpen || !itemToSwap || !apiResponse || !customizedPlan)
+    return null;
 
   const options = apiResponse.alternatives[itemToSwap] ?? [];
 
@@ -67,17 +80,31 @@ export default function SwapModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
+    <dialog
+      ref={dialogRef}
+      aria-labelledby="plan-adjustment-title"
+      onCancel={(event) => {
+        event.preventDefault();
+        setSwapModalOpen(false);
+      }}
+      className="fixed inset-0 m-auto max-h-[90vh] w-[calc(100%_-_2rem)] max-w-2xl rounded-[2rem] bg-transparent p-0 backdrop:bg-slate-950/70 backdrop:backdrop-blur-sm"
+    >
       <div className="w-full max-w-2xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950">
         <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-5 dark:border-slate-800 dark:bg-slate-900">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Plan adjustments</p>
-            <h3 className="mt-1 text-2xl font-black capitalize text-slate-950 dark:text-white">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">
+              Plan adjustments
+            </p>
+            <h3
+              id="plan-adjustment-title"
+              className="mt-1 text-2xl font-black capitalize text-slate-950 dark:text-white"
+            >
               {modalMode === "add" ? "Add" : "Swap"} {itemToSwap}
             </h3>
           </div>
           <button
             onClick={() => setSwapModalOpen(false)}
+            aria-label="Close plan adjustments"
             className="text-3xl leading-none text-slate-400 transition-colors hover:text-slate-700 dark:hover:text-slate-200"
           >
             &times;
@@ -96,39 +123,30 @@ export default function SwapModal() {
               const content = describeOption(item);
 
               return (
-                <div
+                <button
                   key={`${content.title}-${idx}`}
-                  role="button"
-                  tabIndex={0}
+                  type="button"
+                  aria-label={`${modalMode === "add" ? "Add" : "Select"} ${content.title}`}
                   onClick={() => handleSelect(item)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      handleSelect(item);
-                    }
-                  }}
                   className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-sky-300 hover:bg-sky-50 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-sky-800 dark:hover:bg-sky-950/20"
                 >
-                  <div>
-                    <h4 className="font-bold text-slate-950 dark:text-white">{content.title}</h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{content.subtitle}</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleSelect(item);
-                    }}
-                  >
+                  <span>
+                    <span className="block font-bold text-slate-950 dark:text-white">
+                      {content.title}
+                    </span>
+                    <span className="block text-sm text-slate-500 dark:text-slate-400">
+                      {content.subtitle}
+                    </span>
+                  </span>
+                  <span className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
                     {modalMode === "add" ? "Add" : "Select"}
-                  </Button>
-                </div>
+                  </span>
+                </button>
               );
             })}
           </div>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }

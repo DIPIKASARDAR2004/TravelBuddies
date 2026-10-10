@@ -1,3 +1,10 @@
+import { validateCoordinates } from "./locationShares";
+import { isRecord, isRecordId, isRecordTimestamp } from "./recordChecks";
+
+export const ALERT_FIELDS =
+  "id, latitude, longitude, message, status, created_at, resolved_at";
+export const ALERT_HISTORY_LIMIT = 10;
+
 export type EmergencyAlert = {
   id: string;
   latitude: number;
@@ -15,11 +22,14 @@ export type EmergencyAlertInput = {
 };
 
 type ValidationResult =
-  | { valid: true; value: { latitude: number; longitude: number; message: string | null } }
+  | {
+      valid: true;
+      value: { latitude: number; longitude: number; message: string | null };
+    }
   | { valid: false; error: string };
 
 export function validateEmergencyAlertInput(input: unknown): ValidationResult {
-  if (!input || typeof input !== "object") {
+  if (!isRecord(input)) {
     return { valid: false, error: "Emergency alert details are required." };
   }
 
@@ -28,21 +38,21 @@ export function validateEmergencyAlertInput(input: unknown): ValidationResult {
   const hasLongitude = data.longitude !== undefined && data.longitude !== null;
 
   if (!hasLatitude || !hasLongitude) {
-    return { valid: false, error: "A current location is required to create an alert." };
+    return {
+      valid: false,
+      error: "A current location is required to create an alert.",
+    };
   }
 
-  const latitude = typeof data.latitude === "number" ? data.latitude : Number(data.latitude);
-  const longitude = typeof data.longitude === "number" ? data.longitude : Number(data.longitude);
+  const coordinates = validateCoordinates(data);
+  if (!coordinates.valid) return coordinates;
+  const { latitude, longitude } = coordinates;
 
-  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
-    return { valid: false, error: "Latitude must be between -90 and 90." };
-  }
-
-  if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
-    return { valid: false, error: "Longitude must be between -180 and 180." };
-  }
-
-  if (data.message !== undefined && data.message !== null && typeof data.message !== "string") {
+  if (
+    data.message !== undefined &&
+    data.message !== null &&
+    typeof data.message !== "string"
+  ) {
     return { valid: false, error: "Message must be text." };
   }
 
@@ -55,4 +65,73 @@ export function validateEmergencyAlertInput(input: unknown): ValidationResult {
     valid: true,
     value: { latitude, longitude, message: message || null },
   };
+}
+
+export function readEmergencyAlert(
+  value: unknown,
+  expected?: {
+    id?: string;
+    created?: { latitude: number; longitude: number; message: string | null };
+  },
+): EmergencyAlert {
+  const invalid = () =>
+    new Error(
+      "The server returned invalid SOS record details. Refresh to check saved records.",
+    );
+  if (!isRecord(value) || !isRecord(value.alert)) throw invalid();
+  const row = value.alert;
+  const coordinates = validateCoordinates(row);
+  if (
+    !coordinates.valid ||
+    !isRecordId(row.id) ||
+    !isRecordTimestamp(row.created_at) ||
+    typeof row.status !== "string" ||
+    !["pending", "processing", "sent", "failed", "resolved"].includes(
+      row.status,
+    ) ||
+    // The existing database permits 1,000-character legacy notes; new API input stays at 500.
+    !(
+      row.message === null ||
+      (typeof row.message === "string" && row.message.length <= 1000)
+    ) ||
+    !(
+      row.resolved_at === null ||
+      (row.status === "resolved" && isRecordTimestamp(row.resolved_at))
+    )
+  )
+    throw invalid();
+  if (expected?.id !== undefined && row.id !== expected.id) throw invalid();
+  if (
+    expected?.created &&
+    (row.status !== "pending" ||
+      row.resolved_at !== null ||
+      row.latitude !== expected.created.latitude ||
+      row.longitude !== expected.created.longitude ||
+      row.message !== expected.created.message)
+  )
+    throw invalid();
+  return {
+    id: row.id,
+    latitude: coordinates.latitude,
+    longitude: coordinates.longitude,
+    message: row.message as string | null,
+    status: row.status as EmergencyAlert["status"],
+    created_at: row.created_at,
+    resolved_at: row.resolved_at as string | null,
+  };
+}
+
+export function readEmergencyAlerts(value: unknown): EmergencyAlert[] {
+  if (
+    !isRecord(value) ||
+    !Array.isArray(value.alerts) ||
+    value.alerts.length > ALERT_HISTORY_LIMIT
+  ) {
+    throw new Error("The server returned an invalid SOS history.");
+  }
+  const alerts = value.alerts.map((alert) => readEmergencyAlert({ alert }));
+  if (new Set(alerts.map((alert) => alert.id)).size !== alerts.length) {
+    throw new Error("The server returned duplicate SOS records.");
+  }
+  return alerts;
 }

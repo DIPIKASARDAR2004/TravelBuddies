@@ -25,6 +25,7 @@ export interface Hotel {
 
 export interface HotelOption {
   name: string;
+  destination?: string;
   price: number;
   rating?: number;
   latitude?: number | string | null;
@@ -59,6 +60,7 @@ export interface TransportOption {
 
 export interface HotelAlternative {
   hotel_name: string;
+  destination?: string;
   price_per_night: number;
   rating?: number;
   is_women_friendly?: boolean;

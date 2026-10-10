@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { FaClock, FaLandmark, FaMapMarkedAlt, FaRoute, FaTree } from "react-icons/fa";
+import {
+  FaClock,
+  FaLandmark,
+  FaMapMarkedAlt,
+  FaRoute,
+  FaTree,
+} from "react-icons/fa";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBanner } from "@/components/ui/StatusBanner";
 
@@ -10,7 +16,6 @@ interface RouteOption {
   title: string;
   description: string;
   icon: React.ReactNode;
-  duration?: string;
   toneClassName: string;
 }
 
@@ -18,34 +23,35 @@ const routes: RouteOption[] = [
   {
     id: 1,
     title: "Scenic route",
-    description: "Bias toward rivers, hills, and open viewpoints when the journey matters as much as the destination.",
+    description:
+      "Bias toward rivers, hills, and open viewpoints when the journey matters as much as the destination.",
     icon: <FaTree className="text-xl" />,
-    duration: "2-3 hrs",
     toneClassName:
       "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-200",
   },
   {
     id: 2,
     title: "Cultural trail",
-    description: "Prioritize temples, museums, markets, and other historical anchors along the way.",
+    description:
+      "Prioritize temples, museums, markets, and other historical anchors along the way.",
     icon: <FaLandmark className="text-xl" />,
-    duration: "3-4 hrs",
     toneClassName:
       "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-200",
   },
   {
     id: 3,
     title: "Quick route",
-    description: "Optimize for time efficiency when the plan needs tighter transit windows or earlier returns.",
+    description:
+      "Optimize for time efficiency when the plan needs tighter transit windows or earlier returns.",
     icon: <FaClock className="text-xl" />,
-    duration: "1 hr",
     toneClassName:
       "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/30 dark:text-sky-200",
   },
   {
     id: 4,
     title: "Hidden gems",
-    description: "Surface lower-traffic stops and side quests when you want the route to feel less obvious.",
+    description:
+      "Surface lower-traffic stops and side quests when you want the route to feel less obvious.",
     icon: <FaMapMarkedAlt className="text-xl" />,
     toneClassName:
       "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-800/50 dark:bg-violet-950/30 dark:text-violet-200",
@@ -60,11 +66,10 @@ export default function ExploreRoutes() {
       <SectionHeader
         eyebrow="Route ideas"
         title="Try a different trip lens"
-        description="These route modes help you quickly reframe the day before committing to one map-first itinerary."
+        description="Illustrative planning prompts only. Choosing an idea does not change your itinerary or the calculated driving route."
         actions={
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-            <FaRoute className="text-slate-400" />
-            4 route styles
+            <FaRoute className="text-slate-400" />4 route styles
           </div>
         }
       />
@@ -78,6 +83,7 @@ export default function ExploreRoutes() {
               <button
                 key={route.id}
                 type="button"
+                aria-pressed={isActive}
                 onClick={() => setSelectedRoute(route)}
                 className={`rounded-[1.5rem] border px-5 py-5 text-left transition ${
                   isActive
@@ -98,23 +104,13 @@ export default function ExploreRoutes() {
                     </div>
                     <div>
                       <p className="text-lg font-bold">{route.title}</p>
-                      <p className={`mt-2 text-sm leading-6 ${isActive ? "text-white/85 dark:text-slate-700" : "text-slate-500 dark:text-slate-400"}`}>
+                      <p
+                        className={`mt-2 text-sm leading-6 ${isActive ? "text-white/85 dark:text-slate-700" : "text-slate-500 dark:text-slate-400"}`}
+                      >
                         {route.description}
                       </p>
                     </div>
                   </div>
-
-                  {route.duration ? (
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] ${
-                        isActive
-                          ? "bg-white/12 text-white dark:bg-slate-100 dark:text-slate-950"
-                          : "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                      }`}
-                    >
-                      {route.duration}
-                    </span>
-                  ) : null}
                 </div>
               </button>
             );
@@ -122,18 +118,26 @@ export default function ExploreRoutes() {
         </div>
 
         <div className="space-y-4 rounded-[1.75rem] border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-900/70">
-          <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-[0.24em] ${selectedRoute.toneClassName}`}>
+          <div
+            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-[0.24em] ${selectedRoute.toneClassName}`}
+          >
             {selectedRoute.icon}
-            Active route
+            Selected idea
           </div>
 
           <div>
-            <h3 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white">{selectedRoute.title}</h3>
-            <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">{selectedRoute.description}</p>
+            <h3 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white">
+              {selectedRoute.title}
+            </h3>
+            <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+              {selectedRoute.description}
+            </p>
           </div>
 
           <div className="rounded-[1.25rem] border border-dashed border-slate-300 bg-white/80 p-4 dark:border-slate-700 dark:bg-slate-950/60">
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">Best for</p>
+            <p className="text-xs font-bold uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
+              Best for
+            </p>
             <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
               {selectedRoute.title === "Quick route"
                 ? "Trips with tighter daylight windows, quicker transfers, or a stronger focus on punctual arrivals."
@@ -146,7 +150,9 @@ export default function ExploreRoutes() {
           </div>
 
           <StatusBanner title="Prototype behavior">
-            Route modes currently act as planning prompts. They do not yet re-compute the Google map automatically, but they help frame which itinerary style to refine next.
+            Route modes currently act as planning prompts. They do not yet
+            re-compute the Google map automatically, but they help frame which
+            itinerary style to refine next.
           </StatusBanner>
         </div>
       </div>

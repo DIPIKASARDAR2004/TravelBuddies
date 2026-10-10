@@ -20,11 +20,7 @@ CREATE TABLE IF NOT EXISTS public.protected_bookings (
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Note: RLS policies can be added later if authentication is implemented.
--- For the current prototype, we will allow anonymous inserts and updates since there is no auth.
-ALTER TABLE public.protected_bookings DISABLE ROW LEVEL SECURITY;
-
--- If RLS is enforced later, you can use these policies:
--- CREATE POLICY "Allow anonymous inserts" ON public.protected_bookings FOR INSERT TO anon WITH CHECK (true);
--- CREATE POLICY "Allow anonymous selects" ON public.protected_bookings FOR SELECT TO anon USING (true);
--- CREATE POLICY "Allow anonymous updates" ON public.protected_bookings FOR UPDATE TO anon USING (true);
+-- Fail closed for fresh setups. Apply the dated payment-hardening migration
+-- after the policy-fields migration to add ownership and server-only writes.
+ALTER TABLE public.protected_bookings ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.protected_bookings FROM PUBLIC, anon, authenticated;

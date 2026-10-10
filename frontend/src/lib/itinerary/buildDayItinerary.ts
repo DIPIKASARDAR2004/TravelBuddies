@@ -1,16 +1,25 @@
-import { ActivityOption, ItineraryDay, PlannerExtraItem, PlannerPackage } from "@/types";
+import {
+  ActivityOption,
+  ItineraryDay,
+  PlannerExtraItem,
+  PlannerPackage,
+} from "@/types";
 
-export function buildDayItinerary(plan: PlannerPackage | null | undefined, days: number): ItineraryDay[] {
-  const result: ItineraryDay[] = [];
-  for (let i = 1; i <= days; i++) {
-    result.push({ dayNumber: i, activities: [] });
-  }
+// Existing prototype rule, still IN REVIEW; not proof of schedule feasibility.
+export const DRAFT_ACTIVITIES_PER_DAY = 2;
 
-  if (!plan || !days) return result;
+export function getItineraryActivities(
+  plan: PlannerPackage | null | undefined,
+): ActivityOption[] {
+  if (!plan) return [];
 
   let activitiesToSchedule: ActivityOption[] = [];
-  
-  if (plan.selectedActivities && Array.isArray(plan.selectedActivities) && plan.selectedActivities.length > 0) {
+
+  if (
+    plan.selectedActivities &&
+    Array.isArray(plan.selectedActivities) &&
+    plan.selectedActivities.length > 0
+  ) {
     activitiesToSchedule = [...plan.selectedActivities];
   } else if (plan.selectedActivity) {
     activitiesToSchedule = [plan.selectedActivity];
@@ -18,9 +27,9 @@ export function buildDayItinerary(plan: PlannerPackage | null | undefined, days:
 
   if (plan.extraItems && Array.isArray(plan.extraItems)) {
     const customActivities = plan.extraItems
-      .filter((item: PlannerExtraItem) => item.type === 'activity')
+      .filter((item: PlannerExtraItem) => item.type === "activity")
       .map((item: PlannerExtraItem) => item.rawItem as ActivityOption);
-    
+
     if (customActivities.length > 0) {
       activitiesToSchedule = [...activitiesToSchedule, ...customActivities];
     }
@@ -28,7 +37,7 @@ export function buildDayItinerary(plan: PlannerPackage | null | undefined, days:
 
   const uniqueActivities: ActivityOption[] = [];
   const seen = new Set();
-  
+
   for (const act of activitiesToSchedule) {
     // Attempt to deduplicate using id or name if available
     const key = act.id || act.activity_name;
@@ -41,24 +50,37 @@ export function buildDayItinerary(plan: PlannerPackage | null | undefined, days:
     }
   }
 
-  const maxCapacity = days * 2;
-  if (uniqueActivities.length > maxCapacity) {
-    console.warn(`[Itinerary Builder] Warning: More activities (${uniqueActivities.length}) than capacity (${maxCapacity}). Truncating to safely fit.`);
-  }
+  return uniqueActivities;
+}
 
-  const activitiesToUse = uniqueActivities.slice(0, maxCapacity);
-  
+export function buildDayItinerary(
+  plan: PlannerPackage | null | undefined,
+  days: number,
+): ItineraryDay[] {
+  const result: ItineraryDay[] = [];
+  if (!Number.isInteger(days) || days < 1 || days > 365) return result;
+  for (let i = 1; i <= days; i++) {
+    result.push({ dayNumber: i, activities: [] });
+  }
+  if (!plan) return result;
+
+  const activitiesToUse = getItineraryActivities(plan).slice(
+    0,
+    days * DRAFT_ACTIVITIES_PER_DAY,
+  );
+
   let currentActIdx = 0;
   let actsRemaining = activitiesToUse.length;
   let daysRemaining = days;
-  
+
   for (let i = 0; i < days; i++) {
     if (actsRemaining <= 0) break;
-    
+
     // Distribute remaining activities across remaining days
     let countForDay = Math.ceil(actsRemaining / daysRemaining);
-    if (countForDay > 2) countForDay = 2; // enforce max 2 per day constraint
-    
+    if (countForDay > DRAFT_ACTIVITIES_PER_DAY)
+      countForDay = DRAFT_ACTIVITIES_PER_DAY;
+
     for (let j = 0; j < countForDay; j++) {
       if (currentActIdx < activitiesToUse.length) {
         result[i].activities.push(activitiesToUse[currentActIdx]);

@@ -1,11 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
-import fs from 'fs';
-
-const env = fs.readFileSync('.env.local', 'utf-8');
-const urlMatch = env.match(/NEXT_PUBLIC_SUPABASE_URL="?([^"\n]+)"?/);
-const keyMatch = env.match(/NEXT_PUBLIC_SUPABASE_ANON_KEY="?([^"\n]+)"?/);
-
-const supabase = createClient(urlMatch[1], keyMatch[1]);
+import { scriptClient } from "./scriptClient.mjs";
+const supabase = scriptClient({ mutates: true });
 
 const updates = [
   // Hotels

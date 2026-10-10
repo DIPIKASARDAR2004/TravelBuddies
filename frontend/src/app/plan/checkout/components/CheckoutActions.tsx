@@ -4,7 +4,9 @@ import { ProtectedBooking } from "@/types";
 
 interface CheckoutActionsProps {
   booking: ProtectedBooking;
-  handleDemoAction: (action: "release" | "cancel" | "dispute") => void;
+  handleDemoAction: (
+    action: "release" | "cancel" | "dispute" | "refund",
+  ) => void;
   handleAdminAction: (action: "CANCEL" | "NO_SHOW") => void;
   isProcessing: boolean;
 }
@@ -22,11 +24,30 @@ export default function CheckoutActions({
   handleAdminAction,
   isProcessing,
 }: CheckoutActionsProps) {
+  if (booking.status === "REFUND_PENDING") {
+    return (
+      <div className="space-y-3">
+        <StatusBanner tone="warning" title="Refund awaiting confirmation">
+          This refund is not complete. Refresh its status using the same saved
+          request; do not create another booking to retry it.
+        </StatusBanner>
+        <button
+          type="button"
+          disabled={isProcessing}
+          onClick={() => handleDemoAction("refund")}
+          className="rounded-xl border px-4 py-3 disabled:opacity-50"
+        >
+          Refresh refund status
+        </button>
+      </div>
+    );
+  }
   if (booking.status !== "PROTECTED") {
     return (
       <StatusBanner title="Actions unlock after protection">
-        Traveler and hotel controls appear once payment has been successfully protected. Closed and disputed bookings stay read-only
-        here so the timeline remains easy to follow.
+        Traveler and hotel controls appear once payment has been successfully
+        protected. Closed and disputed bookings stay read-only here so the
+        timeline remains easy to follow.
       </StatusBanner>
     );
   }
@@ -34,21 +55,24 @@ export default function CheckoutActions({
   const userActions: ActionButtonConfig[] = [
     {
       label: "Confirm checkout",
-      description: "Simulate a successful stay and release the protected amount.",
+      description:
+        "Simulate a successful stay and release the protected amount.",
       className:
         "border-emerald-200 bg-emerald-50 text-emerald-800 hover:border-emerald-300 hover:bg-emerald-100 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-200 dark:hover:bg-emerald-900/40",
       onClick: () => handleDemoAction("release"),
     },
     {
       label: "Cancel booking",
-      description: "Run the traveler-side cancellation flow with the configured refund logic.",
+      description:
+        "Run the traveler-side cancellation flow with the configured refund logic.",
       className:
         "border-slate-200 bg-slate-50 text-slate-800 hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800",
       onClick: () => handleDemoAction("cancel"),
     },
     {
       label: "Open dispute",
-      description: "Freeze payout when the traveler reports denied entry or overbooking.",
+      description:
+        "Freeze payout when the traveler reports denied entry or overbooking.",
       className:
         "border-orange-200 bg-orange-50 text-orange-800 hover:border-orange-300 hover:bg-orange-100 dark:border-orange-800/50 dark:bg-orange-950/30 dark:text-orange-200 dark:hover:bg-orange-900/40",
       onClick: () => handleDemoAction("dispute"),
@@ -58,25 +82,35 @@ export default function CheckoutActions({
   const adminActions: ActionButtonConfig[] = [
     {
       label: "Hotel cancels booking",
-      description: "Simulate a hotel-side cancellation with a full refund path.",
+      description:
+        "Simulate a hotel-side cancellation with a full refund path.",
       className:
         "border-rose-200 bg-rose-50 text-rose-800 hover:border-rose-300 hover:bg-rose-100 dark:border-rose-800/50 dark:bg-rose-950/30 dark:text-rose-200 dark:hover:bg-rose-900/40",
       onClick: () => handleAdminAction("CANCEL"),
     },
     {
       label: "Mark no-show",
-      description: "Apply the prototype no-show outcome and settle the booking accordingly.",
+      description:
+        "Apply the prototype no-show outcome and settle the booking accordingly.",
       className:
         "border-amber-200 bg-amber-50 text-amber-900 hover:border-amber-300 hover:bg-amber-100 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-200 dark:hover:bg-amber-900/40",
       onClick: () => handleAdminAction("NO_SHOW"),
     },
   ];
 
-  const renderActionGroup = (title: string, copy: string, actions: ActionButtonConfig[]) => (
+  const renderActionGroup = (
+    title: string,
+    copy: string,
+    actions: ActionButtonConfig[],
+  ) => (
     <div className="space-y-3">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">{title}</p>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{copy}</p>
+        <p className="text-xs font-bold uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
+          {title}
+        </p>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          {copy}
+        </p>
       </div>
 
       <div className="space-y-3">

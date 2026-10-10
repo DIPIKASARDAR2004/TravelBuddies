@@ -22,6 +22,7 @@ export const calcTransport = (transport: RecommendationTransport, numTravellers:
 
 const formatHotel = (hotel: RecommendationHotel): PlannerPackage["selectedHotel"] => ({
   name: hotel.hotel_name,
+  destination: hotel.destination ?? undefined,
   price: hotel.price_per_night,
   rating: hotel.rating ?? undefined,
   is_women_friendly: hotel.is_women_friendly ?? undefined,
