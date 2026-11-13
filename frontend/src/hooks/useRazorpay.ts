@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ProtectedBooking } from "@/types";
 import { requestJson } from "@/lib/client/requestJson";
+import { waitForCheckout } from "@/lib/checkout/checkoutClient";
 import {
   loadRazorpayCheckout,
   checkoutLoadError,
@@ -24,6 +25,7 @@ interface RazorpayInstance {
     handler: (response: RazorpayPaymentFailure) => void,
   ) => void;
   open: () => void;
+  close?: () => void;
 }
 
 interface RazorpayCheckoutOptions {
@@ -52,7 +54,7 @@ interface RazorpayOptions {
   bookingId: string;
   booking: ProtectedBooking | null;
   onSuccess: (message: string) => void;
-  onError: (error: string) => void;
+  onError: (error: string, uncertain?: boolean) => void;
 }
 
 export function useRazorpay({
@@ -64,6 +66,25 @@ export function useRazorpay({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCheckoutReady, setIsCheckoutReady] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
+  const active = useRef<{
+    controller: AbortController;
+    verifying: boolean;
+    instance?: RazorpayInstance;
+  } | null>(null);
+
+  useEffect(
+    () => () => {
+      const attempt = active.current;
+      active.current = null;
+      attempt?.controller.abort();
+      try {
+        attempt?.instance?.close?.();
+      } catch {
+        /* Provider cleanup is best effort. */
+      }
+    },
+    [bookingId],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -78,7 +99,7 @@ export function useRazorpay({
   }, []);
 
   const handlePayment = async (checkIn: string, checkOut: string) => {
-    if (isProcessing) return;
+    if (active.current || booking?.status !== "PAYMENT_PENDING") return;
     onError("");
 
     if (!booking) {
@@ -110,9 +131,22 @@ export function useRazorpay({
     }
 
     setIsProcessing(true);
+    const attempt = {
+      controller: new AbortController(),
+      verifying: false,
+      instance: undefined as RazorpayInstance | undefined,
+    };
+    active.current = attempt;
+    const current = () =>
+      active.current === attempt && !attempt.controller.signal.aborted;
+    const finish = () => {
+      if (!current()) return;
+      active.current = null;
+      attempt.controller.abort();
+      setIsProcessing(false);
+    };
 
     try {
-      let verifying = false;
       const options: RazorpayCheckoutOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder",
         amount: booking.amount_paise,
@@ -121,7 +155,8 @@ export function useRazorpay({
         description: `Protected Booking: ${booking.hotel_snapshot?.name || "Hotel"}`,
         order_id: booking.razorpay_order_id,
         handler: async (response) => {
-          verifying = true;
+          if (!current() || attempt.verifying) return;
+          attempt.verifying = true;
           try {
             if (
               response.razorpay_order_id !== booking.razorpay_order_id ||
@@ -132,16 +167,22 @@ export function useRazorpay({
             ) {
               throw new Error("Invalid checkout response.");
             }
-            const verifyData = await requestJson("/api/payments/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                booking_id: bookingId,
-              }),
-            });
+            const verifyData = await waitForCheckout(
+              attempt.controller.signal,
+              (signal) =>
+                requestJson("/api/payments/verify", {
+                  method: "POST",
+                  signal,
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                    booking_id: bookingId,
+                  }),
+                }),
+            );
+            if (!current()) return;
 
             if (
               verifyData &&
@@ -153,13 +194,19 @@ export function useRazorpay({
             ) {
               onSuccess("Payment successful. Your booking is now protected.");
             } else {
-              onError("Payment verification failed.");
+              onError(
+                "Payment verification failed. Refresh the booking before continuing; do not pay again.",
+                true,
+              );
             }
           } catch {
-            onError("Payment verification request failed.");
+            if (current())
+              onError(
+                "Payment verification request failed. Refresh the booking before continuing; do not pay again.",
+                true,
+              );
           } finally {
-            verifying = false;
-            setIsProcessing(false);
+            finish();
           }
         },
         prefill: {
@@ -171,22 +218,28 @@ export function useRazorpay({
         },
         modal: {
           ondismiss: () => {
-            if (!verifying) setIsProcessing(false);
+            if (!attempt.verifying) finish();
           },
         },
       };
 
       const razorpay = new checkoutWindow.Razorpay(options);
-      razorpay.on("payment.failed", (response) => {
+      attempt.instance = razorpay;
+      razorpay.on("payment.failed", () => {
+        if (!current() || attempt.verifying) return;
         onError(
-          `Payment failed: ${response?.error?.description || "Unknown Razorpay error."}`,
+          "The payment provider reported a failure. Check the booking and payment status before another attempt; do not pay again.",
+          true,
         );
-        setIsProcessing(false);
+        finish();
       });
       razorpay.open();
     } catch {
-      onError("Failed to initiate payment.");
-      setIsProcessing(false);
+      onError(
+        "The gateway could not finish opening. Check the booking and payment status before another attempt; do not pay again.",
+        true,
+      );
+      finish();
     }
   };
 
@@ -195,6 +248,5 @@ export function useRazorpay({
     checkoutError,
     isProcessing,
     handlePayment,
-    setIsProcessing,
   };
 }

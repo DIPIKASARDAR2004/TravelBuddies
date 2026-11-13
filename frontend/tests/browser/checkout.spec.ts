@@ -64,6 +64,18 @@ test("malformed booking and action responses never crash or change the displayed
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: /^Open dispute/ }),
+  ).toBeDisabled();
+  await page
+    .getByRole("button", { name: "Refresh booking status", exact: true })
+    .click();
+  await page
+    .getByRole("button", {
+      name: "I've reviewed — enable actions",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByRole("button", { name: /^Open dispute/ }),
   ).toBeEnabled();
 });
 
@@ -99,7 +111,7 @@ test("missing booking dates never borrow an unrelated planner's dates", async ({
   await expect(page.getByLabel("Check-in", { exact: true })).toHaveValue("");
 });
 
-test("dismissed payment unlocks the button and only valid verification protects the booking", async ({
+test("dismissed payment unlocks the button but uncertain verification requires recovery without another charge", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -154,20 +166,42 @@ test("dismissed payment unlocks the button and only valid verification protects 
   expect(verifications).toBe(0);
   await pay.click();
   await expect(
-    page.getByText("Payment verification failed.", { exact: true }),
+    page.getByText(
+      "Payment verification failed. Refresh the booking before continuing; do not pay again.",
+      { exact: true },
+    ),
   ).toBeVisible();
-  await expect(pay).toBeEnabled();
+  await expect(pay).toBeDisabled();
   await expect(
     page.getByRole("button", { name: /^Confirm checkout/ }),
   ).toHaveCount(0);
-  await pay.click();
+  await page
+    .getByRole("button", { name: "Refresh booking status", exact: true })
+    .click();
+  await expect(pay).toBeDisabled();
   await expect(
-    page.getByText("Payment successful. Your booking is now protected."),
-  ).toBeVisible();
+    page.getByRole("button", {
+      name: "I've reviewed — enable actions",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await page.route(
+    "https://travel-test.supabase.co/rest/v1/protected_bookings?*",
+    (route) => json(route, { ...booking, status: "PROTECTED" }),
+  );
+  await page
+    .getByRole("button", { name: "Refresh booking status", exact: true })
+    .click();
+  await page
+    .getByRole("button", {
+      name: "I've reviewed — enable actions",
+      exact: true,
+    })
+    .click();
   await expect(
     page.getByRole("button", { name: /^Confirm checkout/ }),
   ).toBeEnabled();
-  expect(verifications).toBe(2);
+  expect(verifications).toBe(1);
 });
 
 test("a stalled payment SDK times out instead of leaving checkout loading forever", async ({

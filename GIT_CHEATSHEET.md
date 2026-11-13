@@ -1,75 +1,26 @@
-# 🚀 The Idiot-Proof Guide to Testing New Code (Git Branches)
+# Reviewing changes on a branch
 
-Hey team! We are testing out some massive new UI redesigns and refactored code. To make sure we don't break our main working app, we are putting all these crazy new changes on a separate "timeline" called a **branch**.
+The requested workflow is **implementation → `testing` branch review → separately approved merge to `main`**. Publishing is a later step, not part of current maintenance. This guide does not claim that a `testing` branch exists or that anything has been pushed.
 
-Think of the `main` branch as the stable, working version of our app. 
-Think of the `testing` branch as our sandbox where we try out new things.
+## Inspect without changing files
 
-Here is exactly how you can hop between them to see the old version and the new version on your own computer.
+Run these from the TravelBuddies repository root:
 
----
-
-## 1. How to see the NEW redesign (Switching to the `testing` branch)
-
-If you want to see the new changes Soojan and the AI made, follow these exact steps in your terminal:
-
-**Step 1: Download the latest changes from GitHub**
-```bash
-git fetch
+```sh
+git status --short
+git branch --show-current
+git branch --list testing
+git diff --stat
 ```
 
-**Step 2: Hop over to the testing branch**
-```bash
-git checkout testing
-```
-*(You should see a message saying "Switched to branch 'testing'")*
+“Uncommitted” means edited/new local files not recorded in a Git commit. Switching branches does not save them; `main` is a branch name, not proof that its contents are stable or deployed.
 
-**Step 3: Install any new packages we added**
-Because we added new fonts and animation libraries, you **MUST** run this command before starting the app, otherwise it will crash:
-```bash
-cd frontend
-npm install
-```
+## Later, after publication is authorized
 
-**Step 4: Start the app!**
-```bash
-npm run dev
-```
-Now go to your browser (usually `http://localhost:3000`) and enjoy the new premium UI!
+Confirm the intended remote and whether local/remote `testing` already exists. Review and preserve existing edits before selecting a branch; do not overwrite an existing branch, force-push, discard changes or stage everything blindly. Commits must exclude private environment files, generated artifacts and unrelated work.
 
----
+Stop development servers before switching an approved clean checkout, then follow [README setup/checks](README.md) in `frontend`, including lockfile-based `npm ci`. Do not assume a branch added fonts, dependencies or a redesign. Use mocked checks before running an app against configured services.
 
-## 2. How to go back to the OLD version (Switching to the `main` branch)
+If Git refuses to switch because of local edits, stop and review those edits. A stash is temporary local storage, not a discard command or off-machine backup; default stashing also omits untracked files. Do not prescribe stash, commit or deletion without knowing what needs preservation.
 
-Don't like the new UI? Need to work on the old stable code? No problem, you can time-travel back to the `main` branch easily.
-
-**Step 1: Stop the app if it's running**
-Go to your terminal and press `Ctrl + C` (or `Cmd + C` on Mac) to kill the dev server.
-
-**Step 2: Hop back to the main branch**
-```bash
-git checkout main
-```
-*(You should see a message saying "Switched to branch 'main'")*
-
-**Step 3: Revert the installed packages**
-Since the old version doesn't have the new animation libraries, you need to sync your packages back:
-```bash
-cd frontend
-npm install
-```
-
-**Step 4: Start the app!**
-```bash
-npm run dev
-```
-Boom! You are back on the old familiar site.
-
----
-
-## 💡 Troubleshooting
-- **"I have uncommitted changes" error:** If you try to run `git checkout` and Git yells at you about "uncommitted changes", it means you edited some files and Git doesn't want to lose your work.
-  - If you **don't** care about your changes and just want to throw them away, run: `git stash` and then try `git checkout` again.
-  - If you **do** care about your changes, you need to save them first: `git add .` and then `git commit -m "saving my work"`.
-
-Happy coding! 💻✨
+Review the `testing` diff and checks before separately approving a merge. A passing local suite does not prove hosted CI, deployment, provider settlement or production readiness.

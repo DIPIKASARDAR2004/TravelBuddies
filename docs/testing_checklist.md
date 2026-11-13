@@ -5,7 +5,7 @@ This is a manual acceptance checklist, not a record of passing checks. Current a
 ## 1. Authentication System (`/login`, `/signup`)
 - [ ] **Account Creation:** Fill out the signup form and ensure an account is successfully created via Supabase.
 - [ ] **Login:** Test login using email and password. Verify it successfully redirects to `/safety` and sets the SSR session cookies correctly.
-- [ ] **Protected Routes:** Visit `/safety` or trigger `/api/trusted-contacts` and verify you no longer receive `401 Unauthorized` errors.
+- [ ] **Authentication boundary:** A public `/safety` page render is not proof of authorization. In an approved disposable backend, verify `/api/trusted-contacts` rejects anonymous requests with `401`, allows an authenticated user's own records, and rejects cross-owner access. A logged-in success alone does not verify this boundary.
 
 ## 2. Transport Booking System (`/train`, `/bus`)
 - [ ] **UI Rendering:** Ensure the search form, offer cards, and footer render correctly in both light and dark mode.

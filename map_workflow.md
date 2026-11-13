@@ -1,5 +1,7 @@
 # Map Implementation Workflow
 
+> Historical design checklist, not the current implementation or status queue. Use [planning contracts](docs/planning.md#map-preview-and-failure-behavior) for delivered Google Maps behavior and limitations, [README](README.md) for setup, and [brain.md](brain.md) for product decisions. The old Leaflet/coordinate statements and checkboxes below are retained as design history; do not treat them as current tasks or claim that the checked items establish acceptance.
+
 ## 1. Current Map Implementation
 - The existing project uses **Leaflet** for basic mapping functionality.
 - Leaflet will be removed after its files and dependencies are inspected, while the `/map` route and the navbar `Map` link remain active.

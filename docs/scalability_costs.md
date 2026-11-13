@@ -1,26 +1,17 @@
-# Journey Pilot: Scalability and Operating Costs
+# Operating-cost review
 
-As Journey Pilot scales from a prototype to a platform serving thousands of users, infrastructure and service costs will grow across three main pillars: Database/Backend (Supabase), Frontend Hosting (Next.js), and Payments (Razorpay Escrow).
+This is a measurement checklist, not a vendor quote or an implemented scaling architecture. The previous dollar/fee estimates were undated and are not maintained here. Verify each provider's current official pricing and the intended account's limits before making a budget or enabling services.
 
-## 1. Database & Backend Services (Supabase)
+The [README](../README.md) describes the actual stack and configuration; [payments](payments.md), [planning](planning.md) and [assistance](assistance.md) describe provider boundaries and release gates.
 
-Supabase handles PostgreSQL database management, Auth, and Edge Functions.
-- **Compute & Storage:** The free tier provides a shared database (500MB). Scaling to production will require at least the Pro plan ($25/mo), which gives 8GB storage and dedicated compute. At massive scale, dedicated enterprise compute instances range from $15 to $1,000+/mo.
-- **Bandwidth (Egress):** Supabase charges for data leaving their servers. Heavy read operations—like loading thousands of hotel images, detailed map points, or running massive queries for the Trip Planner—will rapidly increase bandwidth usage if not heavily cached on the frontend.
-- **Connection Pooling:** At scale, serverless edge functions can exhaust Postgres connection limits. Supabase provides PgBouncer/Supavisor to pool connections, which is necessary to handle traffic spikes.
+## What to measure before estimating
 
-## 2. Frontend Hosting (Next.js via Vercel or AWS)
+- **Database/auth:** request volume, query latency, stored data, egress, connection use and auth/email activity. Local fixtures do not establish production capacity or hosted account limits.
+- **Application hosting:** build frequency, request volume, compute duration, bandwidth and image delivery. Do not label the recommendation engine expensive without profiling it.
+- **Maps and nearby services:** actual map loads, directions requests and nearby-search frequency, including retries and per-day preview requests. Google Maps and Overpass are current integrations, not hypothetical future Leaflet replacements.
+- **AI chat:** submitted conversation sizes, requests, provider responses, timeouts and abuse exposure. The planner's catalog scoring is separate from the chat provider. Review public-route rate limits and cost controls before release.
+- **Payments:** authorized test-account operations, retries, reconciliation and provider requirements. The current prototype does not implement merchant settlement or regulated escrow; do not budget or present it as an already operating escrow/Route product.
 
-- **Serverless Execution:** If hosted on Vercel, costs are driven by serverless function execution time (GB-hours). Complex server-side calculations (like the Journey Pilot Budget Recommendation Engine) are computationally heavy and will consume execution time quickly if run on every page load.
-- **Cost-Optimization:** Moving heavy computation to background jobs, or heavily caching generic requests (e.g., caching the "Best Value" trip for "Darjeeling, 2-days, 2-travellers" route) will drastically cut serverless hosting costs.
-- **Image Optimization:** Serving optimized images via Next/Image can incur costs after the base limits are exceeded on Vercel.
+Use synthetic, approved workloads and record assumptions with any estimate. Do not capture customer content or credentials in performance logs. Caching or background jobs should follow a measured need and must preserve ownership, privacy, catalog freshness and payment correctness; they are not automatic maintenance tasks.
 
-## 3. Payments & Escrow (Razorpay Route)
-
-- **Standard Processing Fees:** Razorpay charges a standard processing fee for incoming customer payments, typically around **2% + GST** for domestic cards, UPI, and Netbanking.
-- **Escrow / Route Pricing:** Since Journey Pilot operates a Protected Payment (Escrow) model, funds are collected, held, and then split to vendors (hotels). While standard routing may just incur flat transfer fees (₹2 to ₹10 per payout via NEFT/IMPS), a true compliance-heavy Escrow+ setup involving a trustee account requires a custom enterprise pricing plan negotiated directly with Razorpay sales.
-
-## 4. Third-Party APIs (Future)
-
-- **AI Chatbot (LLMs):** Generating itineraries or answering user questions via OpenAI, Anthropic, or Google APIs costs money per input/output token.
-- **Maps:** If the platform shifts from free Leaflet/OSM to Google Maps or Mapbox for advanced routing or safety features, map loads and API calls will introduce significant costs at scale.
+Provider quotas, pricing, availability and legal/commercial approval remain external checks. No load test, paid API operation, hosted change or purchase is authorized by this document.

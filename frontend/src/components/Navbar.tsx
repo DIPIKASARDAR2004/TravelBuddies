@@ -1,59 +1,41 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { FaMoon, FaSun, FaChevronDown, FaBars, FaTimes, FaUserCircle, FaSignOutAlt } from 'react-icons/fa';
-import { User } from '@supabase/supabase-js';
-import { supabaseBrowser as supabase } from '@/lib/supabaseBrowserClient';
-import { NAV_ITEMS } from '@/constants/navigation';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { FaMoon, FaSun, FaChevronDown, FaBars, FaTimes } from "react-icons/fa";
+import { useNavbarSession } from "@/hooks/useNavbarSession";
+import { NavbarAccount } from "@/components/auth/NavbarAccount";
+import { NAV_ITEMS } from "@/constants/navigation";
 
 export default function Navbar() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const session = useNavbarSession();
   const pathname = usePathname();
-  const router = useRouter();
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
-    setTheme(initialTheme);
-
-    const checkUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-    };
-    checkUser();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      if (authListener && authListener.subscription) {
-        authListener.subscription.unsubscribe();
-      }
-    };
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem("theme");
+    } catch {}
+    const initial =
+      saved === "light" || saved === "dark"
+        ? saved
+        : window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+    setTheme(initial);
+    document.documentElement.classList.toggle("dark", initial === "dark");
   }, []);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setIsMobileMenuOpen(false);
-    router.refresh();
-    router.push('/');
-  };
-
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next);
+    try {
+      localStorage.setItem("theme", next);
+    } catch {}
+    document.documentElement.classList.toggle("dark", next === "dark");
   };
 
   return (
@@ -61,15 +43,36 @@ export default function Navbar() {
       <div className="flex justify-between items-center px-6 py-4">
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <Link href="/" className="flex items-center gap-2 group hover:opacity-90 transition-opacity">
+          <Link
+            href="/"
+            className="flex items-center gap-2 group hover:opacity-90 transition-opacity"
+          >
             <div className="bg-blue-600 text-white p-2 rounded-xl shadow-lg shadow-blue-200 dark:shadow-blue-900 group-hover:scale-105 transition-transform">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-extrabold leading-tight tracking-tight text-slate-800 dark:text-white">
-                Journey<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Pilot</span>
+                Journey
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                  Pilot
+                </span>
               </span>
-              <span className="text-[10px] text-slate-500 font-medium">Travel Smart. Travel Safe.</span>
+              <span className="text-[10px] text-slate-500 font-medium">
+                Travel Smart. Travel Safe.
+              </span>
             </div>
           </Link>
         </div>
@@ -78,16 +81,18 @@ export default function Navbar() {
         <ul className="hidden md:flex items-center gap-8">
           {NAV_ITEMS.map(({ href, label, hasDropdown }) => (
             <li key={label}>
-              <Link 
-                href={href} 
+              <Link
+                href={href}
                 className={`flex items-center gap-1 text-sm font-medium transition-colors ${
-                  pathname === href 
+                  pathname === href
                     ? "text-blue-600 dark:text-blue-400 font-bold"
                     : "text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400"
                 }`}
               >
                 {label}
-                {hasDropdown && <FaChevronDown className="text-[10px] opacity-70" />}
+                {hasDropdown && (
+                  <FaChevronDown className="text-[10px] opacity-70" />
+                )}
               </Link>
             </li>
           ))}
@@ -100,48 +105,14 @@ export default function Navbar() {
             className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
             aria-label="Toggle Theme"
           >
-            {theme === 'light' ? <FaMoon /> : <FaSun />}
+            {theme === "light" ? <FaMoon /> : <FaSun />}
           </button>
-          
+
           <div className="hidden md:flex items-center gap-3">
-            {user ? (
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-                  <FaUserCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  <span>{user.email?.split('@')[0]}</span>
-                </div>
-                <button 
-                  onClick={handleLogout}
-                  className="px-4 py-2 text-sm font-medium border rounded-lg text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2"
-                >
-                  <FaSignOutAlt />
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <>
-                <Link 
-                  href="/login" 
-                  className={`px-5 py-2 text-sm font-medium border rounded-lg transition-colors ${
-                    pathname === '/login'
-                      ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-slate-800'
-                      : 'text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  Login
-                </Link>
-                <Link 
-                  href="/signup" 
-                  className={`px-5 py-2 text-sm font-medium rounded-lg transition-colors shadow-sm ${
-                    pathname === '/signup'
-                      ? 'bg-blue-700 text-white shadow-md'
-                      : 'text-white bg-blue-600 hover:bg-blue-700'
-                  }`}
-                >
-                  Sign Up
-                </Link>
-              </>
-            )}
+            <NavbarAccount
+              session={session}
+              closeMenu={() => setIsMobileMenuOpen(false)}
+            />
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -149,20 +120,47 @@ export default function Navbar() {
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
             aria-label="Toggle Mobile Menu"
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-navigation"
           >
             {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
           </button>
         </div>
       </div>
 
+      {(session.notice || session.status === "unknown") && (
+        <div className="border-t border-amber-300 bg-amber-50 px-6 py-3 text-sm text-amber-950">
+          <p role="alert">
+            {session.notice ||
+              "Your account session could not be checked. Try checking again before continuing."}
+          </p>
+          <button
+            className="mt-2 rounded border border-amber-800 px-3 py-1 disabled:opacity-60"
+            disabled={!session.canCheck}
+            onClick={session.check}
+          >
+            Check session
+          </button>
+          {!session.canCheck && (
+            <p className="mt-1">
+              The previous request is still settling. No automatic retry will be
+              sent.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Mobile Dropdown Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xl flex flex-col py-4 px-6 space-y-4">
+        <div
+          id="mobile-navigation"
+          className="md:hidden absolute top-full left-0 w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xl flex flex-col py-4 px-6 space-y-4"
+        >
           <ul className="flex flex-col space-y-4">
             {NAV_ITEMS.map(({ href, label }) => (
               <li key={label}>
-                <Link 
-                  href={href} 
+                <Link
+                  href={href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`block text-base font-medium ${
                     pathname === href
@@ -176,46 +174,11 @@ export default function Navbar() {
             ))}
           </ul>
           <div className="flex flex-col space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-            {user ? (
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-3 px-2 py-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-                  <FaUserCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                  <span>{user.email?.split('@')[0]}</span>
-                </div>
-                <button 
-                  onClick={handleLogout}
-                  className="w-full text-center px-5 py-2.5 text-sm font-medium border rounded-lg text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center gap-2"
-                >
-                  <FaSignOutAlt />
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <>
-                <Link 
-                  href="/login" 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`text-center px-5 py-2.5 text-sm font-medium border rounded-lg ${
-                    pathname === '/login'
-                      ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-slate-800'
-                      : 'text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  Login
-                </Link>
-                <Link 
-                  href="/signup" 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`text-center px-5 py-2.5 text-sm font-medium rounded-lg shadow-sm ${
-                    pathname === '/signup'
-                      ? 'bg-blue-700 text-white shadow-md'
-                      : 'text-white bg-blue-600 hover:bg-blue-700'
-                  }`}
-                >
-                  Sign Up
-                </Link>
-              </>
-            )}
+            <NavbarAccount
+              session={session}
+              closeMenu={() => setIsMobileMenuOpen(false)}
+              mobile
+            />
           </div>
         </div>
       )}

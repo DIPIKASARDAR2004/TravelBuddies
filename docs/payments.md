@@ -16,6 +16,8 @@ Paths below are relative to `frontend/src/`.
 | `lib/checkout/bookingPayments.ts` | Owner checks, catalog pricing, idempotency and guarded booking transitions |
 | `lib/services/razorpay.ts` | Concrete order/payment/refund HTTP calls, response checks and 15-second request timeout |
 | `lib/checkout/bookingResponses.ts` | Browser-facing booking/action response validation |
+| `lib/checkout/checkoutClient.ts` | Concrete booking read/action adapters, action-specific outcomes and bounded waits |
+| `hooks/useCheckoutBooking.ts` | One booking's read/action lifetime, duplicate guard and uncertain-outcome review |
 | `hooks/useBookingDraft.ts` | Selected trip payload and retry key; never trusted pricing |
 | `hooks/useRazorpay.ts` | Checkout modal and verification UI; SDK loading is isolated in `lib/client/razorpayCheckout.ts` |
 
@@ -157,6 +159,45 @@ callbacks, delayed capture, server crashes and provider webhooks still need an
 operational recovery design and hosted tests. Never ask a traveller to pay again
 just because the callback failed.
 
+## Browser checkout lifecycle
+
+The checkout view is keyed by booking ID. Its hook owns booking reads and actions,
+keeps pending mutations mutually exclusive, and aborts local work on departure.
+The SDK/Supabase/fetch boundaries have a 15-second wait that includes body parsing;
+even an adapter that ignores cancellation cannot leave the UI waiting forever.
+The gateway loader retains its separate ten-second timeout. A failed read exposes
+an explicit reload action rather than leaving old booking data actionable.
+
+Action acknowledgements must match the requested operation (for example, release
+cannot become disputed), and refund amounts cannot exceed the booking total or
+be presented as refunded while still pending. Known permission/not-found
+rejections remain actionable; conflicting state, transport/server failure and
+malformed acknowledgements lock mutations until a fresh booking read and explicit
+review. A failed refresh does not clear that lock. The review acknowledgement is
+not provider verification, rollback, atomic concurrency control or durable
+recovery. It exists only for the mounted view; reload/navigation/another device
+can bypass it. Server owner checks, transitions and refund keys remain essential.
+
+One gateway attempt owns its callbacks. Duplicate clicks/callbacks cannot open or
+verify twice within that attempt; dismissed/finished/abandoned callbacks cannot
+dispatch a later verification. Leaving aborts local verification and best-effort
+closes the gateway when its instance exposes `close()`. Late replies cannot change
+another booking's UI. Local cancellation does not retract provider/server writes.
+
+Unconfirmed verification, provider failure or a gateway-opening exception never
+enables a second payment just
+because a refreshed record still says PAYMENT_PENDING. That state requires further
+status checking and provider reconciliation, which is not implemented here. If a
+fresh read instead confirms protection or another completed transition, review can
+unlock only the actions allowed by that state. An ordinary modal dismissal before
+verification still permits reopening; that UI event is not proof about provider
+settlement. Credentials/payment signatures are not persisted by this controller.
+
+The badge says “Test-mode prototype,” not that provider operations are enabled:
+actual server configuration still gates every operation. No payment configuration,
+pricing rule, provider endpoint, booking migration or refund key was changed by
+this browser refactor.
+
 ## Verification and remaining gates
 
 `npm run check` covers pure policies, adversarial route tests, adapter contracts
@@ -164,6 +205,12 @@ and the actual migration in local PGlite PostgreSQL. Those SQL tests simulate
 Supabase roles and `auth.uid()`; they do not prove hosted PostgREST/JWT integration.
 Production Chromium tests mock booking APIs/provider callbacks and block other
 external browser traffic. See [Project Pulse](../../Project_Pulse.md) for counts.
+
+For the focused browser slice, run `npm run test:e2e -- tests/browser/checkout.spec.ts tests/browser/checkoutLifecycle.spec.ts`.
+It covers malformed/status-mismatched updates, duplicate clicks/callbacks, reload
+and explicit review, read/action/verification timeouts, a newer selected booking,
+departure cleanup and unknown-payment recovery. Gateway fixtures are not real
+Razorpay transactions or verification of its hosted UI, settlement or callbacks.
 
 Before real use: verify hosted grants/RLS and test-account capture/refund behavior;
 add callback/webhook/reconciliation recovery, rate limits and real hotel roles;
